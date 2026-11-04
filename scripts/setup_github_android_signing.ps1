@@ -24,7 +24,7 @@ if ($Help) {
     Write-Host "Usage: .\\scripts\\setup_github_android_signing.ps1 -KeystorePath <path> -StorePassword <pwd> -KeyAlias <alias> -KeyPassword <pwd> [-Repo owner/name]"
     Write-Host ""
     Write-Host "Example:"
-    Write-Host "  .\\scripts\\setup_github_android_signing.ps1 -KeystorePath .\\android\\upload-keystore.jks -StorePassword '***' -KeyAlias upload -KeyPassword '***' -Repo yuraantonov11/siseli-app"
+    Write-Host "  .\\scripts\\setup_github_android_signing.ps1 -KeystorePath .\\android\\upload-keystore.jks -StorePassword '***' -KeyAlias upload -KeyPassword '***' -Repo denilnicolosi/siseli-app"
     exit 0
 }
 

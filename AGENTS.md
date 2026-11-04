@@ -15,7 +15,7 @@ This is a Flutter desktop application for monitoring and controlling PowMr/Smart
 - **WeatherService**: Fetches solar radiation forecasts from Open-Meteo API, learns dynamic conversion ratios from historical PV data
 - **LogService**: Centralized logging with 1000-entry buffer, used throughout app instead of print/debugPrint
 - **SecureStorageService**: Wraps `flutter_secure_storage` for credential/token storage (Windows: DPAPI). Use `SecureStorageService.savePassword/getPassword/saveToken/getToken` — do NOT store secrets in `SharedPreferences`
-- **UpdateService**: Checks GitHub Releases API (`yuraantonov11/siseli-app`) for new versions, downloads installer (`.exe`/`.msi`/`.msix` priority order) to temp dir, and launches it via `Process.run`/`Process.start` with `runInShell: false`
+- **UpdateService**: Checks GitHub Releases API (`denilnicolosi/siseli-app`) for new versions, downloads installer (`.exe`/`.msi`/`.msix` priority order) to temp dir, and launches it via `Process.run`/`Process.start` with `runInShell: false`
 
 ## Control Modes & Settings
 - **Output Priority**: 0=USB (Grid priority), 2=SBU (Solar priority)
@@ -25,7 +25,7 @@ This is a Flutter desktop application for monitoring and controlling PowMr/Smart
 ## Development Workflow
 - **Build**: `flutter build windows --release` (Windows x64 target)
 - **Package (Inno Setup)**: Inno Setup script (`windows/installer_script.iss`) creates EXE installer
-- **Package (MSIX)**: `flutter pub run msix:create` uses `msix_config` in `pubspec.yaml` (identity: `YuraAntonov.SmartInverterApp`)
+- **Package (MSIX)**: `flutter pub run msix:create` uses `msix_config` in `pubspec.yaml` (identity: `DenilNicolosi.SmartInverterApp`)
 - **Test**: `flutter test` — includes `test/hems_algorithm_test.dart` (unit tests for `HemsAlgorithmService` adaptive mode logic) and `test/widget_test.dart`
 - **Localize**: ARB files (`lib/l10n/app_*.arb`) with placeholders for dynamic strings
 - **Icons**: `flutter_launcher_icons` generates from `assets/app_icon.png`

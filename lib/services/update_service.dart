@@ -33,7 +33,7 @@ class UpdateInfo {
 
 class UpdateService {
   static const String releasesUrl =
-      'https://api.github.com/repos/yuraantonov11/siseli-app/releases?per_page=20';
+      'https://api.github.com/repos/denilnicolosi/siseli-app/releases?per_page=20';
   static final _client = http.Client();
 
   static List<String> get _supportedAssetExtensions =>

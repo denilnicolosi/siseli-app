@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.yuraantonov.smartinverterapp"
+    namespace = "com.denilnicolosi.smartinverterapp"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.yuraantonov.smartinverterapp"
+        applicationId = "com.denilnicolosi.smartinverterapp"
         minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -1,6 +1,6 @@
 # Smart Inverter Desktop ⚡️
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/yuraantonov11/siseli-app/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/denilnicolosi/siseli-app/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=flat&logo=Flutter&logoColor=white)](https://flutter.dev)
 
@@ -98,7 +98,7 @@ HEMS — це система, що приймає рішення на основ
 - **Fl_Chart** (Graphics)
 
 ## Installation 📥
-Download the EXE from the [Releases](https://github.com/yuraantonov11/siseli-app/releases) section. Supports Windows 10/11.
+Download the EXE from the [Releases](https://github.com/denilnicolosi/siseli-app/releases) section. Supports Windows 10/11.
 
 ## Android Release (AAB/APK) 🤖
 1. Create an upload keystore inside `android/`:
@@ -128,7 +128,7 @@ Canonical release runbook:
 Set Android signing secrets for GitHub Actions tag releases:
 
 ```powershell
-.\scripts\setup_github_android_signing.ps1 -KeystorePath .\android\upload-keystore.jks -StorePassword "<store-password>" -KeyAlias "upload" -KeyPassword "<key-password>" -Repo yuraantonov11/siseli-app
+.\scripts\setup_github_android_signing.ps1 -KeystorePath .\android\upload-keystore.jks -StorePassword "<store-password>" -KeyAlias "upload" -KeyPassword "<key-password>" -Repo denilnicolosi/siseli-app
 ```
 
 Official release command (prepare -> build -> commit -> tag -> push):

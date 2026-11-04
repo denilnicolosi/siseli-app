@@ -1,4 +1,4 @@
-package com.yuraantonov.smartinverterapp
+package com.denilnicolosi.smartinverterapp
 
 import io.flutter.embedding.android.FlutterActivity
 

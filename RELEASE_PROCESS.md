@@ -204,7 +204,7 @@ Example:
 If install/update fails on device:
 
 1. Check `versionCode` increased.
-2. Check `applicationId` unchanged (`com.yuraantonov.smartinverterapp`).
+2. Check `applicationId` unchanged (`com.denilnicolosi.smartinverterapp`).
 3. Check same release keystore is used.
 4. Check common install errors:
    - `INSTALL_FAILED_VERSION_DOWNGRADE`
@@ -251,7 +251,7 @@ Required GitHub secrets for Android signing:
 Quick setup (PowerShell helper):
 
 ```powershell
-.\scripts\setup_github_android_signing.ps1 -KeystorePath .\android\upload-keystore.jks -StorePassword "<store-password>" -KeyAlias "upload" -KeyPassword "<key-password>" -Repo yuraantonov11/siseli-app
+.\scripts\setup_github_android_signing.ps1 -KeystorePath .\android\upload-keystore.jks -StorePassword "<store-password>" -KeyAlias "upload" -KeyPassword "<key-password>" -Repo denilnicolosi/siseli-app
 ```
 
 OTA check expectations in app Settings:
