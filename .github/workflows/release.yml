@@ -31,7 +31,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.29.3
+          flutter-version: 3.47.9
 
       - name: Install dependencies
         run: flutter pub get
@@ -94,7 +94,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.29.3
+          flutter-version: 3.47.9
 
       - name: Install dependencies
         run: flutter pub get
@@ -104,7 +104,7 @@ jobs:
 
       - name: Validate release version policy
         run: |
-          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1 | tr -d '\r' | xargs)
+          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1 | tr -d '\r' | cut -d+ -f1 | xargs)
           if [[ -z "$PUBSPEC_VERSION" ]]; then
             echo "pubspec version not found"
             exit 1
@@ -125,7 +125,7 @@ jobs:
 
       - name: Compute Android build metadata
         run: |
-          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1 | tr -d '\r' | xargs)
+          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1 | tr -d '\r' | cut -d+ -f1 | xargs)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$PUBSPEC_VERSION"
           BUILD_CODE=$((10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH))
 
@@ -170,7 +170,7 @@ jobs:
 
       - name: Package Android artifacts
         run: |
-          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1 | tr -d '\r' | xargs)
+          PUBSPEC_VERSION=$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n1 | tr -d '\r' | cut -d+ -f1 | xargs)
           mkdir -p artifacts
 
           if [[ "${SIGNING_CONFIGURED}" == "true" && "${GITHUB_REF_TYPE}" == "tag" ]]; then
