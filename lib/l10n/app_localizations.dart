@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_it.dart';
 import 'app_localizations_uk.dart';
 
 // ignore_for_file: type=lint
@@ -95,6 +96,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
+    Locale('it'),
     Locale('uk')
   ];
 
@@ -1775,7 +1777,7 @@ abstract class AppLocalizations {
   /// No description provided for @currencyUah.
   ///
   /// In en, this message translates to:
-  /// **'UAH'**
+  /// **'€'**
   String get currencyUah;
 
   /// No description provided for @energyTariffLabel.
@@ -1799,7 +1801,7 @@ abstract class AppLocalizations {
   /// No description provided for @energyTariffUnit.
   ///
   /// In en, this message translates to:
-  /// **'UAH/kWh'**
+  /// **'€/kWh'**
   String get energyTariffUnit;
 
   /// No description provided for @nightEnergyShareLabel.
@@ -2255,7 +2257,7 @@ abstract class AppLocalizations {
   /// No description provided for @uahPerHour.
   ///
   /// In en, this message translates to:
-  /// **'₴/h'**
+  /// **'€/h'**
   String get uahPerHour;
 
   /// No description provided for @batteryCycles.
@@ -2492,7 +2494,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'uk'].contains(locale.languageCode);
+      <String>['en', 'it', 'uk'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2503,6 +2505,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'it':
+      return AppLocalizationsIt();
     case 'uk':
       return AppLocalizationsUk();
   }

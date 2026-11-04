@@ -157,6 +157,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
       supportedLocales: const [
         Locale('en', ''),
         Locale('uk', ''),
+        Locale('it', ''),
       ],
       home: provider.isCheckingAuth
           ? Scaffold(

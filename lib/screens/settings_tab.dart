@@ -110,6 +110,7 @@ class SettingsTab extends StatelessWidget {
                         DropdownMenuItem(value: 'en', child: Text('English')),
                         DropdownMenuItem(
                             value: 'uk', child: Text('Українська')),
+                        DropdownMenuItem(value: 'it', child: Text('Italiano')),
                       ],
                       onChanged: (val) {
                         if (val != null) provider.setLanguage(val);

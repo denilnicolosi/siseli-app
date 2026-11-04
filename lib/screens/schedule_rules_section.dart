@@ -703,56 +703,60 @@ class _RuleEditDialogState extends State<_RuleEditDialog> {
                     color: theme.colorScheme.onSurfaceVariant,
                   )),
               const SizedBox(height: AppTheme.spacingS),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline_rounded,
-                        size: 22),
-                    onPressed: _priority > ScheduleRule.minPriority
-                        ? () => setState(() => _priority = (_priority - 1)
-                            .clamp(ScheduleRule.minPriority,
-                                ScheduleRule.maxPriority))
-                        : null,
-                    color: theme.colorScheme.primary,
-                  ),
-                  ...List.generate(ScheduleRule.maxPriority, (i) {
-                    final val = i + 1;
-                    final active = val == _priority;
-                    return GestureDetector(
-                      onTap: () => setState(() => _priority = val),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        width: active ? 18 : 12,
-                        height: active ? 18 : 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: active
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.outlineVariant,
-                        ),
-                      ),
-                    );
-                  }),
-                  IconButton(
-                    icon:
-                        const Icon(Icons.add_circle_outline_rounded, size: 22),
-                    onPressed: _priority < ScheduleRule.maxPriority
-                        ? () => setState(() => _priority = (_priority + 1)
-                            .clamp(ScheduleRule.minPriority,
-                                ScheduleRule.maxPriority))
-                        : null,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$_priority / ${ScheduleRule.maxPriority}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline_rounded,
+                          size: 22),
+                      onPressed: _priority > ScheduleRule.minPriority
+                          ? () => setState(() => _priority = (_priority - 1)
+                              .clamp(ScheduleRule.minPriority,
+                                  ScheduleRule.maxPriority))
+                          : null,
                       color: theme.colorScheme.primary,
                     ),
-                  ),
-                ],
+                    ...List.generate(ScheduleRule.maxPriority, (i) {
+                      final val = i + 1;
+                      final active = val == _priority;
+                      return GestureDetector(
+                        onTap: () => setState(() => _priority = val),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          width: active ? 18 : 12,
+                          height: active ? 18 : 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: active
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outlineVariant,
+                          ),
+                        ),
+                      );
+                    }),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline_rounded,
+                          size: 22),
+                      onPressed: _priority < ScheduleRule.maxPriority
+                          ? () => setState(() => _priority = (_priority + 1)
+                              .clamp(ScheduleRule.minPriority,
+                                  ScheduleRule.maxPriority))
+                          : null,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$_priority / ${ScheduleRule.maxPriority}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: AppTheme.spacingM),
             ],

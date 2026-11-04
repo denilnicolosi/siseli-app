@@ -258,7 +258,7 @@ class _MainScreenState extends State<MainScreen> {
                   message: l10n.language,
                   child: IconButton(
                     onPressed: () => provider.setLanguage(
-                      lang == 'en' ? 'uk' : 'en',
+                      const ['en', 'uk', 'it'][(const ['en', 'uk', 'it'].indexOf(lang) + 1) % 3],
                     ),
                     icon: const Icon(Icons.language_rounded, size: 20),
                   ),
@@ -375,7 +375,7 @@ class _MainScreenState extends State<MainScreen> {
                                     langCode: langCode,
                                     extendedRail: extendedRail,
                                     onTap: () => provider.setLanguage(
-                                      lang == 'en' ? 'uk' : 'en',
+                                      const ['en', 'uk', 'it'][(const ['en', 'uk', 'it'].indexOf(lang) + 1) % 3],
                                     ),
                                   ),
                                 ),

@@ -940,7 +940,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentThisMonth => 'To pay this month';
 
   @override
-  String get currencyUah => 'UAH';
+  String get currencyUah => '€';
 
   @override
   String get energyTariffLabel => 'Electricity tariff';
@@ -952,7 +952,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get energyTariffNightLabel => 'Night tariff';
 
   @override
-  String get energyTariffUnit => 'UAH/kWh';
+  String get energyTariffUnit => '€/kWh';
 
   @override
   String get nightEnergyShareLabel => 'Night energy share';
@@ -1222,7 +1222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentCostPerHour => 'Cost now';
 
   @override
-  String get uahPerHour => '₴/h';
+  String get uahPerHour => '€/h';
 
   @override
   String get batteryCycles => 'Cycles';

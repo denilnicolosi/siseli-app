@@ -85,8 +85,8 @@ class AppStateProvider extends ChangeNotifier {
   DateTime? plannedOutageEndAt;
 
   // Economics (monthly estimate cards on dashboard)
-  double dayTariffUahPerKwh = 4.32;
-  double nightTariffUahPerKwh = 2.16;
+  double dayTariffUahPerKwh = 0.25;
+  double nightTariffUahPerKwh = 0.125;
   double nightEnergySharePercent = 35.0;
   double batteryRoundTripEfficiencyPercent = 92.0;
   double? _monthLoadWh;
@@ -650,7 +650,7 @@ class AppStateProvider extends ChangeNotifier {
     final legacyTariff = prefs.getDouble('energy_tariff_uah_per_kwh');
     dayTariffUahPerKwh = prefs.getDouble('energy_tariff_day_uah_per_kwh') ??
         legacyTariff ??
-        4.32;
+        0.25;
     nightTariffUahPerKwh = prefs.getDouble('energy_tariff_night_uah_per_kwh') ??
         ((legacyTariff ?? dayTariffUahPerKwh) * 0.5);
     nightEnergySharePercent =

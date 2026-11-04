@@ -100,7 +100,7 @@ String _formatKwh(double? value) =>
     value == null ? 'n/a' : '${value.toStringAsFixed(1)} kWh';
 
 String _formatMoney(double? value) =>
-    value == null ? 'n/a' : '${value.toStringAsFixed(1)} UAH';
+    value == null ? 'n/a' : '${value.toStringAsFixed(1)} €';
 
 String _smartModeLabel(int mode) {
   switch (mode) {

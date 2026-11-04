@@ -945,7 +945,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get paymentThisMonth => 'До оплати за місяць';
 
   @override
-  String get currencyUah => 'грн';
+  String get currencyUah => '€';
 
   @override
   String get energyTariffLabel => 'Тариф на електроенергію';
@@ -957,7 +957,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get energyTariffNightLabel => 'Нічний тариф';
 
   @override
-  String get energyTariffUnit => 'грн/кВт·год';
+  String get energyTariffUnit => '€/кВт·год';
 
   @override
   String get nightEnergyShareLabel => 'Частка нічного споживання';
@@ -1228,7 +1228,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get currentCostPerHour => 'Зараз коштує';
 
   @override
-  String get uahPerHour => '₴/год';
+  String get uahPerHour => '€/год';
 
   @override
   String get batteryCycles => 'Цикли';
