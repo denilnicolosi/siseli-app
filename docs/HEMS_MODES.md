@@ -1,6 +1,5 @@
 # HEMS Modes — Detailed Reference
 
-> [English](HEMS_MODES.md) | [Українська](HEMS_MODES_UA.md)  
 > **Smart Inverter App** — Home Energy Management System  
 > Algorithm file: `lib/services/hems_algorithm.dart`  
 > Tuning constants: `HemsTunables` (all adjustable)

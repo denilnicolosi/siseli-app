@@ -46,7 +46,7 @@ $iss = Get-Content $issPath -Raw
 $iss = [regex]::Replace($iss, '#define AppVersion "\d+\.\d+\.\d+"', "#define AppVersion `"$Version`"")
 Set-Content -Path $issPath -Value $iss -NoNewline
 
-$notesPath = Join-Path $repoRoot "release_notes_$Version.md"
+$notesPath = Join-Path $repoRoot "docs/release-notes/$Version.md"
 if (-not (Test-Path $notesPath)) {
 @"
 ## Smart Inverter App v$Version

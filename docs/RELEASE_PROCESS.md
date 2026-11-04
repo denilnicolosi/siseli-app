@@ -81,7 +81,7 @@ What this updates:
 - `pubspec.yaml` -> `version: 2.0.2`
 - `pubspec.yaml` -> `msix_version: 2.0.2.0`
 - `windows/installer_script.iss` -> `AppVersion "2.0.0"`
-- creates `release_notes_2.0.0.md` if missing
+- creates `docs/release-notes/2.0.0.md` if missing
 
 Optional flags in one run:
 - `-Commit`
@@ -158,7 +158,7 @@ Equivalent one-shot command:
 After successful tests and builds (manual way):
 
 ```powershell
-git add pubspec.yaml windows/installer_script.iss release_notes_2.0.0.md
+git add pubspec.yaml windows/installer_script.iss docs/release-notes/2.0.0.md
 git commit -m "release: bump to 2.0.2"
 git tag -a v2.0.2 -m "Release v2.0.2"
 git push origin main
@@ -230,7 +230,7 @@ Trigger:
 - Push tag in format `vX.Y.Z` -> builds signed release artifacts and publishes GitHub Release
 
 ```powershell
-git add pubspec.yaml windows/installer_script.iss release_notes_2.0.1.md
+git add pubspec.yaml windows/installer_script.iss docs/release-notes/2.0.1.md
 git commit -m "release: bump to 2.0.2"
 git tag -a v2.0.2 -m "Release v2.0.2"
 git push origin main

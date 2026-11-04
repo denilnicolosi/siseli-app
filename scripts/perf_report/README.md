@@ -20,7 +20,7 @@ Parses Smart Inverter diagnostics/runtime logs and generates a Markdown report w
 ## Quick Run (PowerShell)
 
 ```powershell
-Set-Location "c:\Users\yuraa\WebstormProjects\inverter_app"
+Set-Location <repo-root>
 python -u scripts\perf_report\perf_report.py --input . --output scripts\perf_report\last_report.md
 ```
 
@@ -32,6 +32,6 @@ python -u scripts\perf_report\perf_report.py --input . --output scripts\perf_rep
 
 ## Notes
 
-- Uses only Python standard library (`requirements.txt` intentionally empty).
+- Uses only Python standard library (no requirements file needed).
 - Safe to run multiple times; output file is overwritten.
 

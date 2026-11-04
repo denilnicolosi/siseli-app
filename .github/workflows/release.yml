@@ -227,7 +227,7 @@ jobs:
         run: |
           FULL_VERSION="${TAG_NAME#v}"
           VERSION="${FULL_VERSION%%+*}"
-          NOTES_FILE="release_notes_${VERSION}.md"
+          NOTES_FILE="docs/release-notes/${VERSION}.md"
           if [ -f "$NOTES_FILE" ]; then
             cp "$NOTES_FILE" release_notes.md
           else

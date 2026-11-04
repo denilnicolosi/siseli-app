@@ -56,13 +56,11 @@ All notable changes to this project will be documented in this file.
 **No breaking changes.** Default profile preserves v1.3 behavior (static thresholds, fixed windows, no tariff awareness). To enable v1.4 features, select strategy in **Settings → HEMS Strategy**. Existing users unaffected; opt-in for optimizations.
 
 ### Migration Guide
-See **HEMS_MODES.md** section 14 (_Migration Guide: v1.3 → v1.4_) for upgrade instructions, testing recommendations, and troubleshooting.
+See **docs/HEMS_MODES.md** section 14 (_Migration Guide: v1.3 → v1.4_) for upgrade instructions, testing recommendations, and troubleshooting.
 
 ### Documentation Updates
-- **HEMS_MODES.md** — added section 13 (v1.4 features) and section 14 (migration guide).
-- **HEMS_MODES_UA.md** — Ukrainian translation of v1.4 features and migration notes.
+- **docs/HEMS_MODES.md** — added section 13 (v1.4 features) and section 14 (migration guide).
 - **README.md** — updated feature list to highlight v1.4 innovations.
-- **V14_ROADMAP.md** — marked all phases ✅ COMPLETE; Phase 4 execution track finished.
 
 ## [1.3.2] - 2026-04-25
 ### Added
@@ -75,7 +73,7 @@ See **HEMS_MODES.md** section 14 (_Migration Guide: v1.3 → v1.4_) for upgrade 
 - **Smarter load fallback** in simulation — uses live `loadPower` instead of flat 500W when historical stats are unavailable, improving short-horizon accuracy.
 - **Structured reason-coded logs** — every mode decision logs `reason=…` with live metrics (`pv=NW load=NW surplus=NW soc=N% def=NWh`).
 - **`armManualOverride()` wired to UI** — SBU/USB buttons and advanced settings dropdown in `control_panel.dart` now explicitly arm the override hold before sending the command.
-- **`HEMS_MODES.md`** — comprehensive documentation of all modes, time windows, decision trees, real-world examples, tuning guide, and FAQ.
+- **`docs/HEMS_MODES.md`** — comprehensive documentation of all modes, time windows, decision trees, real-world examples, tuning guide, and FAQ.
 - **11 unit tests** (was 4) — new scenarios: T1 sunny noon, T2 cloudy deficit, T3 low SOC safety, T4 manual override, T5 dwell guard, T6a/b night tariff SNU/OSO selection.
 
 ### Fixed

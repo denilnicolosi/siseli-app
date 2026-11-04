@@ -123,7 +123,7 @@ Generated files:
 
 ## Release Process 📦
 Canonical release runbook:
-- `RELEASE_PROCESS.md`
+- `docs/RELEASE_PROCESS.md`
 
 Set Android signing secrets for GitHub Actions tag releases:
 
@@ -145,7 +145,7 @@ Quick command for validation/build only:
 
 ## License 📄
 This project is licensed under the MIT License.
-Bundled fonts and their licenses are documented in `FONTS_LICENSES.md`.
+Bundled fonts and their licenses are documented in `docs/FONTS_LICENSES.md`.
 
 ## Disclaimer ⚠️
 This application uses the internal API of the solar.siseli.com platform. Use at your own risk.

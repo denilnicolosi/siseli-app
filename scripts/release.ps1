@@ -116,7 +116,7 @@ $resolvedVersion = $match.Groups[1].Value
 $resolvedBuild = $match.Groups[2].Value
 $fullVersion = "$resolvedVersion+$resolvedBuild"
 $tagName = "v$fullVersion"
-$notesPath = Join-Path $repoRoot "release_notes_$resolvedVersion.md"
+$notesPath = Join-Path $repoRoot "docs/release-notes/$resolvedVersion.md"
 
 if (-not (Test-Path $notesPath)) {
     throw "Missing release notes file: $notesPath"
