@@ -611,15 +611,17 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     final depletionAt = selectedDay.add(Duration(
       minutes: ((lastSoc.x + hoursToThreshold) * 60).round(),
     ));
-    final endX = (lastSoc.x + hoursToThreshold).clamp(lastSoc.x, 23.0);
-    if (endX <= lastSoc.x) return null;
+    // Not clamp(lastSoc.x, 23): after 23:00 the lower bound exceeds the
+    // upper one, clamp throws and the whole chart section failed to build.
+    final rawEndX = lastSoc.x + hoursToThreshold;
+    final endX = rawEndX < 23.0 ? rawEndX : 23.0;
     final endSoc = soc - (endX - lastSoc.x) * socDropPerHour;
 
     return (
-      spots: [
-        FlSpot(lastSoc.x, soc),
-        FlSpot(endX, endSoc),
-      ],
+      // No room left on the 0-23 h axis: keep the text, skip the line.
+      spots: endX > lastSoc.x
+          ? [FlSpot(lastSoc.x, soc), FlSpot(endX, endSoc)]
+          : const <FlSpot>[],
       depletionAt: depletionAt,
     );
   }
@@ -759,7 +761,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                                 AppTheme.batteryColor.withValues(alpha: 0.15),
                           ),
                         ),
-                        if (socForecast != null)
+                        if (socForecast != null && socForecast.spots.isNotEmpty)
                           LineChartBarData(
                             spots: socForecast.spots,
                             color: AppTheme.batteryColor.withValues(alpha: 0.8),

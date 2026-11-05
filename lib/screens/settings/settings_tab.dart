@@ -825,6 +825,25 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
+  /// Download + install straight away (used by the update notification).
+  static Future<void> startUpdate(
+      BuildContext context, AppStateProvider provider) async {
+    var info = provider.updateInfo;
+    if (info == null || !info.hasUpdate) {
+      info = await provider.checkForUpdates(force: true);
+    }
+    if (!context.mounted) return;
+    if (!info.hasUpdate) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!
+            .updatesSubtitleUpToDate(info.currentVersion)),
+      ));
+      return;
+    }
+    await SettingsTab(provider: provider)
+        ._downloadAndInstallUpdate(context, info);
+  }
+
   Future<void> _downloadAndInstallUpdate(
       BuildContext context, UpdateInfo info) async {
     final l10n = AppLocalizations.of(context)!;

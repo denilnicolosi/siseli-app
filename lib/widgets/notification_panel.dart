@@ -8,7 +8,11 @@ import '../theme/app_theme.dart';
 // ---------------------------------------------------------------------------
 
 class NotificationBell extends StatefulWidget {
-  const NotificationBell({super.key});
+  /// Tapping an "update available" notification calls this (download and
+  /// install the new version).
+  final Future<void> Function(BuildContext context)? onUpdateTap;
+
+  const NotificationBell({super.key, this.onUpdateTap});
 
   @override
   State<NotificationBell> createState() => _NotificationBellState();
@@ -63,6 +67,17 @@ class _NotificationBellState extends State<NotificationBell>
     }
   }
 
+  VoidCallback? _tapHandler(AppNotification n) {
+    final onUpdateTap = widget.onUpdateTap;
+    if (n.type != AppNotificationType.updateAvailable || onUpdateTap == null) {
+      return null;
+    }
+    return () {
+      _controller.hide();
+      onUpdateTap(context);
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
@@ -86,7 +101,10 @@ class _NotificationBellState extends State<NotificationBell>
                 offset: const Offset(0, 8),
                 child: Align(
                   alignment: Alignment.topRight,
-                  child: _NotificationDropdown(onClose: _controller.hide),
+                  child: _NotificationDropdown(
+                    onClose: _controller.hide,
+                    tapHandler: _tapHandler,
+                  ),
                 ),
               ),
             ],
@@ -179,8 +197,12 @@ class _BellIconButton extends StatelessWidget {
 
 class _NotificationDropdown extends StatelessWidget {
   final VoidCallback onClose;
+  final VoidCallback? Function(AppNotification) tapHandler;
 
-  const _NotificationDropdown({required this.onClose});
+  const _NotificationDropdown({
+    required this.onClose,
+    required this.tapHandler,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -291,8 +313,10 @@ class _NotificationDropdown extends StatelessWidget {
                         shrinkWrap: true,
                         itemCount: capped.length,
                         separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (ctx, i) =>
-                            _NotificationTile(notification: capped[i]),
+                        itemBuilder: (ctx, i) => _NotificationTile(
+                          notification: capped[i],
+                          onTap: tapHandler(capped[i]),
+                        ),
                       ),
                     );
                   },
@@ -312,8 +336,9 @@ class _NotificationDropdown extends StatelessWidget {
 
 class _NotificationTile extends StatelessWidget {
   final AppNotification notification;
+  final VoidCallback? onTap;
 
-  const _NotificationTile({required this.notification});
+  const _NotificationTile({required this.notification, this.onTap});
 
   Color _accent(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -340,7 +365,7 @@ class _NotificationTile extends StatelessWidget {
     final theme = Theme.of(context);
     final accent = _accent(context);
 
-    return Container(
+    final tile = Container(
       color: notification.isRead
           ? Colors.transparent
           : accent.withValues(alpha: 0.06),
@@ -412,8 +437,15 @@ class _NotificationTile extends StatelessWidget {
               ],
             ),
           ),
+          if (onTap != null)
+            Icon(Icons.download_rounded, size: 18, color: accent),
         ],
       ),
+    );
+    if (onTap == null) return tile;
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(onTap: onTap, child: tile),
     );
   }
 

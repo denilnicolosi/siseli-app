@@ -349,7 +349,7 @@ class AppStateProvider extends ChangeNotifier {
         final alreadyNotified = _notifService.notifications.any(
           (n) =>
               n.type == AppNotificationType.updateAvailable &&
-              n.title.contains(info.latestVersion),
+              n.body.contains(info.latestVersion),
         );
         if (!alreadyNotified) {
           await _notifService.show(

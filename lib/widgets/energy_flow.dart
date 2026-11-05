@@ -114,30 +114,42 @@ enum _InteractiveFlowLink {
 /// Diagram node the user can tap to see its readings.
 enum _FlowNode { solar, acInput, battery, load, inverter }
 
-/// Node a realtime API field belongs to, from its key. Whatever is not
-/// matched (priorities, ratings, temperature, firmware, states) is shown
-/// under the inverter, so every reading appears exactly once.
-_FlowNode _nodeForKey(String key) {
-  final k = key.toLowerCase();
-  if (k.contains('priority')) return _FlowNode.inverter;
-  if (k.contains('pv') ||
-      k.contains('photovoltaic') ||
-      k == 'generationpower') {
-    return _FlowNode.solar;
-  }
-  if (k.contains('bat') || k.contains('charg') || k.contains('balancing')) {
-    return _FlowNode.battery;
-  }
-  if (k.contains('acinput') ||
-      k.contains('grid') ||
-      k.contains('mains') ||
-      k.contains('utility') ||
-      k.contains('feedin')) {
-    return _FlowNode.acInput;
-  }
-  if (k.contains('output') || k.contains('load')) return _FlowNode.load;
-  return _FlowNode.inverter;
-}
+/// Realtime API fields that describe the current state of each node, in
+/// display order. Settings and ratings (charge voltages, priorities,
+/// nominal values, firmware) are left out: they are in the Data tab.
+const _liveKeys = <_FlowNode, List<String>>{
+  _FlowNode.solar: [
+    'pvInputVoltage',
+    'pvInputCurrent',
+    'photovoltaicAccessFlag',
+    'pvStatuss',
+  ],
+  _FlowNode.acInput: [
+    'acInputVoltage',
+    'acInputFrequency',
+    'gridState',
+    'mainsRelayStatus',
+    'feedInPower',
+  ],
+  _FlowNode.battery: [
+    'batteryVoltage',
+    'batteryChargingCurrent',
+    'batteryDischargeCurrent',
+    'batState',
+  ],
+  _FlowNode.load: [
+    'outputVoltage',
+    'outputFrequency',
+    'outputApparentPower',
+    'loadPercentage',
+    'loadStatus',
+    'outputRelayStatus',
+  ],
+  _FlowNode.inverter: [
+    'workingStates',
+    'ntcMaximumTemperature',
+  ],
+};
 
 class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
     with SingleTickerProviderStateMixin {
@@ -346,8 +358,8 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
     );
   }
 
-  /// Popup with every realtime reading of [node]: the values the diagram
-  /// shows first, then the raw API fields grouped by [_nodeForKey].
+  /// Popup with the live readings of [node]: the values the diagram shows
+  /// first, then the API fields listed in [_liveKeys].
   void _showNodeDetails(_FlowNode node, _FlowSnapshot snapshot) {
     final l10n = AppLocalizations.of(context)!;
     final data = widget.data;
@@ -394,22 +406,11 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
           ],
       },
     ];
-    // Shown above with the app's own values (PV under 5 W = 0, BMS SOC).
-    const replacedBySummary = {
-      'pvInputPower',
-      'generationPower',
-      'batteryCapacity'
-    };
-
     final readings = <({String name, String value, String? description})>[];
-    for (final entry in data.rawFields.entries) {
-      if (entry.key == 'fullConfigs' ||
-          replacedBySummary.contains(entry.key) ||
-          _nodeForKey(entry.key) != node) {
-        continue;
-      }
-      final field = entry.value;
-      var name = entry.key;
+    for (final key in _liveKeys[node]!) {
+      if (!data.rawFields.containsKey(key)) continue;
+      final field = data.rawFields[key];
+      var name = key;
       var value = '-';
       var unit = '';
       if (field is Map) {
@@ -423,7 +424,7 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
       } else if (field != null) {
         value = field.toString();
       }
-      final info = inverterReadingInfo(l10n, entry.key);
+      final info = inverterReadingInfo(l10n, key);
       value = translateReadingValue(l10n, value);
       readings.add((
         name: info?.name ?? name,
@@ -431,8 +432,6 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
         description: info?.description,
       ));
     }
-    readings
-        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     showDialog<void>(
       context: context,

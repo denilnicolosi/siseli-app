@@ -257,7 +257,9 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
               // Notification bell
-              const NotificationBell(),
+              NotificationBell(
+                onUpdateTap: (ctx) => SettingsTab.startUpdate(ctx, provider),
+              ),
               Tooltip(
                 message: isDark ? l10n.lightTheme : l10n.darkTheme,
                 child: IconButton(
