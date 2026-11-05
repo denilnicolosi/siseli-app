@@ -10,84 +10,41 @@ A modern, fast, and elegant desktop application built with Flutter for monitorin
 
 ## 📑 Table of Contents / Зміст
 - [English Version](#english-version-en)
-  - [Features](#features)
-  - [HEMS Algorithm](#-smart-algorithm-hems-how-it-works)
-  - [Setup](#setup)
 - [Українська версія](#українська-версія-ua)
-  - [Можливості](#можливості)
-  - [Алгоритм HEMS](#-розумний-алгоритм-hems--як-це-працює)
-  - [Налаштування](#налаштування)
 
 ---
 
 # English Version (EN)
 
+Built for an **off-grid** solar system: the app monitors the plant and lets you change inverter settings by hand. It never switches inverter modes on its own.
+
 ## Features 🚀
-* **Real-time Monitoring**: Watch solar, grid, battery, and load metrics with animated energy flow diagrams.
-* **Instant Control**: Switch between SBU and USB modes with a single click.
-* **Advanced Settings**: Remote control of output and charger priorities (CSO, SNU, OSO).
-* **System Tray Integration**: Run silently in the background with battery status on hover.
-* **Smart HEMS Algorithm v2**: Advanced weather-based, tariff-aware, and adaptive automation (NEW in v1.4).
-* **Adaptive Optimization**: Dynamic thresholds, battery health awareness, and anti-flapping (NEW in v1.4).
-* **Tariff Intelligence**: Time-of-use pricing support with cost-aware charging (NEW in v1.4).
-* **Grid Reliability**: Planned outage detection with automatic emergency precharge (NEW in v1.4).
-* **Diagnostics Dashboard**: Real-time parameter visibility for troubleshooting (NEW in v1.4).
-
-## 🧠 Smart Algorithm (HEMS) How It Works
-The Home Energy Management System (HEMS) makes decisions based on family habits and weather forecasts.
-
-### Mode 1: Adaptive (Digital Twin + Open-Meteo)
-Analyzes consumption patterns from the past 7 days and matches them against the **Open-Meteo API** solar forecast.
-* **Cloudy Day:** Automatically charges from the grid at night (cheap tariff) if solar won't be enough.
-* **Sunny Day:** Disables grid charging to leave "room" in the battery for free solar energy.
-* **Peak Preservation:** Switches to grid during the day if the battery is needed for the expensive 17:00-23:00 peak.
-
-### Mode 2: Night Arbitrage
-Focuses on dual-zone tariffs. Charges at 23:00, uses battery during the day, and prioritizes battery usage during evening peaks.
-
-### Mode 3: Storm / Reserve Mode
-Keeps the battery at 100% using all available sources (Utility + Solar) in preparation for blackouts.
-
-### 🤫 Acoustic Comfort
-Automatically mutes the inverter buzzer from 22:00 to 07:00 for a peaceful sleep.
+* **Real-time Monitoring**: Solar, battery, load and AC input (generator) with an animated energy flow diagram.
+* **Energy History**: Day / week / month chart with a full-screen view that rotates the phone to landscape.
+* **Solar Forecast**: Next days' production from Open-Meteo radiation, sized on your panel power (e.g. 3 kWp) and site location.
+* **Inverter Settings**: Output and charger priorities (USB/SUB/SBU, CSO/SNU/OSO) and the other parameters, each with an explanation based on the Easun iSolar manual.
+* **Battery**: SOC history, cycle count and low-battery notifications.
+* **System Tray Integration** (desktop): Run in the background with battery status on hover.
 
 ## Setup
-1.  **Hardware Configuration:** Enter your battery Ah and PV capacity in the app settings.
+1. **Hardware Configuration:** In Settings → Station parameters enter battery Ah, panel power (W) and the site location (latitude/longitude) used by the forecast.
 
 ---
 
 # Українська версія (UA)
 
+Створено для **автономної (off-grid)** сонячної системи: застосунок показує стан установки й дозволяє змінювати налаштування інвертора вручну. Він ніколи не перемикає режими інвертора самостійно.
+
 ## Можливості 🚀
-* **Моніторинг у реальному часі**: Візуалізація потоків енергії між сонцем, мережею та АКБ.
-* **Миттєве керування**: Перемикання режимів SBU/USB в один клік.
-* **Розумний Алгоритм HEMS v2**: Адаптивна автоматизація з урахуванням погоди, тарифів та батареї (НОВИЙ у v1.4).
-* **Динамічна оптимізація**: Адаптивні пороги, обізнаність про здоров'я батареї, анти-флепінг (НОВИЙ у v1.4).
-* **Розумність тарифів**: Підтримка багатозонних тарифів з економічною зарядкою (НОВИЙ у v1.4).
-* **Надійність мережі**: Детекція передбачених відключень та автоматична передзарядка (НОВИЙ у v1.4).
-* **Діагностична панель**: Візуалізація параметрів вгадування в реальному часі (НОВИЙ у v1.4).
-* **Робота у треї**: Моніторинг заряду АКБ без відкриття вікна програми.
-
-## 🧠 Розумний Алгоритм (HEMS) – Як це працює?
-HEMS — це система, що приймає рішення на основі прогнозів погоди та ваших енергетичних звичок.
-
-### Режим 1: Адаптивний (Digital Twin + Прогноз Open-Meteo)
-Програма аналізує споживання за останні 7 днів і порівнює його з прогнозом від **Open-Meteo API**.
-* **Якщо завтра хмарно:** Система вночі дозарядить АКБ по дешевому тарифу.
-* **Якщо завтра сонце:** Зарядка вночі вимкнеться, щоб лишити місце для «безкоштовних» ватів від сонця.
-* **Збереження на пік:** Якщо в обід сонця мало, програма перемкне будинок на мережу, щоб зберегти заряд АКБ на дорогий вечір (17:00-23:00).
-
-### Режим 2: Нічний арбітраж
-Працює суто по часу: дешева зарядка вночі, робота від АКБ у дорогі години пік.
-
-### Режим 3: Шторм / Резерв
-Тримає АКБ на 100%, заряджаючи її від усіх доступних джерел одночасно (мережа + сонце).
-
-### 🤫 Акустичний комфорт
-Щодня о 22:00 програма вимикає звук (buzzer) інвертора, щоб він не заважав спати вашій родині. О 07:00 звук повертається.
+* **Моніторинг у реальному часі**: сонце, АКБ, навантаження та вхід AC (генератор) з анімованою схемою потоків енергії.
+* **Історія енергії**: графік за день / тиждень / місяць з повноекранним режимом, що повертає телефон горизонтально.
+* **Прогноз генерації**: виробництво на наступні дні за радіацією Open-Meteo з урахуванням потужності панелей (наприклад 3 кВтп) і розташування.
+* **Налаштування інвертора**: пріоритети виходу та заряду (USB/SUB/SBU, CSO/SNU/OSO) та інші параметри, кожен з поясненням за інструкцією Easun iSolar.
+* **АКБ**: історія SOC, кількість циклів і сповіщення про низький заряд.
+* **Робота у треї** (desktop): моніторинг заряду АКБ без відкриття вікна програми.
 
 ## Налаштування
-1.  **Параметри заліза:** Вкажіть ємність АКБ (Ah) та потужність панелей у налаштуваннях додатка.
+1. **Параметри заліза:** у Settings → Station parameters вкажіть ємність АКБ (Ah), потужність панелей (W) та координати місця (широта/довгота) для прогнозу.
 
 ---
 

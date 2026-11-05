@@ -94,30 +94,6 @@ class _MemoryCacheEntry<T> {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Storm risk model
-// ---------------------------------------------------------------------------
-
-class WeatherStormRisk {
-  /// Normalized risk score 0.0–1.0.
-  final double score;
-
-  /// Human-readable reason (e.g. "thunderstorm", "heavy rain", "strong wind").
-  final String reason;
-
-  /// True when score >= 0.6 — triggers automatic Storm mode.
-  final bool isHighRisk;
-
-  const WeatherStormRisk({
-    required this.score,
-    required this.reason,
-    required this.isHighRisk,
-  });
-
-  static const WeatherStormRisk clear =
-      WeatherStormRisk(score: 0.0, reason: 'clear', isHighRisk: false);
-}
-
 class WeatherService {
   final Dio _dio = Dio(BaseOptions(
     baseUrl: 'https://api.open-meteo.com',
@@ -153,159 +129,10 @@ class WeatherService {
   double _localAvgMs = 0;
   double _dailyAvgMs = 0;
 
-  // Storm-risk cache (in-memory only, 1-hour TTL)
-  static const Duration _stormRiskMemoryTtl = Duration(hours: 1);
-  _MemoryCacheEntry<WeatherStormRisk>? _stormRiskCache;
-
   WeatherService() {
     // БЕЗПЕКА: Dio автоматично перевіряє SSL сертифікати
     // Open-Meteo використовує legitim Let's Encrypt сертифікати
   }
-
-  // ─────────────────────────────────────────────────────────
-  // STORM RISK: прогноз небезпечної погоди на 12 годин вперед
-  // ─────────────────────────────────────────────────────────
-
-  /// WMO weather code → risk score (0.0–1.0)
-  static double _wmoCodeScore(int code) {
-    if (code >= 95) return 1.0; // Thunderstorm
-    if (code >= 80) return 0.8; // Heavy rain/snow showers
-    if (code >= 63) return 0.7; // Heavy rain/freezing rain
-    if (code >= 61) return 0.5; // Moderate rain
-    if (code >= 51) return 0.2; // Drizzle
-    return 0.0;
-  }
-
-  /// WMO weather code → English reason string
-  static String _wmoCodeReason(int code) {
-    if (code >= 95) return 'thunderstorm';
-    if (code >= 80) return 'heavy showers';
-    if (code >= 71) return 'heavy snow';
-    if (code >= 63) return 'heavy rain';
-    if (code >= 61) return 'rain';
-    if (code >= 51) return 'drizzle';
-    return '';
-  }
-
-  /// Returns storm risk for the next 12 hours at [lat]/[lon].
-  /// Uses a 1-hour in-memory cache.
-  Future<WeatherStormRisk> fetchStormRisk({
-    required double lat,
-    required double lon,
-  }) async {
-    final cached = _stormRiskCache;
-    if (cached != null &&
-        DateTime.now().difference(cached.createdAt) < _stormRiskMemoryTtl) {
-      return cached.data;
-    }
-    final result = await _computeStormRisk(lat: lat, lon: lon);
-    _stormRiskCache =
-        _MemoryCacheEntry(data: result, createdAt: DateTime.now());
-    return result;
-  }
-
-  Future<WeatherStormRisk> _computeStormRisk({
-    required double lat,
-    required double lon,
-  }) async {
-    try {
-      await _applyRateLimit();
-      final resp = await _dio.get(
-        '/v1/forecast',
-        queryParameters: {
-          'latitude': lat,
-          'longitude': lon,
-          'hourly': 'precipitation_probability,weather_code,wind_speed_10m',
-          'timezone': 'auto',
-          'forecast_days': 2,
-        },
-      );
-      if (resp.statusCode != 200) return WeatherStormRisk.clear;
-
-      final hourly = resp.data['hourly'] as Map<String, dynamic>;
-      final times = (hourly['time'] as List).cast<String>();
-      final precipProbs =
-          (hourly['precipitation_probability'] as List?)?.cast<dynamic>() ??
-              const [];
-      final weatherCodes =
-          (hourly['weather_code'] as List?)?.cast<dynamic>() ?? const [];
-      final windSpeeds =
-          (hourly['wind_speed_10m'] as List?)?.cast<dynamic>() ?? const [];
-
-      final now = DateTime.now();
-      final horizon = now.add(const Duration(hours: 12));
-
-      var maxScore = 0.0;
-      var maxReason = '';
-
-      for (var i = 0; i < times.length; i++) {
-        DateTime dt;
-        try {
-          dt = DateTime.parse(times[i]);
-        } catch (_) {
-          continue;
-        }
-        if (dt.isBefore(now) || dt.isAfter(horizon)) continue;
-
-        var score = 0.0;
-        var reason = '';
-
-        // Weather code
-        final rawWc = i < weatherCodes.length ? weatherCodes[i] : null;
-        final wc = rawWc is num ? rawWc.toInt() : null;
-        if (wc != null) {
-          final wcScore = _wmoCodeScore(wc);
-          if (wcScore > score) {
-            score = wcScore;
-            reason = _wmoCodeReason(wc);
-          }
-        }
-
-        // Wind speed (m/s)
-        final rawWs = i < windSpeeds.length ? windSpeeds[i] : null;
-        final ws = rawWs is num ? rawWs.toDouble() : null;
-        if (ws != null) {
-          if (ws >= 25 && 0.8 > score) {
-            score = 0.8;
-            reason = 'strong wind';
-          } else if (ws >= 15 && 0.4 > score) {
-            score = 0.4;
-            reason = 'moderate wind';
-          }
-        }
-
-        // Precipitation probability (%)
-        final rawPp = i < precipProbs.length ? precipProbs[i] : null;
-        final pp = rawPp is num ? rawPp.toDouble() : null;
-        if (pp != null) {
-          if (pp >= 80 && 0.6 > score) {
-            score = 0.6;
-            reason = 'high rain probability';
-          } else if (pp >= 60 && 0.4 > score) {
-            score = 0.4;
-            reason = 'moderate rain probability';
-          }
-        }
-
-        if (score > maxScore) {
-          maxScore = score;
-          maxReason = reason;
-        }
-      }
-
-      LogService.log('🌩️ StormRisk: score=${maxScore.toStringAsFixed(2)}, '
-          'reason="$maxReason", high=${maxScore >= 0.6}');
-      return WeatherStormRisk(
-        score: maxScore,
-        reason: maxReason.isEmpty ? 'clear' : maxReason,
-        isHighRisk: maxScore >= 0.6,
-      );
-    } catch (e, st) {
-      LogService.log('❌ fetchStormRisk error: $e', error: e, stack: st);
-      return WeatherStormRisk.clear;
-    }
-  }
-
   /// БЕЗПЕКА: Rate limiting для запобігання DoS атакам
   Future<void> _applyRateLimit() async {
     final now = DateTime.now();
@@ -339,8 +166,10 @@ class WeatherService {
     required int forecastDays,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final cacheDataKey = 'openmeteo_cache_data_v2_$forecastDays';
-    final cacheTimeKey = 'openmeteo_cache_timestamp_v2_$forecastDays';
+    // Location is part of the key so a changed site never reuses old weather.
+    final loc = '${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}';
+    final cacheDataKey = 'openmeteo_cache_data_v3_${forecastDays}_$loc';
+    final cacheTimeKey = 'openmeteo_cache_timestamp_v3_${forecastDays}_$loc';
 
     final cachedData = prefs.getString(cacheDataKey);
     final cacheTimestampStr = prefs.getString(cacheTimeKey);
@@ -525,8 +354,8 @@ class WeatherService {
   // 3. ОСНОВНИЙ МЕТОД: ПРОГНОЗ НА МАЙБУТНЄ
   // ─────────────────────────────────────────────────────────
   Future<Map<String, double>> fetchLocalForecast({
-    double lat = 49.7115,
-    double lon = 23.9060,
+    required double lat,
+    required double lon,
     required double pvCapacityW,
     double efficiency = 0.85,
     Map<String, double> historicalPvData = const {},
@@ -614,8 +443,8 @@ class WeatherService {
   }
 
   Future<List<DailySolarForecast>> fetchDailyForecast({
-    double lat = 49.7115,
-    double lon = 23.9060,
+    required double lat,
+    required double lon,
     required double pvCapacityW,
     double efficiency = 0.85,
     Map<String, double> historicalPvData = const {},

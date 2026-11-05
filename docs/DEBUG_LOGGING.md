@@ -1,79 +1,68 @@
-# Debug Logging System - Критичні HEMS Events
+# Debug Logging
 
-## 📋 Огляд
+- [English](#english)
+- [Українська](#українська)
 
-Приложение має **двохрівневу систему логування**:
+---
 
-1. **In-Memory Logs** — буффер на 1000 записів для швидкого доступу в UI
-2. **File-Based Logs** — критичні события записуються на диск для анализу
+## English
 
-## 🔴 Критичні Категорії Логування
+### Overview
 
-| Категорія | Опис | Де логується |
-|-----------|------|-------------|
-| `BATTERY_SAFETY` | Hard floor SOC protection (≤22%) | `hems_algorithm.dart:490` |
-| `BATTERY_RECOVERY` | Критична розрядка (SOC < 35%) та гістерезис (< 45%) | `hems_algorithm.dart:614-629` |
-| `EVENING_PROTECTION` | Вечірня захист батареї (18:00-23:00) | `hems_algorithm.dart:673-695` |
-| `MODE_CONFLICT` | Конфлікти режимів між ПК та телефоном | `hems_algorithm.dart:251` |
-| `STALE_DATA` | Дані застарілі >30 хв, примусове USB | `app_provider.dart:1376-1380` |
-| `EMERGENCY_CHARGE` | Срочна зарядка при SOC < 25% | `app_provider.dart:1397-1405` |
+The app has **two levels of logging**:
 
-## 📂 Розташування Файлів
+1. **In-memory log** — a 1000-entry buffer shown in the UI (`LogService.log`).
+2. **File log** — critical events written to disk for later analysis (`LogService.logCritical`).
+
+### Critical categories
+
+| Category | Meaning | Where it is logged |
+|----------|---------|--------------------|
+| `CONTROL_WRITE` | A write to the inverter failed, or the safe charging current could not be confirmed by read-back | `app_provider.dart` (`changeSetting`, `applySafeChargingCurrent`) |
+
+The app no longer switches inverter modes on its own (HEMS and automations were removed), so the old `BATTERY_*`, `EVENING_PROTECTION`, `MODE_CONFLICT`, `STALE_DATA` and `EMERGENCY_CHARGE` categories are gone.
+
+### File location
 
 ```
 ~/Documents/siseli_debug_logs/
 ├── hems_critical_events.log-2026-05-12
 ├── hems_critical_events.log-2026-05-11.01
-├── hems_critical_events.log-2026-05-11.02
-└── ... (максимум 10 файлів, ротація після 5MB)
+└── ... (at most 10 files, rotated at 5 MB)
 ```
 
-**Platform:**
+The `hems_critical_events.log` file name is kept so older logs stay readable.
+
 - **Windows**: `C:\Users\<user>\Documents\siseli_debug_logs\`
-- **Android**: `/storage/emulated/0/Documents/siseli_debug_logs/` (чи `/sdcard/...`)
+- **Android**: `/storage/emulated/0/Documents/siseli_debug_logs/` (or `/sdcard/...`)
 - **iOS**: `~/Documents/siseli_debug_logs/`
 
-## 🚀 Як Використовувати
+### How to use
 
-### 1️⃣ **Увімкнути Developer Mode**
-- Натисніть на версію додатку 7 разів у Settings → Developer Mode включиться
+1. **Enable Developer Mode**: tap the app version 7 times in Settings.
+2. **Open the logs**: Settings → 🐛 Debug Logs opens a full-screen view with file info, the logged categories, the critical-events file content and reload/delete buttons.
+3. **Export**: copy the content from the screen, or open the `Documents/siseli_debug_logs/` folder.
 
-### 2️⃣ **Переглянути Логи**
-Settings → 🐛 Debug Logs → відкриється повноекранний экран з:
-- 📁 Информацією про файли
-- 🏷️ Категоріями які логуються
-- 📝 Вмістом файлу критичних подій
-- 🔄 Кнопками для оновлення/видалення
+### Entry format
 
-### 3️⃣ **Експортувати Логи**
-Скопіюйте весь вміст з UI або вручну перейдіть до папки `Documents/siseli_debug_logs/`
-
-## 📊 Формати Записів
-
-Кожен лог-запис має такий формат:
 ```
 [HH:MM:SS] [CATEGORY] MESSAGE
 ```
 
-**Приклади:**
+Example:
+
 ```
-[18:45:33] [BATTERY_RECOVERY] CRITICAL RECOVERY: SOC=34.2% < 35% → Force USB+SNU until 45%+
-[18:47:15] [MODE_CONFLICT] EXTERNAL MODE CHANGE: sent=SBU, device shows=USB → sync conflict detected!
-[18:50:00] [EVENING_PROTECTION] EVENING CRITICAL: SOC=21.5% ≤ 22.0% at hour=18 → Emergency USB+SNU
-[19:12:44] [STALE_DATA] STALE DATA EMERGENCY: no realtime for 31m, SOC=28% (day) → Force USB for protection
+[18:45:33] [CONTROL_WRITE] ❌ setting.write failed: key=outputSourcePrioritySetting value=2 deviceSn=... (likely API timeout/offline).
 ```
 
-## 🔧 API для Розробників
+### Developer API
 
 ```dart
 // Initialize file logging at app startup
 await LogService.initializeFileLogging();
 
-// Log critical event
-LogService.logCritical(
-  'My critical message',
-  category: 'MY_CATEGORY'
-);
+// Log a critical event
+LogService.logCritical('My critical message', category: 'MY_CATEGORY');
 
 // Read all critical logs from file
 final logs = await LogService.readCriticalLog();
@@ -88,72 +77,104 @@ final files = await LogService.listDebugLogFiles();
 await LogService.clearDebugLogs();
 ```
 
-## 📝 Приклади Аналізу
+### Troubleshooting
 
-### Сценарій 1: Розрядка вечером (18:00)
+**"A setting does not change"**
+1. Open Debug Logs and look for `CONTROL_WRITE`.
+2. Check `key=` and `value=`, and whether the device was offline.
+3. The cloud applies writes with a delay: wait about a minute and refresh the settings.
 
-```log
-[18:45:33] [BATTERY_RECOVERY] HYSTERESIS: SOC=42.1% < 45% on USB → maintain SNU charging
-[18:47:15] [EVENING_PROTECTION] EVENING LOW ENERGY: available=119.2Wh ≤ safety=150.0Wh at hour=18 → USB
-[18:50:00] [EVENING_PROTECTION] EVENING CRITICAL: SOC=21.5% ≤ 22.0% at hour=18 → Emergency USB+SNU
-[19:12:44] [STALE_DATA] STALE DATA EMERGENCY: no realtime for 31m, SOC=28% (day) → Force USB for protection
-```
+**"The app reacts slowly"**
+1. Check the network connection.
+2. Check the "Last update" time on the dashboard: the inverter Wi-Fi module sends data about every 5 minutes.
 
-**Аналіз:** Система коректно:
-1. ✅ Залишилась у режимі USB при низькому зарядженні
-2. ✅ Активувала зарядку від мережі (SNU)
-3. ✅ При втраті зв'язку примусово перейшла на USB для захисту
+### Privacy
 
-### Сценарій 2: Конфлікти між ПК та телефоном
+**Never logged** (masked automatically): tokens, passwords, keys, e-mail addresses, URL parameters with sensitive data.
 
-```log
-[14:22:10] [MODE_CONFLICT] EXTERNAL MODE CHANGE: sent=SBU, device shows=USB → sync conflict detected!
-[14:22:11] [MODE_CONFLICT] EXTERNAL MODE CHANGE: sent=USB, device shows=SBU → sync conflict detected!
-```
+**Logged**: SOC %, setting keys and values written, timestamps, version numbers, error types.
 
-**Аналіз:** Обидва приложення намагаються перемикати режим одночасно → тиск на "HOLD" після першої зміни
+### Reporting a problem
 
-## 🛠️ Дебагування
-
-### Проблема: "Світло пропало вечором"
-1. Відкрийте Debug Logs
-2. Шукайте `EVENING_PROTECTION` -> `CRITICAL` записи
-3. Перевірте `SOC%` та `available energy`
-4. Перевірте, чи був `STALE_DATA` - сигнал тому що дані застарілі
-
-### Проблема: "Конфлікти режимів"
-1. Шукайте `MODE_CONFLICT` записи
-2. Проаналізуйте часи: `sent=X, device shows=Y`
-3. Дивіться на час синхронізації (500ms затримка)
-
-### Проблема: "Система повільна реагує"
-1. Перевірте `STALE_DATA` -> дані застарілі >30 хв
-2. Перевірте розташування API серверу
-3. Перевірте мережеве з'єднання
-
-## 🔐 Конфіденційність
-
-**Користувачеві дані, які НЕ логуються:**
-- Токени, паролі, ключі (автоматично маскуються)
-- Email адреси
-- URL параметри з чутливими даними
-
-**Що логується:**
-- SOC%, режими управління, часи переходів
-- Прогнози дефіциту енергії
-- Номери версій, типи помилок
-
-## 📞 Звіти про Проблеми
-
-При звіті про проблему додайте:
-1. **Файл логу** з `Documents/siseli_debug_logs/`
-2. **Часовий діапазон** проблеми
-3. **Описання** що сапсувало (світло, конфлікт, і т.д.)
-
-Це допоможе швидко ідентифікувати проблему!
+Attach:
+1. The **log file** from `Documents/siseli_debug_logs/`
+2. The **time range** of the problem
+3. A **short description** of what went wrong
 
 ---
 
-**Остання оновлення:** 2026-05-12  
-**Версія:** 2.0.4+
+## Українська
 
+### Огляд
+
+Застосунок має **два рівні логування**:
+
+1. **Логи в пам'яті** — буфер на 1000 записів, що показується в UI (`LogService.log`).
+2. **Файлові логи** — критичні події записуються на диск для аналізу (`LogService.logCritical`).
+
+### Критичні категорії
+
+| Категорія | Опис | Де логується |
+|-----------|------|-------------|
+| `CONTROL_WRITE` | Не вдалося записати налаштування в інвертор або підтвердити безпечний струм заряду зчитуванням | `app_provider.dart` (`changeSetting`, `applySafeChargingCurrent`) |
+
+Застосунок більше не перемикає режими інвертора самостійно (HEMS і автоматизації видалено), тому старих категорій `BATTERY_*`, `EVENING_PROTECTION`, `MODE_CONFLICT`, `STALE_DATA` та `EMERGENCY_CHARGE` більше немає.
+
+### Розташування файлів
+
+```
+~/Documents/siseli_debug_logs/
+├── hems_critical_events.log-2026-05-12
+├── hems_critical_events.log-2026-05-11.01
+└── ... (максимум 10 файлів, ротація після 5 МБ)
+```
+
+Назву файлу `hems_critical_events.log` збережено, щоб старі логи залишались доступними.
+
+- **Windows**: `C:\Users\<user>\Documents\siseli_debug_logs\`
+- **Android**: `/storage/emulated/0/Documents/siseli_debug_logs/` (або `/sdcard/...`)
+- **iOS**: `~/Documents/siseli_debug_logs/`
+
+### Як користуватися
+
+1. **Увімкнути Developer Mode**: натисніть на версію застосунку 7 разів у Settings.
+2. **Переглянути логи**: Settings → 🐛 Debug Logs відкриває повноекранний вигляд з інформацією про файли, категоріями, вмістом файлу критичних подій і кнопками оновлення/видалення.
+3. **Експорт**: скопіюйте вміст з екрана або відкрийте папку `Documents/siseli_debug_logs/`.
+
+### Формат запису
+
+```
+[HH:MM:SS] [CATEGORY] MESSAGE
+```
+
+### API для розробників
+
+Див. приклад коду в англійському розділі вище.
+
+### Діагностика
+
+**«Налаштування не змінюється»**
+1. Відкрийте Debug Logs і шукайте `CONTROL_WRITE`.
+2. Перевірте `key=` і `value=` та чи був пристрій офлайн.
+3. Хмара застосовує запис із затримкою: зачекайте близько хвилини й оновіть налаштування.
+
+**«Застосунок повільно реагує»**
+1. Перевірте мережеве з'єднання.
+2. Перевірте час «Останнє оновлення» на дашборді: Wi-Fi модуль інвертора надсилає дані приблизно кожні 5 хвилин.
+
+### Конфіденційність
+
+**Ніколи не логуються** (маскуються автоматично): токени, паролі, ключі, email-адреси, URL-параметри з чутливими даними.
+
+**Логуються**: SOC %, записані ключі та значення налаштувань, час, номери версій, типи помилок.
+
+### Звіт про проблему
+
+Додайте:
+1. **Файл логу** з `Documents/siseli_debug_logs/`
+2. **Часовий діапазон** проблеми
+3. **Короткий опис** того, що сталося
+
+---
+
+**Last updated / Остання оновлення:** 2026-11-05

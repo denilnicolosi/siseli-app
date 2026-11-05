@@ -21,10 +21,7 @@ class _EnergyFlowSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final expressive = context.expressive;
-    final isGridOutage = provider.isGridOutageDetected;
     final lastUpdatedAt = provider.lastSuccessfulRealtimeAt;
-    final backupHours = provider.estimateBackupHoursRemaining();
-    final batteryOnlyHours = provider.estimateBatteryOnlyHoursRemaining();
     final lastUpdatedLabel = lastUpdatedAt == null
         ? l10n.lastRealtimeUpdate
         : '${l10n.lastRealtimeUpdate}: ${lastUpdatedAt.hour.toString().padLeft(2, '0')}:${lastUpdatedAt.minute.toString().padLeft(2, '0')}';
@@ -85,15 +82,6 @@ class _EnergyFlowSection extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          if (isGridOutage) ...[
-            const SizedBox(height: AppTheme.spacingM),
-            _GridOutageRuntimeBanner(
-              voltage: data.gridVoltage,
-              backupHours: backupHours,
-              batteryOnlyHours: batteryOnlyHours,
-              isSolarCoveringLoad: provider.isLoadCoveredBySolarNow,
-            ),
-          ],
           const SizedBox(height: AppTheme.spacingM),
           RepaintBoundary(
             child: ExcludeSemantics(child: EnergyFlowDiagram(data: data)),
@@ -114,51 +102,74 @@ class _EnergyFlowFullscreenView extends StatefulWidget {
       _EnergyFlowFullscreenViewState();
 }
 
-class _EnergyFlowFullscreenViewState extends State<_EnergyFlowFullscreenView> {
+/// Fullscreen helpers shared by the energy-flow and chart fullscreen views.
+/// Desktop: native OS fullscreen. Mobile: immersive mode, optional landscape.
+mixin _FullscreenViewMixin<T extends StatefulWidget> on State<T> {
   bool _enteredNativeFullscreen = false;
-  bool _wasNativeFullscreen = false;
 
-  bool get _supportsNativeFullscreen {
-    if (kIsWeb) return false;
-    return defaultTargetPlatform == TargetPlatform.windows ||
-        defaultTargetPlatform == TargetPlatform.linux ||
-        defaultTargetPlatform == TargetPlatform.macOS;
-  }
+  bool get _isDesktop =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.macOS);
 
-  @override
-  void initState() {
-    super.initState();
-    // Enter native OS fullscreen so the view fills the monitor, not only app layout.
-    unawaited(_enterNativeFullscreen());
-  }
+  bool get _isMobile =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 
-  Future<void> _enterNativeFullscreen() async {
-    if (!_supportsNativeFullscreen) return;
-    final isFull = await windowManager.isFullScreen();
-    _wasNativeFullscreen = isFull;
-    if (!isFull) {
-      await windowManager.setFullScreen(true);
-      _enteredNativeFullscreen = true;
+  Future<void> enterFullscreen({bool landscape = false}) async {
+    if (_isDesktop) {
+      if (!await windowManager.isFullScreen()) {
+        await windowManager.setFullScreen(true);
+        _enteredNativeFullscreen = true;
+      }
+    } else if (_isMobile) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      if (landscape) await lockOrientation(landscape: true);
     }
   }
 
-  Future<void> _restoreNativeFullscreen() async {
-    if (!_supportsNativeFullscreen) return;
-    if (_enteredNativeFullscreen && !_wasNativeFullscreen) {
-      await windowManager.setFullScreen(false);
+  Future<void> lockOrientation({required bool landscape}) {
+    if (!_isMobile) return Future.value();
+    return SystemChrome.setPreferredOrientations(landscape
+        ? const [
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight
+          ]
+        : const [DeviceOrientation.portraitUp]);
+  }
+
+  Future<void> exitFullscreen() async {
+    if (_isDesktop) {
+      if (_enteredNativeFullscreen) {
+        _enteredNativeFullscreen = false;
+        await windowManager.setFullScreen(false);
+      }
+    } else if (_isMobile) {
+      await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
   }
 
-  Future<void> _closeView() async {
-    await _restoreNativeFullscreen();
-    if (!mounted) return;
-    Navigator.of(context).pop();
+  Future<void> closeFullscreen() async {
+    await exitFullscreen();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
-    unawaited(_restoreNativeFullscreen());
+    unawaited(exitFullscreen());
     super.dispose();
+  }
+}
+
+class _EnergyFlowFullscreenViewState extends State<_EnergyFlowFullscreenView>
+    with _FullscreenViewMixin {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(enterFullscreen());
   }
 
   @override
@@ -171,7 +182,11 @@ class _EnergyFlowFullscreenViewState extends State<_EnergyFlowFullscreenView> {
 
     final dominant = [
       (label: l10n.solar, value: solar, icon: Icons.solar_power_rounded),
-      (label: l10n.grid, value: gridImport, icon: Icons.electric_bolt_rounded),
+      (
+        label: l10n.acInput,
+        value: gridImport,
+        icon: Icons.electric_bolt_rounded
+      ),
       (
         label: l10n.battery,
         value: batteryDischarge,
@@ -181,170 +196,68 @@ class _EnergyFlowFullscreenViewState extends State<_EnergyFlowFullscreenView> {
 
     final mainSource = dominant.first;
 
+    // Leaving fullscreen on pop is handled by _FullscreenViewMixin.dispose.
     return Dialog.fullscreen(
-      child: WillPopScope(
-        onWillPop: () async {
-          await _restoreNativeFullscreen();
-          return true;
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.equipmentStatus),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: _closeView,
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spacingL),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppCard(
-                    borderRadius: context.expressive.cornerMedium,
-                    enableBlur: false,
-                    backgroundColor: theme.colorScheme.surfaceContainerLow,
-                    padding: const EdgeInsets.all(AppTheme.spacingM),
-                    child: Wrap(
-                      spacing: AppTheme.spacingM,
-                      runSpacing: AppTheme.spacingS,
-                      children: [
-                        _DashboardPill(
-                          icon: mainSource.icon,
-                          label:
-                              'Main source: ${mainSource.label} ${mainSource.value.toStringAsFixed(0)} W',
-                          color: theme.colorScheme.primary,
-                        ),
-                        _DashboardPill(
-                          icon: Icons.home_rounded,
-                          label:
-                              '${l10n.load}: ${widget.data.loadPower.toStringAsFixed(0)} W',
-                          color: AppTheme.loadColor,
-                        ),
-                        _DashboardPill(
-                          icon: Icons.battery_6_bar_rounded,
-                          label:
-                              '${l10n.battery}: ${widget.data.batterySoc.toStringAsFixed(0)}% (${widget.data.batteryPower.toStringAsFixed(0)} W)',
-                          color: AppTheme.batteryColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacingM),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: EnergyFlowDiagram(
-                        data: widget.data,
-                        showInteractiveToolbar: true,
-                        autofocusShortcuts: true,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.equipmentStatus),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: closeFullscreen,
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacingL),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppCard(
+                  borderRadius: context.expressive.cornerMedium,
+                  enableBlur: false,
+                  backgroundColor: theme.colorScheme.surfaceContainerLow,
+                  padding: const EdgeInsets.all(AppTheme.spacingM),
+                  child: Wrap(
+                    spacing: AppTheme.spacingM,
+                    runSpacing: AppTheme.spacingS,
+                    children: [
+                      _DashboardPill(
+                        icon: mainSource.icon,
+                        label:
+                            '${l10n.mainSource}: ${mainSource.label} ${mainSource.value.toStringAsFixed(0)} W',
+                        color: theme.colorScheme.primary,
                       ),
+                      _DashboardPill(
+                        icon: Icons.home_rounded,
+                        label:
+                            '${l10n.load}: ${widget.data.loadPower.toStringAsFixed(0)} W',
+                        color: AppTheme.loadColor,
+                      ),
+                      _DashboardPill(
+                        icon: Icons.battery_6_bar_rounded,
+                        label:
+                            '${l10n.battery}: ${widget.data.batterySoc.toStringAsFixed(0)}% (${widget.data.batteryPower.toStringAsFixed(0)} W)',
+                        color: AppTheme.batteryColor,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacingM),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: EnergyFlowDiagram(
+                      data: widget.data,
+                      showInteractiveToolbar: true,
+                      autofocusShortcuts: true,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _GridOutageRuntimeBanner extends StatelessWidget {
-  final double voltage;
-  final double? backupHours;
-  final double? batteryOnlyHours;
-  final bool isSolarCoveringLoad;
-
-  const _GridOutageRuntimeBanner({
-    required this.voltage,
-    required this.backupHours,
-    required this.batteryOnlyHours,
-    required this.isSolarCoveringLoad,
-  });
-
-  String _formatHoursLabel(AppLocalizations l10n, double? hours) {
-    if (hours == null) return '--';
-    if (hours.isInfinite) return l10n.runtimeInfinite;
-    if (hours <= 0.02) return l10n.runtimeNow;
-    if (hours < 1.0) {
-      final mins = (hours * 60).round().clamp(1, 59);
-      return l10n.runtimeMinutes(mins.toString());
-    }
-    final h = hours.floor();
-    final mins = ((hours - h) * 60).round();
-    if (mins <= 0) return l10n.runtimeHoursOnly(h.toString());
-    return l10n.runtimeHoursMinutes(h.toString(), mins.toString());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final effectiveBackupLabel = _formatHoursLabel(l10n, backupHours);
-    final batteryOnlyLabel = _formatHoursLabel(l10n, batteryOnlyHours);
-
-    return AppCard(
-      borderRadius: context.expressive.cornerMedium,
-      enableBlur: false,
-      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.58),
-      padding: const EdgeInsets.all(AppTheme.spacingM),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.power_off_rounded,
-                color: theme.colorScheme.onErrorContainer,
-              ),
-              const SizedBox(width: AppTheme.spacingS),
-              Expanded(
-                child: Text(
-                  l10n.gridOutageVisualTitle,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onErrorContainer,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacingXS),
-          Text(
-            l10n.gridOutageVisualBody(voltage.toStringAsFixed(0)),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onErrorContainer,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacingS),
-          Text(
-            l10n.backupRuntimeHybrid(effectiveBackupLabel),
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onErrorContainer,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacingXS),
-          Text(
-            l10n.backupRuntimeBatteryOnly(batteryOnlyLabel),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onErrorContainer,
-            ),
-          ),
-          if (isSolarCoveringLoad) ...[
-            const SizedBox(height: AppTheme.spacingXS),
-            Text(
-              l10n.backupRuntimeSolarCoverHint,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onErrorContainer,
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

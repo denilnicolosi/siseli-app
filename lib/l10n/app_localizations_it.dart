@@ -36,9 +36,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dashboard => 'Dashboard';
 
   @override
-  String get automation => 'Automazione';
-
-  @override
   String get data => 'Dati';
 
   @override
@@ -84,42 +81,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get battery => 'Batteria';
 
   @override
-  String get grid => 'Rete';
-
-  @override
   String get forecast => 'Previsioni';
-
-  @override
-  String get modeAdaptive => 'Intelligenza adattiva (Auto)';
-
-  @override
-  String get modeAdaptiveSubtitle =>
-      'Modalità dinamica: previsioni, tariffa e stato batteria';
-
-  @override
-  String get modeAdaptiveDesc =>
-      'La modalità adattiva analizza continuamente:\n• produzione FV e consumo di casa in tempo reale\n• previsione solare per il resto della giornata\n• SOC della batteria e riserva di sicurezza\n• fasce tariffarie orarie (notte/giorno/sera)\n\nCosa fa:\n• Di notte prevede se il sole di domani basterà e decide se serve caricare dalla rete\n• Di giorno ottimizza la priorità delle sorgenti per conservare energia per il picco serale\n• La sera usa l\'energia della batteria fino alla soglia di riserva configurata\n• Torna automaticamente alla rete se la sicurezza della batteria o la stabilità dell\'alimentazione sono a rischio\n\nRisultato: meno commutazioni manuali, costi energetici più bassi e funzionamento quotidiano più stabile.';
-
-  @override
-  String get modeArbitrage => 'Arbitraggio notturno';
-
-  @override
-  String get modeArbitrageSubtitle =>
-      'Ottimizzazione rigorosa dei costi per fasce tariffarie';
-
-  @override
-  String get modeArbitrageDesc =>
-      'Questa modalità punta al minimo costo dell\'elettricità:\n• Nella fascia notturna forza il funzionamento da rete e carica la batteria\n• Di giorno/sera dà priorità a batteria e solare\n• La carica da rete è disattivata fuori dalla fascia notturna\n\nIdeale quando il risparmio è l\'obiettivo principale, anche con più cicli della batteria.';
-
-  @override
-  String get modeStorm => 'Riserva / Tempesta';
-
-  @override
-  String get modeStormSubtitle => 'Massima prontezza di backup per i blackout';
-
-  @override
-  String get modeStormDesc =>
-      'Questa modalità privilegia l\'affidabilità rispetto al risparmio:\n• Mantiene la batteria il più carica possibile\n• Alimenta la casa dalla rete per conservare la batteria per le emergenze\n• Ignora l\'ottimizzazione tariffaria quando la riserva è critica\n\nConsigliata prima di temporali, periodi di rete instabile o blackout prolungati previsti.';
 
   @override
   String get account => 'Account';
@@ -134,9 +96,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cancel => 'Annulla';
 
   @override
-  String get confirm => 'Conferma';
-
-  @override
   String get save => 'Salva';
 
   @override
@@ -149,16 +108,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get advancedSettings => 'Impostazioni avanzate';
-
-  @override
-  String get hemsTitle => 'Modalità HEMS intelligenti';
-
-  @override
-  String get hemsSubtitle =>
-      'Scegli la strategia: automazione adattiva, risparmio o riserva di backup';
-
-  @override
-  String get gotIt => 'Ho capito';
 
   @override
   String get email => 'Email';
@@ -219,20 +168,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Copiato negli appunti';
-
-  @override
-  String get diagnosticsSnapshot => 'Istantanea diagnostica';
-
-  @override
-  String get diagnosticsSnapshotHint =>
-      'Copia un report compatto per la risoluzione problemi o l\'assistenza.';
-
-  @override
-  String get copyDiagnosticsSnapshot => 'Copia istantanea';
-
-  @override
-  String get diagnosticsSnapshotCopied =>
-      'Istantanea diagnostica copiata negli appunti';
 
   @override
   String get updatesTitle => 'Aggiornamenti';
@@ -529,26 +464,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get timeZoneLabel => 'Fuso orario';
 
   @override
-  String get astronomicalWindowsTitle =>
-      'Finestre astronomiche (alba/tramonto)';
-
-  @override
-  String get astronomicalWindowsAutoSubtitle =>
-      'Finestre automatiche dalle coordinate geografiche';
-
-  @override
-  String get astronomicalWindowsManualSubtitle => 'Usa limiti orari manuali';
-
-  @override
-  String get manualDayStartHour => 'Ora inizio giorno manuale';
-
-  @override
-  String get manualEveningStartHour => 'Ora inizio sera manuale';
-
-  @override
-  String get manualNightStartHour => 'Ora inizio notte manuale';
-
-  @override
   String get geoPresetKyiv => 'Kyiv, UA';
 
   @override
@@ -575,14 +490,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String geoSummary(String latitude, String longitude, String timeZone) {
     return 'Geo: $latitude, $longitude ($timeZone)';
-  }
-
-  @override
-  String get windowsAstronomicalAuto => 'Finestre: astronomiche (auto)';
-
-  @override
-  String windowsManualSummary(String day, String evening, String night) {
-    return 'Finestre: manuali $day:00 / $evening:00 / $night:00';
   }
 
   @override
@@ -681,9 +588,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get inverterLoad => 'Carico inverter';
 
   @override
-  String get pvGeneration => 'Produzione FV';
-
-  @override
   String get refreshChart => 'Aggiorna grafico';
 
   @override
@@ -710,9 +614,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get total => 'Totale';
-
-  @override
   String get solar => 'Solare';
 
   @override
@@ -723,52 +624,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get connectionOffline => 'Offline';
-
-  @override
-  String get gridOutageDetectedShort => 'Blackout rete';
-
-  @override
-  String get gridOutageVisualTitle => 'Rete elettrica non disponibile';
-
-  @override
-  String gridOutageVisualBody(String voltage) {
-    return 'Rilevato dalla tensione di ingresso ($voltage V), non dal cambio di modalità';
-  }
-
-  @override
-  String backupRuntimeHybrid(String duration) {
-    return 'Autonomia stimata (batteria + solare): ~$duration';
-  }
-
-  @override
-  String backupRuntimeBatteryOnly(String duration) {
-    return 'Solo batteria: ~$duration';
-  }
-
-  @override
-  String get backupRuntimeSolarCoverHint =>
-      'Il solare copre attualmente il carico, l\'autonomia reale può essere maggiore.';
-
-  @override
-  String get runtimeInfinite => 'continua';
-
-  @override
-  String get runtimeNow => 'ora';
-
-  @override
-  String runtimeMinutes(String minutes) {
-    return '$minutes min';
-  }
-
-  @override
-  String runtimeHoursOnly(String hours) {
-    return '$hours h';
-  }
-
-  @override
-  String runtimeHoursMinutes(String hours, String minutes) {
-    return '$hours h $minutes min';
-  }
 
   @override
   String get lastRealtimeUpdate => 'Ultimo aggiornamento';
@@ -800,204 +655,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get exit => 'Esci';
 
   @override
-  String get tooltipTodayEnergy => 'Energia solare totale prodotta oggi';
-
-  @override
-  String get tooltipTotalEnergy =>
-      'Energia solare totale prodotta dall\'installazione del dispositivo';
-
-  @override
-  String get tooltipCo2 =>
-      'Riduzione stimata delle emissioni di CO₂ grazie alla produzione solare';
-
-  @override
-  String get tooltipInverterLoad =>
-      'Carico attuale dell\'inverter rispetto alla potenza nominale';
-
-  @override
-  String get tooltipPvGeneration =>
-      'Produzione FV attuale rispetto alla potenza totale dei pannelli installati';
-
-  @override
   String batteryLevel(String level) {
     return 'Batteria: $level%';
   }
 
   @override
   String get batteryInstallYearLabel => 'Anno di installazione batteria';
-
-  @override
-  String get hemsStrategyLabel => 'Strategia di ottimizzazione HEMS';
-
-  @override
-  String get hemsStrategyEconomical =>
-      'Economica (minimizza il costo della rete)';
-
-  @override
-  String get hemsStrategySolarMaxed =>
-      'Solare massimo (massimizza l\'autoconsumo)';
-
-  @override
-  String get hemsStrategyBatteryLife => 'Vita batteria (cicli prudenti)';
-
-  @override
-  String get hemsStrategyGridReliance =>
-      'Affidabilità rete (resilienza / off-grid)';
-
-  @override
-  String get hemsStrategyHybrid => 'Ibrida (bilanciata — consigliata)';
-
-  @override
-  String get moneySavedMonth => 'Risparmiato questo mese';
-
-  @override
-  String get paymentThisMonth => 'Da pagare questo mese';
-
-  @override
-  String get currencyUah => '€';
-
-  @override
-  String get energyTariffDayLabel => 'Tariffa diurna';
-
-  @override
-  String get energyTariffNightLabel => 'Tariffa notturna';
-
-  @override
-  String get energyTariffUnit => '€/kWh';
-
-  @override
-  String get nightEnergyShareLabel => 'Quota energia notturna';
-
-  @override
-  String get nightEnergyShareUnit => '%';
-
-  @override
-  String get autoEstimateNightShare => 'Stima automatica quota notturna';
-
-  @override
-  String get batteryRoundTripEfficiencyLabel =>
-      'Efficienza round-trip batteria';
-
-  @override
-  String get batteryRoundTripEfficiencyHint =>
-      'Usata per ridurre il risparmio dall\'energia spostata tramite batteria. Imposta 100% per disattivare la correzione delle perdite.';
-
-  @override
-  String get nightShareFallbackHint =>
-      'Usata solo come ripiego quando l\'economia oraria da telemetria non è disponibile.';
-
-  @override
-  String economicsMethodTelemetry(String efficiency) {
-    return 'Telemetria oraria • Efficienza batteria $efficiency%';
-  }
-
-  @override
-  String economicsMethodEstimated(String share) {
-    return 'Stima di ripiego • Quota notturna $share%';
-  }
-
-  @override
-  String get calculationSourceLabel => 'Fonte del calcolo';
-
-  @override
-  String get calculationAccuracyLabel => 'Precisione';
-
-  @override
-  String get calculationSourceTelemetry => 'Telemetria oraria';
-
-  @override
-  String get calculationSourceFallback => 'Stima di ripiego';
-
-  @override
-  String get calculationAccuracyHigh => 'Alta';
-
-  @override
-  String get calculationAccuracyEstimated => 'Stimata';
-
-  @override
-  String effectiveTariffFormula(String day, String night, String share) {
-    return 'Formula: $day*(1-$share%) + $night*$share%';
-  }
-
-  @override
-  String tooltipMoneySavedMonthTelemetry(String efficiency) {
-    return 'Calcolato dalla telemetria con tariffa oraria giorno/notte. L\'energia spostata tramite batteria è corretta con efficienza round-trip del $efficiency%.';
-  }
-
-  @override
-  String tooltipMoneySavedMonthEstimated(String share, String efficiency) {
-    return 'Stimato dal solare autoconsumato con quota notturna di ripiego $share% ed efficienza batteria $efficiency%.';
-  }
-
-  @override
-  String tooltipPaymentThisMonthTelemetry(String dayStart, String nightStart) {
-    return 'Calcolato dalla telemetria con fasce tariffarie orarie: giorno dalle $dayStart:00, notte dalle $nightStart:00.';
-  }
-
-  @override
-  String tooltipPaymentThisMonthEstimated(String share) {
-    return 'Bolletta mensile stimata con quota notturna di ripiego $share% per la ripartizione giorno/notte.';
-  }
-
-  @override
-  String tooltipEffectiveTariffTelemetry(String dayStart, String nightStart) {
-    return 'Solo tariffa media di riferimento. Pagamento e risparmio reali sopra sono calcolati ora per ora dalla telemetria con giorno dalle $dayStart:00 e notte dalle $nightStart:00.';
-  }
-
-  @override
-  String get projectedSavedMonth => 'Risparmio previsto a fine mese';
-
-  @override
-  String get projectedPaymentMonth => 'Pagamento previsto a fine mese';
-
-  @override
-  String get tooltipProjectedSavedMonth =>
-      'Previsione basata sull\'andamento del mese dell\'energia solare autoconsumata';
-
-  @override
-  String get tooltipProjectedPaymentMonth =>
-      'Previsione basata sull\'andamento del mese dell\'energia prelevata dalla rete';
-
-  @override
-  String get monthlyEnergyBreakdown => 'Ripartizione energetica mensile';
-
-  @override
-  String get monthLoadEnergy => 'Consumo questo mese';
-
-  @override
-  String get monthGridImport => 'Prelievo dalla rete';
-
-  @override
-  String get monthSelfConsumed => 'Solare autoconsumato';
-
-  @override
-  String get monthGridCost => 'Costo rete questo mese';
-
-  @override
-  String get monthSavedCost => 'Risparmio questo mese';
-
-  @override
-  String get monthEffectiveTariff => 'Tariffa effettiva';
-
-  @override
-  String get tooltipMonthProgress => 'Avanzamento del mese corrente';
-
-  @override
-  String get plannedOutageTitle => 'Avviso blackout programmato';
-
-  @override
-  String get plannedOutageEnabledSubtitle =>
-      'Precarica automatica prima del blackout';
-
-  @override
-  String get plannedOutageDisabledSubtitle =>
-      'Nessun blackout programmato manualmente';
-
-  @override
-  String get plannedOutageStartLabel => 'Inizio blackout';
-
-  @override
-  String get plannedOutageEndLabel => 'Fine blackout';
 
   @override
   String get notificationsTitle => 'Notifiche';
@@ -1007,21 +670,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationsClear => 'Cancella tutto';
-
-  @override
-  String get notifGridOutageTitle => 'Blackout rete elettrica';
-
-  @override
-  String get notifGridOutageBody =>
-      'Tensione di rete assente — funzionamento da solare/batteria';
-
-  @override
-  String get notifGridRestoredTitle => 'Rete elettrica ripristinata';
-
-  @override
-  String notifGridRestoredBody(String voltage) {
-    return 'Tensione di rete tornata normale ($voltage V)';
-  }
 
   @override
   String get notifLowBatteryTitle => 'Batteria scarica';
@@ -1040,51 +688,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get notifModeChangedTitle => 'Modalità HEMS cambiata';
-
-  @override
-  String notifModeChangedBody(String mode) {
-    return 'Modalità attiva: $mode';
-  }
-
-  @override
-  String get notifGridInstabilityTitle => 'Rete instabile';
-
-  @override
-  String get notifGridInstabilityBody =>
-      'Rilevati frequenti cambi di stato della rete';
-
-  @override
-  String get notifAutoStormTitle => 'Modalità Tempesta automatica attivata';
-
-  @override
-  String get notifAutoStormBody =>
-      'Blackout rilevato — passato alla modalità Tempesta per proteggere la batteria';
-
-  @override
-  String get notifForecastStormTitle => 'Modalità Tempesta — Allerta meteo';
-
-  @override
-  String notifForecastStormBody(String reason) {
-    return 'Maltempo in arrivo: $reason — passato alla modalità Tempesta';
-  }
-
-  @override
-  String get notifForecastStormRestoredTitle =>
-      'Modalità adattiva ripristinata';
-
-  @override
-  String get notifForecastStormRestoredBody =>
-      'Rischio meteo cessato — ripristinata la modalità HEMS normale';
-
-  @override
-  String get notifAutoAdaptiveTitle => 'Modalità adattiva ripristinata';
-
-  @override
-  String get notifAutoAdaptiveBody =>
-      'La rete è tornata — ripristinata automaticamente la modalità adattiva';
-
-  @override
   String get notifAnomalyTitle => 'Consumo elevato rilevato';
 
   @override
@@ -1101,149 +704,722 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get eventHistoryTitle => 'Cronologia eventi';
-
-  @override
-  String get eventHistoryEmpty => 'Nessun evento registrato';
-
-  @override
-  String get eventHistoryClear => 'Cancella cronologia';
-
-  @override
-  String get eventHistoryShowAll => 'Mostra tutto';
-
-  @override
-  String get exportCsv => 'Esporta CSV';
-
-  @override
-  String exportedTo(String path) {
-    return 'Salvato in:\n$path';
-  }
-
-  @override
-  String get exportFailed => 'Esportazione non riuscita';
-
-  @override
-  String get currentCostPerHour => 'Costo attuale';
-
-  @override
-  String get uahPerHour => '€/h';
-
-  @override
-  String get batteryCycles => 'Cicli';
-
-  @override
-  String get batteryHealth => 'Salute batteria';
-
-  @override
-  String battSohPercent(String soh) {
-    return 'SOH $soh%';
-  }
-
-  @override
-  String get autoStormByForecastTitle =>
-      'Modalità Tempesta automatica da previsioni meteo';
-
-  @override
-  String get autoStormByForecastEnabledSubtitle =>
-      'Passa alla modalità Tempesta quando è previsto maltempo (prossime 12 h)';
-
-  @override
-  String get autoStormByForecastDisabledSubtitle =>
-      'Modalità Tempesta da previsioni disattivata';
-
-  @override
-  String get socHistoryTitle => 'SOC batteria — ultime 24 h';
-
-  @override
-  String get socHistorySubtitle => 'Andamento livello di carica';
-
-  @override
   String get socHistoryNoData =>
       'Dati ancora insufficienti.\nI dati vengono raccolti ogni 5 minuti.';
 
   @override
-  String get socHistoryReserveLabel => 'Riserva';
+  String get acInput => 'Ingresso AC';
 
   @override
-  String get socHistoryChargingLabel => 'In carica';
+  String get mainSource => 'Sorgente principale';
 
   @override
-  String get socHistoryDischargingLabel => 'In scarica';
+  String get chartFullscreen => 'Schermo intero';
 
   @override
-  String get socHistoryIdleLabel => 'Inattiva';
+  String get chartRotate => 'Ruota';
 
   @override
-  String get scheduleRulesTitle => 'Regole programmate';
-
-  @override
-  String get scheduleRulesSubtitle =>
-      'Forza una modalità HEMS in una fascia oraria ricorrente';
-
-  @override
-  String get scheduleRulesEmpty =>
-      'Nessuna regola programmata.\nTocca + per aggiungere la prima.';
-
-  @override
-  String get scheduleRuleAdd => 'Aggiungi regola';
-
-  @override
-  String get scheduleRuleEdit => 'Modifica regola';
-
-  @override
-  String get scheduleRuleDelete => 'Elimina regola';
-
-  @override
-  String scheduleRuleDeleteConfirm(String name) {
-    return 'Eliminare la regola \"$name\"?';
+  String forecastBasis(String kwp) {
+    return 'Stima per $kwp kWp di pannelli dalla radiazione solare Open-Meteo';
   }
 
   @override
-  String get scheduleRuleName => 'Nome regola';
+  String get applySafeCurrent => 'Applica corrente sicura';
 
   @override
-  String get scheduleRuleNameHint => 'Es. Solare mattutino, Carica weekend…';
-
-  @override
-  String get scheduleRuleDays => 'Giorni attivi';
-
-  @override
-  String get scheduleRuleStartTime => 'Ora di inizio';
-
-  @override
-  String get scheduleRuleEndTime => 'Ora di fine';
-
-  @override
-  String get scheduleRuleMode => 'Modalità HEMS forzata';
-
-  @override
-  String get scheduleRuleModeAdaptive => 'Adattiva (Auto)';
-
-  @override
-  String get scheduleRuleModeArbitrage => 'Arbitraggio notturno';
-
-  @override
-  String get scheduleRuleModeStorm => 'Tempesta / Riserva';
-
-  @override
-  String get scheduleRuleActive => 'Attiva ora';
-
-  @override
-  String get scheduleRuleNameEmpty => 'Inserisci un nome';
-
-  @override
-  String get scheduleRuleNoDays => 'Seleziona almeno un giorno';
-
-  @override
-  String get scheduleRulePriority => 'Priorità';
-
-  @override
-  String get scheduleRulePriorityHint =>
-      'In caso di sovrapposizione vince la priorità più alta';
-
-  @override
-  String scheduleRuleConflict(int count) {
-    return '$count regole sovrapposte ora — uso la priorità più alta';
+  String safeCurrentApplied(String target, String read) {
+    return 'Corrente sicura applicata: $target A (letta: $read)';
   }
+
+  @override
+  String safeCurrentFailed(String target, String read) {
+    return 'Corrente sicura non confermata. Obiettivo $target A, letta: $read';
+  }
+
+  @override
+  String get invSetOutputPriority => 'Priorità sorgente di uscita';
+
+  @override
+  String get invSetOutputPriorityDesc =>
+      'Quale sorgente alimenta i carichi (programma 01). USB: prima l\'ingresso AC; solare e batteria solo se manca l\'ingresso AC. SUB: il solare carica prima la batteria, poi alimenta i carichi; l\'ingresso AC copre il resto. SBU: prima il solare, poi la batteria; l\'ingresso AC solo quando la batteria scende alla soglia di ritorno su AC (programma 12/43). Off-grid: usa SBU.';
+
+  @override
+  String get invSetChargerPriority => 'Priorità sorgente di carica';
+
+  @override
+  String get invSetChargerPriorityDesc =>
+      'Quale sorgente carica la batteria (programma 16). CSO: prima il solare, l\'ingresso AC solo quando manca il sole. SNU: solare e ingresso AC insieme. OSO: solo solare, anche con ingresso AC presente. Senza generatore sull\'ingresso AC carica solo il solare.';
+
+  @override
+  String get invSetMaxChargeCurrent => 'Corrente di carica massima';
+
+  @override
+  String get invSetMaxChargeCurrentDesc =>
+      'Corrente totale di carica della batteria, solare + ingresso AC (programma 02). Non può essere inferiore alla corrente di carica da AC (programma 11). Rispetta il limite del produttore della batteria.';
+
+  @override
+  String get invSetAcChargeCurrent => 'Corrente massima di carica da AC';
+
+  @override
+  String get invSetAcChargeCurrentDesc =>
+      'Corrente massima per caricare la batteria dall\'ingresso AC, rete o generatore (programma 11). Tienila abbastanza bassa per il generatore e per l\'interruttore d\'ingresso.';
+
+  @override
+  String get invSetAcInputRange => 'Intervallo tensione ingresso AC';
+
+  @override
+  String get invSetAcInputRangeDesc =>
+      'Tensione d\'ingresso AC accettata (programma 03). APL (elettrodomestici): 90-280 V, intervallo ampio. UPS: 170-280 V, intervallo stretto per carichi sensibili. L\'intervallo ampio tollera meglio un generatore con tensione instabile.';
+
+  @override
+  String get invSetBatteryType => 'Tipo di batteria';
+
+  @override
+  String get invSetBatteryTypeDesc =>
+      'Chimica della batteria; determina le tensioni di carica (programma 05). AGM e Flooded: profili per piombo. Definito dall\'utente: imposti tu tensione di bulk, float e stacco (programmi 26, 27, 29). LIB/LiFe: litio.';
+
+  @override
+  String get invSetOverloadRestart => 'Riavvio automatico dopo sovraccarico';
+
+  @override
+  String get invSetOverloadRestartDesc =>
+      'Se attivo, l\'uscita si riaccende da sola dopo uno spegnimento per sovraccarico (programma 06).';
+
+  @override
+  String get invSetOverTempRestart =>
+      'Riavvio automatico dopo surriscaldamento';
+
+  @override
+  String get invSetOverTempRestartDesc =>
+      'Se attivo, l\'uscita si riaccende da sola dopo uno spegnimento per temperatura eccessiva (programma 07).';
+
+  @override
+  String get invSetOutputVoltage => 'Tensione di uscita';
+
+  @override
+  String get invSetOutputVoltageDesc =>
+      'Tensione AC fornita ai carichi (programma 08). In Italia: 230 V.';
+
+  @override
+  String get invSetOutputFrequency => 'Frequenza di uscita';
+
+  @override
+  String get invSetOutputFrequencyDesc =>
+      'Frequenza AC fornita ai carichi (programma 09). In Europa: 50 Hz.';
+
+  @override
+  String get invSetOverloadBypass => 'Bypass in sovraccarico';
+
+  @override
+  String get invSetOverloadBypassDesc =>
+      'Se attivo, in caso di sovraccarico in modalità batteria l\'inverter passa i carichi sull\'ingresso AC (programma 23). Serve solo con un generatore collegato.';
+
+  @override
+  String get invSetBuzzer => 'Allarme acustico (buzzer)';
+
+  @override
+  String get invSetBuzzerDesc =>
+      'Attiva o disattiva il cicalino dell\'inverter per avvisi e guasti (programma 18).';
+
+  @override
+  String get invSetSourceLossBeep => 'Bip alla perdita della sorgente primaria';
+
+  @override
+  String get invSetSourceLossBeepDesc =>
+      'Se attivo, l\'inverter emette un bip quando si interrompe la sorgente primaria scelta nel programma 01 (programma 22).';
+
+  @override
+  String get invSetReturnToDefaultScreen => 'Ritorno alla schermata principale';
+
+  @override
+  String get invSetReturnToDefaultScreenDesc =>
+      'Se attivo, il display torna alla schermata principale circa 1 minuto dopo l\'ultimo tasto premuto; altrimenti resta sull\'ultima schermata (programma 19).';
+
+  @override
+  String get invSetBacklight => 'Retroilluminazione display';
+
+  @override
+  String get invSetBacklightDesc =>
+      'Tiene sempre accesa la retroilluminazione del display, oppure la lascia spegnere quando è inattivo (programma 20).';
+
+  @override
+  String get invSetRecordFaults => 'Registra codici di guasto';
+
+  @override
+  String get invSetRecordFaultsDesc =>
+      'Se attivo, l\'inverter salva i codici di guasto nella sua memoria (programma 25).';
+
+  @override
+  String get invSetEqualization => 'Equalizzazione batteria';
+
+  @override
+  String get invSetEqualizationDesc =>
+      'Sovraccarica periodica controllata che bilancia le celle delle batterie al piombo (programma 33). Solo per batterie Flooded o definite dall\'utente; tienila spenta con il litio.';
+
+  @override
+  String get invSetEqualizationNow => 'Avvia equalizzazione ora';
+
+  @override
+  String get invSetEqualizationNowDesc =>
+      'Avvia subito un ciclo di equalizzazione (programma 39). Funziona solo se l\'equalizzazione (programma 33) è attiva.';
+
+  @override
+  String get invSetBatteryPowerLimit => 'Limitazione potenza batteria';
+
+  @override
+  String get invSetBatteryPowerLimitDesc =>
+      'Limita la potenza prelevata dalla batteria. Non descritta nel manuale Easun: verifica la documentazione dell\'inverter prima di modificarla.';
+
+  @override
+  String get invSetSmartLoadCutOff =>
+      'Stacco carico smart su tensione batteria';
+
+  @override
+  String get invSetSmartLoadCutOffDesc =>
+      'Stacca l\'uscita per il carico smart (secondario) in base alla tensione della batteria. Non descritta nel manuale Easun: verifica la documentazione dell\'inverter prima di modificarla.';
+
+  @override
+  String get invSetRgbLight => 'Luce RGB';
+
+  @override
+  String get invSetRgbLightDesc =>
+      'Accende o spegne la luce di stato RGB dell\'inverter.';
+
+  @override
+  String get rdDualOutputVoltageSwitch => 'Uscita doppia';
+
+  @override
+  String get rdDualOutputVoltageSwitchDesc =>
+      'Seconda uscita AC per carichi non essenziali; si spegne quando la batteria scende alla tensione di spegnimento.';
+
+  @override
+  String get rdAcInputFrequency => 'Frequenza ingresso AC';
+
+  @override
+  String get rdAcInputFrequencyDesc =>
+      'Frequenza sull\'ingresso AC (rete o generatore). 0 Hz significa che non è collegato nulla.';
+
+  @override
+  String get rdLedPatternLight1 => 'Luci LED';
+
+  @override
+  String get rdLedPatternLight1Desc =>
+      'Stato delle luci LED di stato dell\'inverter.';
+
+  @override
+  String get rdBatteryNumber => 'Tensione sistema batteria';
+
+  @override
+  String get rdBatteryNumberDesc =>
+      'Classe di tensione del banco batterie per cui è costruito l\'inverter.';
+
+  @override
+  String get rdAcInputVoltage => 'Tensione ingresso AC';
+
+  @override
+  String get rdAcInputVoltageDesc =>
+      'Tensione sull\'ingresso AC. 0 V significa nessuna rete o generatore collegato.';
+
+  @override
+  String get rdWorkingStates => 'Stato di funzionamento';
+
+  @override
+  String get rdWorkingStatesDesc =>
+      'Modalità attuale: Inverter (carichi da batteria/solare), Linea (carichi dall\'ingresso AC), Standby o Guasto.';
+
+  @override
+  String get rdAcOutputActivePower => 'Potenza attiva in uscita';
+
+  @override
+  String get rdAcOutputActivePowerDesc =>
+      'Potenza reale assorbita ora dai carichi.';
+
+  @override
+  String get rdBatteryEqualizationMode => 'Equalizzazione batteria';
+
+  @override
+  String get rdBatteryEqualizationModeDesc =>
+      'Se l\'equalizzazione periodica è attiva (programma 33). Solo batterie al piombo.';
+
+  @override
+  String get rdGridConnectedSwitch1 => 'Immissione in rete';
+
+  @override
+  String get rdGridConnectedSwitch1Desc =>
+      'Se l\'inverter può immettere energia in rete. Off-grid: tienila spenta.';
+
+  @override
+  String get rdGenerationPower => 'Potenza generata';
+
+  @override
+  String get rdGenerationPowerDesc =>
+      'Potenza prodotta ora dai pannelli solari.';
+
+  @override
+  String get rdRatingOutputCurrent => 'Corrente nominale di uscita';
+
+  @override
+  String get rdRatingOutputCurrentDesc =>
+      'Corrente AC di uscita continua massima dell\'inverter (dato di targa).';
+
+  @override
+  String get rdLowBatteryCutOffVoltage => 'Tensione di stacco batteria scarica';
+
+  @override
+  String get rdLowBatteryCutOffVoltageDesc =>
+      'Sotto questa tensione l\'inverter spegne l\'uscita per proteggere la batteria (programma 29).';
+
+  @override
+  String get rdBatteryCapacity => 'Carica batteria (SOC)';
+
+  @override
+  String get rdBatteryCapacityDesc =>
+      'Stato di carica riportato dall\'inverter.';
+
+  @override
+  String get rdStartBalancing => 'Avvia equalizzazione ora';
+
+  @override
+  String get rdStartBalancingDesc =>
+      'Se è richiesto un ciclo di equalizzazione immediato (programma 39).';
+
+  @override
+  String get rdBatteryDischargeCurrent => 'Corrente di scarica batteria';
+
+  @override
+  String get rdBatteryDischargeCurrentDesc =>
+      'Corrente che esce ora dalla batteria.';
+
+  @override
+  String get rdGridConnectedCurrent => 'Corrente di immissione in rete';
+
+  @override
+  String get rdGridConnectedCurrentDesc =>
+      'Corrente massima immessa in rete quando l\'immissione è attiva. Non usata off-grid.';
+
+  @override
+  String get rdRatedBatteryVoltage => 'Tensione nominale batteria';
+
+  @override
+  String get rdRatedBatteryVoltageDesc =>
+      'Tensione nominale del banco batterie.';
+
+  @override
+  String get rdOutputApparentPower => 'Potenza apparente in uscita';
+
+  @override
+  String get rdOutputApparentPowerDesc =>
+      'Potenza apparente (VA) assorbita dai carichi, compresa la parte reattiva: è quella che l\'inverter deve erogare.';
+
+  @override
+  String get rdDualOutputTurnOffVoltage =>
+      'Tensione di spegnimento uscita doppia';
+
+  @override
+  String get rdDualOutputTurnOffVoltageDesc =>
+      'Tensione della batteria alla quale si spegne la seconda uscita.';
+
+  @override
+  String get rdMainCPUVersion1 => 'Firmware CPU principale';
+
+  @override
+  String get rdMainCPUVersion1Desc =>
+      'Versione firmware del processore principale dell\'inverter.';
+
+  @override
+  String get rdChargerSourcePriority => 'Priorità sorgente di carica';
+
+  @override
+  String get rdChargerSourcePriorityDesc =>
+      'Priorità di carica attuale (programma 16). CSO: prima il solare. SNU: solare + ingresso AC. OSO: solo solare.';
+
+  @override
+  String get rdComebackUtilityModeVolSBUPriorityStatus =>
+      'Tensione di ritorno su AC (SBU)';
+
+  @override
+  String get rdComebackUtilityModeVolSBUPriorityStatusDesc =>
+      'Con SBU o solare prima, sotto questa tensione della batteria i carichi passano sull\'ingresso AC (programma 12). Senza generatore non ha effetto.';
+
+  @override
+  String get rdNominalAcVoltage => 'Tensione AC nominale';
+
+  @override
+  String get rdNominalAcVoltageDesc => 'Tensione AC nominale dell\'inverter.';
+
+  @override
+  String get rdNominalAcCurrent => 'Corrente AC nominale';
+
+  @override
+  String get rdNominalAcCurrentDesc => 'Corrente AC nominale dell\'inverter.';
+
+  @override
+  String get rdOutputRelayStatus => 'Relè di uscita';
+
+  @override
+  String get rdOutputRelayStatusDesc =>
+      'ON significa che l\'uscita AC è alimentata.';
+
+  @override
+  String get rdPhotovoltaicAccessFlag => 'Collegamento fotovoltaico';
+
+  @override
+  String get rdPhotovoltaicAccessFlagDesc =>
+      'Se l\'inverter rileva i pannelli solari.';
+
+  @override
+  String get rdPvStatuss => 'Stato fotovoltaico';
+
+  @override
+  String get rdPvStatussDesc =>
+      'Stato di funzionamento dell\'ingresso solare (regolatore MPPT).';
+
+  @override
+  String get rdRatedOutputFrequency => 'Frequenza nominale di uscita';
+
+  @override
+  String get rdRatedOutputFrequencyDesc =>
+      'Frequenza di uscita impostata sull\'inverter (programma 09).';
+
+  @override
+  String get rdRatedOutputVoltage => 'Tensione nominale di uscita';
+
+  @override
+  String get rdRatedOutputVoltageDesc =>
+      'Tensione di uscita impostata sull\'inverter (programma 08).';
+
+  @override
+  String get rdGridState => 'Stato ingresso AC';
+
+  @override
+  String get rdGridStateDesc =>
+      'Se l\'ingresso AC (rete o generatore) è collegato.';
+
+  @override
+  String get rdBatteryEqualizationInterval => 'Intervallo di equalizzazione';
+
+  @override
+  String get rdBatteryEqualizationIntervalDesc =>
+      'Giorni tra due cicli di equalizzazione (programma 37).';
+
+  @override
+  String get rdLoadPercentage => 'Percentuale di carico';
+
+  @override
+  String get rdLoadPercentageDesc =>
+      'Carico in uscita in percentuale della potenza nominale dell\'inverter.';
+
+  @override
+  String get rdComebackBatteryModeVolSBUPriorityStatus =>
+      'Tensione di ritorno a batteria (SBU)';
+
+  @override
+  String get rdComebackBatteryModeVolSBUPriorityStatusDesc =>
+      'Con SBU o solare prima, sopra questa tensione della batteria i carichi tornano sulla batteria (programma 13).';
+
+  @override
+  String get rdPvInputPower => 'Potenza ingresso fotovoltaico';
+
+  @override
+  String get rdPvInputPowerDesc =>
+      'Potenza che entra dai pannelli solari nel regolatore MPPT.';
+
+  @override
+  String get rdMaxTotalChargeCurrent1 => 'Corrente di carica totale massima';
+
+  @override
+  String get rdMaxTotalChargeCurrent1Desc =>
+      'Limite di carica totale, solare + ingresso AC (programma 02).';
+
+  @override
+  String get rdBatState => 'Stato batteria';
+
+  @override
+  String get rdBatStateDesc =>
+      'Se la batteria è in carica, in scarica o ferma.';
+
+  @override
+  String get rdOutputSourcePriority => 'Priorità sorgente di uscita';
+
+  @override
+  String get rdOutputSourcePriorityDesc =>
+      'Priorità di uscita attuale (programma 01). USB: prima l\'ingresso AC. SUB: il solare carica prima, l\'AC copre il resto. SBU: solare, poi batteria, poi AC.';
+
+  @override
+  String get rdFloatChargingVoltage => 'Tensione di mantenimento (float)';
+
+  @override
+  String get rdFloatChargingVoltageDesc =>
+      'Tensione mantenuta quando la batteria è piena (programma 27).';
+
+  @override
+  String get rdBatteryChargingCurrent => 'Corrente di carica batteria';
+
+  @override
+  String get rdBatteryChargingCurrentDesc =>
+      'Corrente che entra ora nella batteria.';
+
+  @override
+  String get rdAcOutputRatingApparentPower => 'Potenza apparente nominale';
+
+  @override
+  String get rdAcOutputRatingApparentPowerDesc =>
+      'Potenza nominale di uscita dell\'inverter in VA.';
+
+  @override
+  String get rdLoadStatus => 'Stato del carico';
+
+  @override
+  String get rdLoadStatusDesc =>
+      'Se il carico in uscita è normale o in sovraccarico.';
+
+  @override
+  String get rdBatteryEqualizationVoltage => 'Tensione di equalizzazione';
+
+  @override
+  String get rdBatteryEqualizationVoltageDesc =>
+      'Tensione di carica usata durante l\'equalizzazione (programma 34).';
+
+  @override
+  String get rdBatteryVoltage => 'Tensione batteria';
+
+  @override
+  String get rdBatteryVoltageDesc => 'Tensione della batteria misurata ora.';
+
+  @override
+  String get rdOutputVoltage => 'Tensione di uscita';
+
+  @override
+  String get rdOutputVoltageDesc => 'Tensione AC in uscita adesso.';
+
+  @override
+  String get rdBulkChargingVoltage => 'Tensione di carica (bulk)';
+
+  @override
+  String get rdBulkChargingVoltageDesc =>
+      'Tensione obiettivo della carica a tensione costante (programma 26).';
+
+  @override
+  String get rdBatteryEqualizationTimeout => 'Timeout equalizzazione';
+
+  @override
+  String get rdBatteryEqualizationTimeoutDesc =>
+      'Tempo massimo aggiuntivo concesso a un ciclo di equalizzazione (programma 36).';
+
+  @override
+  String get rdFeedInPower => 'Potenza immessa in rete';
+
+  @override
+  String get rdFeedInPowerDesc =>
+      'Potenza immessa in rete. Off-grid resta a 0.';
+
+  @override
+  String get rdNtcMaximumTemperature => 'Temperatura interna massima';
+
+  @override
+  String get rdNtcMaximumTemperatureDesc =>
+      'Temperatura più alta misurata dai sensori interni dell\'inverter (NTC).';
+
+  @override
+  String get rdMainsRelayStatus => 'Relè ingresso AC';
+
+  @override
+  String get rdMainsRelayStatusDesc =>
+      'ON significa che carichi o caricatore sono collegati all\'ingresso AC.';
+
+  @override
+  String get rdBatteryRatingVoltage => 'Tensione nominale';
+
+  @override
+  String get rdBatteryRatingVoltageDesc =>
+      'Tensione nominale riportata dall\'inverter.';
+
+  @override
+  String get rdRatedActivePower => 'Potenza attiva nominale';
+
+  @override
+  String get rdRatedActivePowerDesc =>
+      'Potenza di uscita continua nominale dell\'inverter in W.';
+
+  @override
+  String get rdPvInputVoltage => 'Tensione ingresso fotovoltaico';
+
+  @override
+  String get rdPvInputVoltageDesc =>
+      'Tensione della stringa solare; deve restare nell\'intervallo di tensione dell\'MPPT.';
+
+  @override
+  String get rdMainsInputRange => 'Intervallo ingresso AC';
+
+  @override
+  String get rdMainsInputRangeDesc =>
+      'Intervallo di tensione AC accettato (programma 03). APL: 90-280 V. UPS: 170-280 V.';
+
+  @override
+  String get rdOutputFrequency => 'Frequenza di uscita';
+
+  @override
+  String get rdOutputFrequencyDesc => 'Frequenza AC misurata in uscita.';
+
+  @override
+  String get rdBatteryEqualizationTime => 'Durata equalizzazione';
+
+  @override
+  String get rdBatteryEqualizationTimeDesc =>
+      'Durata di un ciclo di equalizzazione (programma 35).';
+
+  @override
+  String get rdBatteryType => 'Tipo di batteria';
+
+  @override
+  String get rdBatteryTypeDesc =>
+      'Tipo di batteria impostato sull\'inverter (programma 05).';
+
+  @override
+  String get rdMaxUtilityChargeCurrent1 => 'Corrente di carica da AC';
+
+  @override
+  String get rdMaxUtilityChargeCurrent1Desc =>
+      'Corrente massima di carica dall\'ingresso AC (programma 11).';
+
+  @override
+  String get rdValOn => 'Acceso';
+
+  @override
+  String get rdValOff => 'Spento';
+
+  @override
+  String get rdValEnabled => 'Attivo';
+
+  @override
+  String get rdValDisabled => 'Disattivo';
+
+  @override
+  String get rdValCharging => 'In carica';
+
+  @override
+  String get rdValDischarging => 'In scarica';
+
+  @override
+  String get rdValInvertMode => 'Modalità inverter';
+
+  @override
+  String get rdValLineMode => 'Modalità linea (da AC)';
+
+  @override
+  String get rdValStandbyMode => 'Standby';
+
+  @override
+  String get rdValFaultMode => 'Guasto';
+
+  @override
+  String get rdValAcNotConnected => 'Ingresso AC non collegato';
+
+  @override
+  String get rdValAcConnected => 'Ingresso AC collegato';
+
+  @override
+  String get rdValNormal => 'Normale';
+
+  @override
+  String get rdValPvWorking => 'Collegato e in funzione';
+
+  @override
+  String get rdValPvConnected => 'Pannelli collegati';
+
+  @override
+  String get invSetBackToAcVoltage => 'Tensione di ritorno su AC (SBU)';
+
+  @override
+  String get invSetBackToAcVoltageDesc =>
+      'Con SBU o solare prima nel programma 01, sotto questa tensione della batteria i carichi passano sull\'ingresso AC (programma 12). Deve essere più bassa della tensione di ritorno a batteria. Senza generatore non ha effetto.';
+
+  @override
+  String get invSetBackToBatteryVoltage =>
+      'Tensione di ritorno a batteria (SBU)';
+
+  @override
+  String get invSetBackToBatteryVoltageDesc =>
+      'Con SBU o solare prima, quando la batteria risale sopra questa tensione i carichi tornano sulla batteria (programma 13). Deve essere più alta della tensione di ritorno su AC.';
+
+  @override
+  String get invSetBulkVoltage => 'Tensione di carica bulk (C.V.)';
+
+  @override
+  String get invSetBulkVoltageDesc =>
+      'Tensione della fase di carica a tensione costante (programma 26). Modificabile solo con batteria definita dall\'utente; deve essere almeno pari alla tensione float. Segui i valori del produttore della batteria.';
+
+  @override
+  String get invSetFloatVoltage => 'Tensione di mantenimento (float)';
+
+  @override
+  String get invSetFloatVoltageDesc =>
+      'Tensione mantenuta quando la batteria è piena (programma 27). Modificabile solo con batteria definita dall\'utente; non può superare la tensione bulk.';
+
+  @override
+  String get invSetLowCutOffVoltage => 'Tensione di stacco batteria scarica';
+
+  @override
+  String get invSetLowCutOffVoltageDesc =>
+      'Sotto questa tensione della batteria l\'inverter spegne l\'uscita per proteggerla (programma 29). Deve essere più bassa della tensione di ritorno su AC.';
+
+  @override
+  String get invSetLowCutOffSoc => 'SOC di stacco batteria scarica';
+
+  @override
+  String get invSetLowCutOffSocDesc =>
+      'Con batteria al litio in comunicazione con l\'inverter: sotto questo stato di carica l\'uscita si spegne (programma 45, predefinito 20%, intervallo 3-30%).';
+
+  @override
+  String get invSetEqVoltage => 'Tensione di equalizzazione';
+
+  @override
+  String get invSetEqVoltageDesc =>
+      'Tensione di carica usata durante l\'equalizzazione (programma 34). Solo piombo.';
+
+  @override
+  String get invSetEqTime => 'Durata equalizzazione';
+
+  @override
+  String get invSetEqTimeDesc =>
+      'Per quanto tempo viene mantenuta la tensione di equalizzazione (programma 35, 0-900 min).';
+
+  @override
+  String get invSetEqTimeout => 'Timeout equalizzazione';
+
+  @override
+  String get invSetEqTimeoutDesc =>
+      'Tempo aggiuntivo concesso se la tensione di equalizzazione non viene raggiunta (programma 36, 0-900 min).';
+
+  @override
+  String get invSetEqInterval => 'Intervallo di equalizzazione';
+
+  @override
+  String get invSetEqIntervalDesc =>
+      'Giorni tra due cicli di equalizzazione (programma 37, 1-90 giorni).';
+
+  @override
+  String get invSetOutputDelay => 'Ritardo uscita';
+
+  @override
+  String get invSetOutputDelayDesc =>
+      'Ritardo prima che l\'uscita AC si accenda. Non descritto nel manuale Easun: verifica la documentazione dell\'inverter prima di modificarlo.';
+
+  @override
+  String get socDayChartTitle => 'Carica batteria (SOC) nella giornata';
+
+  @override
+  String get flowLosses => 'Perdite';
+
+  @override
+  String get flowLossesHint =>
+      'Potenza in ingresso (sole, ingresso AC, batteria) che non arriva ai carichi né alla batteria: consumo proprio dell\'inverter e perdite di conversione.';
+
+  @override
+  String get flowMismatch => 'Scarto misure';
+
+  @override
+  String get flowMismatchHint =>
+      'Esce più potenza di quella che le letture mostrano in ingresso: i valori sono stati letti in istanti leggermente diversi.';
 }

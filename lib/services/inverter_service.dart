@@ -9,7 +9,6 @@ import 'package:fl_chart/fl_chart.dart';
 import '../models/inverter_data.dart';
 import '../utils/chart_log.dart';
 import 'log_service.dart' as app_log;
-import 'tariff_forecast_service.dart';
 
 class InverterService {
   final String _appId = 'rBrTRfAPXz';
@@ -36,6 +35,7 @@ class InverterService {
   static const _minRequestIntervalMs = 1000; // 1 запит за секунду мінімум
 
   Map<String, dynamic>? _cachedFullConfigs;
+  Map<String, dynamic>? get cachedFullConfigs => _cachedFullConfigs;
   DateTime? _lastConfigFetchTime;
   DateTime? _configPollingBlockedUntil;
   DateTime? _lastConfigConnectionErrorLogAt;
@@ -52,11 +52,6 @@ class InverterService {
   bool _lastRealtimeOffline = false;
 
   bool get lastRealtimeOffline => _lastRealtimeOffline;
-
-  // Cached monthly economics summary to avoid frequent repeated API calls.
-  DateTime? _cachedMonthlySummaryAt;
-  String? _cachedMonthlySummaryKey;
-  ({double loadWh, double gridWh})? _cachedMonthlySummary;
 
   late final String _appSecret = _decryptAppSecret(_appId, _encryptedAppSecret);
 
@@ -494,6 +489,7 @@ class InverterService {
           'batteryDischargeCurrent',
           'batteryVoltage',
           'acInputVoltage',
+          'batteryCapacity', // SOC %
         ]
       };
 
@@ -577,406 +573,6 @@ class InverterService {
     app_log.LogService.log(
         '📉 chart.fetch empty result: range=$rangeLabel($range), date=$dateLabel');
     return {'pv': [], 'load': [], 'grid': [], 'battery': []};
-  }
-
-  Future<({double loadWh, double gridWh})?> getMonthlyEnergySummary(
-      DateTime targetDate) async {
-    if (currentStationId == null) return null;
-
-    final monthKey =
-        '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}';
-    final now = DateTime.now();
-    if (_cachedMonthlySummary != null &&
-        _cachedMonthlySummaryKey == monthKey &&
-        _cachedMonthlySummaryAt != null &&
-        now.difference(_cachedMonthlySummaryAt!) <
-            const Duration(minutes: 20)) {
-      return _cachedMonthlySummary;
-    }
-
-    final chart = await getChartData(2, targetDate);
-    var loadWh = _sumSpotsWh(chart['load'] ?? const []);
-    var gridWh = _sumSpotsWh(chart['grid'] ?? const []);
-
-    // CRITICAL FIX: Validate grid <= load relationship
-    // If grid > load, the fields are likely swapped from API
-    // In a real system: grid_import <= load (can't import more than consuming)
-    if (gridWh > loadWh && loadWh > 0 && gridWh > 0) {
-      app_log.LogService.log(
-          '⚠️ ENERGY DATA SWAP DETECTED: load($loadWh Wh) < grid($gridWh Wh), fields were swapped, correcting...');
-      final temp = gridWh;
-      gridWh = loadWh;
-      loadWh = temp;
-    }
-
-    // The monthly summary endpoint uses summaryCategoryKey=pvInverterElectricityQuantityClass
-    // which only returns PV generation data. If load/grid come back as zero,
-    // fall back to aggregating from telemetry history (5-day chunks).
-    if (loadWh <= 0 || gridWh <= 0) {
-      app_log.LogService.log(
-          '⚠️ monthly.summary: load/grid zeros from chart API (load=${loadWh.toStringAsFixed(0)}, grid=${gridWh.toStringAsFixed(0)}), falling back to telemetry aggregation');
-      final telemetry = await _aggregateMonthFromTelemetry(targetDate);
-      if (telemetry != null) {
-        if (loadWh <= 0) {
-          loadWh = telemetry.loadWh;
-          app_log.LogService.log(
-              '✅ Telemetry load: ${loadWh.toStringAsFixed(0)}Wh');
-        }
-        if (gridWh <= 0) {
-          gridWh = telemetry.gridWh;
-          app_log.LogService.log(
-              '✅ Telemetry grid: ${gridWh.toStringAsFixed(0)}Wh');
-        }
-        app_log.LogService.log(
-            '✅ monthly.summary telemetry fallback: load=${loadWh.toStringAsFixed(0)}Wh, grid=${gridWh.toStringAsFixed(0)}Wh');
-      }
-    }
-
-    final summary = (loadWh: loadWh, gridWh: gridWh);
-    _cachedMonthlySummary = summary;
-    _cachedMonthlySummaryKey = monthKey;
-    _cachedMonthlySummaryAt = now;
-    return summary;
-  }
-
-  /// Aggregates load and grid Wh for the whole month by fetching telemetry
-  /// in 5-day chunks (≤ 1440 points each @ 5-min cadence) — proven reliable.
-  Future<({double loadWh, double gridWh})?> _aggregateMonthFromTelemetry(
-      DateTime targetDate) async {
-    if (deviceSn == null) return null;
-
-    final firstDay = DateTime(targetDate.year, targetDate.month, 1);
-    // Do not go beyond today for current month.
-    final now = DateTime.now();
-    final lastDay =
-        (targetDate.year == now.year && targetDate.month == now.month)
-            ? now
-            : DateTime(targetDate.year, targetDate.month + 1, 0);
-
-    var totalLoadWh = 0.0;
-    var totalGridWh = 0.0;
-
-    // Split month into 5-day windows (max ~1440 points per window at 5-min cadence).
-    var chunkStart = firstDay;
-    while (!chunkStart.isAfter(lastDay)) {
-      final chunkEnd = chunkStart.add(const Duration(days: 5));
-      final to = chunkEnd.isAfter(lastDay) ? lastDay : chunkEnd;
-      final raw = await _fetchHistoryRaw(from: chunkStart, to: to, count: 1500);
-      if (raw != null) {
-        final energy = _extractEnergyTotalsFromHistoryPayload(raw);
-        totalLoadWh += energy['load'] ?? 0.0;
-        totalGridWh += energy['grid'] ?? 0.0;
-      }
-      chunkStart = chunkStart.add(const Duration(days: 5, seconds: 1));
-    }
-
-    // Validate grid <= load relationship even from telemetry
-    if (totalGridWh > totalLoadWh && totalLoadWh > 0 && totalGridWh > 0) {
-      app_log.LogService.log(
-          '⚠️ ENERGY DATA SWAP DETECTED IN TELEMETRY: load($totalLoadWh Wh) < grid($totalGridWh Wh), fields were swapped, correcting...');
-      final temp = totalGridWh;
-      totalGridWh = totalLoadWh;
-      totalLoadWh = temp;
-    }
-
-    app_log.LogService.log(
-        '📊 monthly.telemetry aggregation done: load=${totalLoadWh.toStringAsFixed(0)}Wh, grid=${totalGridWh.toStringAsFixed(0)}Wh');
-    return (loadWh: totalLoadWh, gridWh: totalGridWh);
-  }
-
-  Future<List<({int day, double loadWh, double gridWh})>> getMonthlyDailyEnergy(
-      DateTime targetDate) async {
-    if (currentStationId == null) return const [];
-
-    final chart = await getChartData(2, targetDate);
-    final loadSpots = chart['load'] ?? const <FlSpot>[];
-    final gridSpots = chart['grid'] ?? const <FlSpot>[];
-
-    final loadByDay = <int, double>{};
-    final gridByDay = <int, double>{};
-
-    for (final s in loadSpots) {
-      if (!s.x.isFinite || !s.y.isFinite) continue;
-      final day = s.x.round().clamp(1, 31);
-      loadByDay[day] = (loadByDay[day] ?? 0.0) + s.y;
-    }
-    for (final s in gridSpots) {
-      if (!s.x.isFinite || !s.y.isFinite) continue;
-      final day = s.x.round().clamp(1, 31);
-      gridByDay[day] = (gridByDay[day] ?? 0.0) + s.y;
-    }
-
-    // If load or grid per-day data is empty, fall back to telemetry aggregation.
-    final hasLoad = loadByDay.values.any((v) => v > 0);
-    final hasGrid = gridByDay.values.any((v) => v > 0);
-    if (!hasLoad || !hasGrid) {
-      app_log.LogService.log(
-          '⚠️ monthly.daily: load/grid zeros from chart API, falling back to telemetry per-day');
-      final perDay = await _aggregateMonthDailyFromTelemetry(targetDate);
-      if (perDay.isNotEmpty) return perDay;
-    }
-
-    final days = <int>{...loadByDay.keys, ...gridByDay.keys}.toList()..sort();
-    return days
-        .map((d) => (
-              day: d,
-              loadWh: loadByDay[d] ?? 0.0,
-              gridWh: gridByDay[d] ?? 0.0,
-            ))
-        .toList(growable: false);
-  }
-
-  Future<
-      ({
-        double loadWh,
-        double gridWh,
-        double selfConsumedWh,
-        double payableUah,
-        double savedUah,
-        List<({int day, double payableUah, double savedUah})> daily,
-      })?> getMonthlyTouEconomics({
-    required DateTime targetDate,
-    required double dayTariffUahPerKwh,
-    required double nightTariffUahPerKwh,
-    required int dayStartHour,
-    required int nightStartHour,
-    required double batteryRoundTripEfficiency,
-  }) async {
-    if (deviceSn == null) return null;
-
-    final efficiency = batteryRoundTripEfficiency.clamp(0.5, 1.0).toDouble();
-    final firstDay = DateTime(targetDate.year, targetDate.month, 1);
-    final now = DateTime.now();
-    final lastDay =
-        (targetDate.year == now.year && targetDate.month == now.month)
-            ? now
-            : DateTime(targetDate.year, targetDate.month + 1, 0);
-
-    var totalLoadWh = 0.0;
-    var totalGridWh = 0.0;
-    var totalSelfConsumedWh = 0.0;
-    var totalPayableUah = 0.0;
-    var totalSavedUah = 0.0;
-    var processedSamples = 0;
-
-    final payableByDay = <int, double>{};
-    final savedByDay = <int, double>{};
-
-    var chunkStart = firstDay;
-    while (!chunkStart.isAfter(lastDay)) {
-      final chunkEnd = chunkStart.add(const Duration(days: 5));
-      final to = chunkEnd.isAfter(lastDay) ? lastDay : chunkEnd;
-      final raw = await _fetchHistoryRaw(from: chunkStart, to: to, count: 1500);
-      if (raw != null) {
-        final payload = (raw['payload'] as Map<String, dynamic>?) ?? raw;
-        final timeSeries = payload['timeSeries'] as List<dynamic>? ?? [];
-        final fields = payload['fields'] as Map<String, dynamic>? ?? {};
-
-        List<dynamic> pick(List<String> keys) {
-          for (final key in keys) {
-            final value = fields[key];
-            if (value is List<dynamic> &&
-                value.any((element) => element != null)) {
-              return value;
-            }
-          }
-          return const [];
-        }
-
-        final genPower = pick(['generationPower']);
-        final loadPower = pick(['acOutputActivePower', 'loadPower']);
-        final batPower = pick([
-          'batteryPower',
-          'batteryActivePower',
-          'batteryChargePower',
-          'batteryDischargePower',
-        ]);
-        final gridPower =
-            pick(['acInputActivePower', 'gridPower', 'acInputPower']);
-        final batChargeCurrent = pick(['batteryChargingCurrent']);
-        final batDischargeCurrent = pick(['batteryDischargeCurrent']);
-        final batVoltage = pick(['batteryVoltage']);
-
-        DateTime? previousDt;
-
-        for (var i = 0; i < timeSeries.length; i++) {
-          final dt = DateTime.tryParse(timeSeries[i].toString())?.toLocal();
-          if (dt == null) continue;
-          if (dt.year != targetDate.year || dt.month != targetDate.month) {
-            previousDt = dt;
-            continue;
-          }
-
-          final minutesFromPrevious = previousDt == null
-              ? 5.0
-              : dt.difference(previousDt).inMinutes.toDouble();
-          final sampleMinutes = minutesFromPrevious <= 0
-              ? 5.0
-              : minutesFromPrevious > 30
-                  ? 5.0
-                  : minutesFromPrevious;
-          final sampleHours = sampleMinutes / 60.0;
-          previousDt = dt;
-
-          final pvW = (i < genPower.length && genPower[i] != null)
-              ? (genPower[i] as num).toDouble() * 1000.0
-              : 0.0;
-          final loadW = (i < loadPower.length && loadPower[i] != null)
-              ? (loadPower[i] as num).toDouble() * 1000.0
-              : 0.0;
-
-          var batteryW = 0.0;
-          if (i < batPower.length && batPower[i] != null) {
-            batteryW = (batPower[i] as num).toDouble() * 1000.0;
-          } else if (i < batVoltage.length && batVoltage[i] != null) {
-            final voltage = (batVoltage[i] as num).toDouble();
-            final chargeCurrent =
-                i < batChargeCurrent.length && batChargeCurrent[i] != null
-                    ? (batChargeCurrent[i] as num).toDouble()
-                    : 0.0;
-            final dischargeCurrent =
-                i < batDischargeCurrent.length && batDischargeCurrent[i] != null
-                    ? (batDischargeCurrent[i] as num).toDouble()
-                    : 0.0;
-            if (chargeCurrent > 0) {
-              batteryW = voltage * chargeCurrent;
-            } else if (dischargeCurrent > 0) {
-              batteryW = -(voltage * dischargeCurrent);
-            }
-          }
-
-          var gridW = 0.0;
-          if (i < gridPower.length && gridPower[i] != null) {
-            gridW = (gridPower[i] as num).toDouble() * 1000.0;
-          }
-
-          final totalDemand = loadW + (batteryW > 0 ? batteryW : 0.0);
-          final derivedGrid = totalDemand - pvW;
-          if (gridW <= 0 || (gridW > totalDemand && derivedGrid > 0)) {
-            gridW = derivedGrid > 0 ? derivedGrid : 0.0;
-          }
-
-          final sampleLoadWh = loadW * sampleHours;
-          final sampleGridWh = gridW * sampleHours;
-          totalLoadWh += sampleLoadWh;
-          totalGridWh += sampleGridWh;
-          processedSamples++;
-
-          final day = dt.day;
-          final isNight = TariffForecastService.isNightTariffHour(
-            dt.hour,
-            dayStartHour: dayStartHour,
-            nightStartHour: nightStartHour,
-          );
-          final tariff = isNight ? nightTariffUahPerKwh : dayTariffUahPerKwh;
-
-          final payable = (sampleGridWh / 1000.0) * tariff;
-          totalPayableUah += payable;
-          payableByDay[day] = (payableByDay[day] ?? 0.0) + payable;
-
-          final selfConsumedLoadW =
-              (loadW - gridW).clamp(0.0, double.infinity).toDouble();
-          final directSolarToLoadW = min(selfConsumedLoadW, pvW);
-          final batteryDischargeToLoadW = min(
-            max(0.0, selfConsumedLoadW - directSolarToLoadW),
-            max(0.0, -batteryW),
-          );
-          final remainingSelfConsumedW = max(
-            0.0,
-            selfConsumedLoadW - directSolarToLoadW - batteryDischargeToLoadW,
-          );
-          final adjustedSelfConsumedWh = (directSolarToLoadW +
-                  remainingSelfConsumedW +
-                  (batteryDischargeToLoadW * efficiency)) *
-              sampleHours;
-          totalSelfConsumedWh += adjustedSelfConsumedWh;
-          final saved = (adjustedSelfConsumedWh / 1000.0) * tariff;
-          totalSavedUah += saved;
-          savedByDay[day] = (savedByDay[day] ?? 0.0) + saved;
-        }
-      }
-
-      chunkStart = chunkStart.add(const Duration(days: 5, seconds: 1));
-    }
-
-    if (processedSamples == 0) {
-      app_log.LogService.log(
-          '⚠️ monthly.tou: no telemetry samples available for month ${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}');
-      return null;
-    }
-
-    final days = <int>{...payableByDay.keys, ...savedByDay.keys}.toList()
-      ..sort();
-    final daily = days
-        .map((day) => (
-              day: day,
-              payableUah: payableByDay[day] ?? 0.0,
-              savedUah: savedByDay[day] ?? 0.0,
-            ))
-        .toList(growable: false);
-
-    app_log.LogService.log(
-        '📊 monthly.tou telemetry: load=${totalLoadWh.toStringAsFixed(0)}Wh, grid=${totalGridWh.toStringAsFixed(0)}Wh, self=${totalSelfConsumedWh.toStringAsFixed(0)}Wh, payable=${totalPayableUah.toStringAsFixed(1)}UAH, saved=${totalSavedUah.toStringAsFixed(1)}UAH, batteryEff=${(efficiency * 100).toStringAsFixed(0)}%');
-
-    return (
-      loadWh: totalLoadWh,
-      gridWh: totalGridWh,
-      selfConsumedWh: totalSelfConsumedWh,
-      payableUah: totalPayableUah,
-      savedUah: totalSavedUah,
-      daily: daily,
-    );
-  }
-
-  /// Builds per-day load/grid Wh for the selected month using telemetry.
-  /// Fetches one day at a time (max 31 API calls); called only as a fallback.
-  Future<List<({int day, double loadWh, double gridWh})>>
-      _aggregateMonthDailyFromTelemetry(DateTime targetDate) async {
-    if (deviceSn == null) return const [];
-
-    final firstDay = DateTime(targetDate.year, targetDate.month, 1);
-    final now = DateTime.now();
-    final lastDay =
-        (targetDate.year == now.year && targetDate.month == now.month)
-            ? DateTime(now.year, now.month, now.day)
-            : DateTime(targetDate.year, targetDate.month + 1, 0);
-
-    final results = <({int day, double loadWh, double gridWh})>[];
-    var day = firstDay;
-    while (!day.isAfter(lastDay)) {
-      final raw = await _fetchHistoryRaw(
-        from: day,
-        to: DateTime(day.year, day.month, day.day, 23, 59, 59),
-      );
-      if (raw != null) {
-        final energy = _extractEnergyTotalsFromHistoryPayload(raw);
-        var dayLoadWh = energy['load'] ?? 0.0;
-        var dayGridWh = energy['grid'] ?? 0.0;
-
-        // Validate grid <= load relationship
-        if (dayGridWh > dayLoadWh && dayLoadWh > 0 && dayGridWh > 0) {
-          final temp = dayGridWh;
-          dayGridWh = dayLoadWh;
-          dayLoadWh = temp;
-        }
-
-        results.add((
-          day: day.day,
-          loadWh: dayLoadWh,
-          gridWh: dayGridWh,
-        ));
-      }
-      day = day.add(const Duration(days: 1));
-    }
-    app_log.LogService.log(
-        '📊 monthly.daily telemetry: ${results.length} days aggregated');
-    return results;
-  }
-
-  double _sumSpotsWh(List<FlSpot> spots) {
-    if (spots.isEmpty) return 0.0;
-    return spots.fold<double>(
-        0.0, (sum, s) => sum + (s.y.isFinite ? s.y : 0.0));
   }
 
   /// Invalidates the config cache so the next call forces a re-fetch
@@ -1087,7 +683,8 @@ class InverterService {
       try {
         final batchId = _configBatchReadId;
         if (batchId == null || batchId.isEmpty) {
-          app_log.LogService.log('⚠️ Missing batchReadId while polling configs');
+          app_log.LogService.log(
+              '⚠️ Missing batchReadId while polling configs');
           break;
         }
 
@@ -1102,11 +699,13 @@ class InverterService {
           if (parsed != null) {
             _cachedFullConfigs = parsed;
             _lastConfigFetchTime = DateTime.now();
-            app_log.LogService.log('✅ Конфіги отримано (спроба ${i + 1}/$maxAttempts)');
+            app_log.LogService.log(
+                '✅ Конфіги отримано (спроба ${i + 1}/$maxAttempts)');
             return parsed;
           }
         }
-        app_log.LogService.log('⏳ Конфіги не готові (${i + 1}/$maxAttempts)...');
+        app_log.LogService.log(
+            '⏳ Конфіги не готові (${i + 1}/$maxAttempts)...');
       } catch (e) {
         if (e is DioException && e.type == DioExceptionType.connectionError) {
           _configPollingBlockedUntil =
@@ -1153,6 +752,7 @@ class InverterService {
     var load = <FlSpot>[];
     var battery = <FlSpot>[];
     var grid = <FlSpot>[];
+    var soc = <FlSpot>[];
 
     final payload = (data['payload'] as Map<String, dynamic>?) ?? data;
 
@@ -1211,6 +811,8 @@ class InverterService {
         fieldAlias: 'batteryDischargeCurrent');
     final batVoltage =
         extractList(['batteryVoltage'], fieldAlias: 'batteryVoltage');
+    final batSoc = extractList(['batteryCapacity', 'batterySoc'],
+        fieldAlias: 'batterySoc', optional: true);
 
     developer.log(
         '📊 Розпарсені масиви: genPower=${genPower.length}, loadPwr=${loadPwr.length}, batPower=${batPower.length}, gridPwr=${gridPwr.length}');
@@ -1271,6 +873,9 @@ class InverterService {
       if (gridW != null) {
         grid.add(FlSpot(xValue, gridW));
       }
+      if (i < batSoc.length && batSoc[i] != null) {
+        soc.add(FlSpot(xValue, (batSoc[i] as num).toDouble()));
+      }
     }
 
     developer.log(
@@ -1282,8 +887,15 @@ class InverterService {
     load.sort((a, b) => a.x.compareTo(b.x));
     battery.sort((a, b) => a.x.compareTo(b.x));
     grid.sort((a, b) => a.x.compareTo(b.x));
+    soc.sort((a, b) => a.x.compareTo(b.x));
 
-    return {'pv': pv, 'load': load, 'grid': grid, 'battery': battery};
+    return {
+      'pv': pv,
+      'load': load,
+      'grid': grid,
+      'battery': battery,
+      'soc': soc,
+    };
   }
 
   Map<String, List<FlSpot>> _cloneSpotsMap(Map<String, List<FlSpot>> source) {
@@ -1292,6 +904,7 @@ class InverterService {
       'load': List<FlSpot>.from(source['load'] ?? const []),
       'grid': List<FlSpot>.from(source['grid'] ?? const []),
       'battery': List<FlSpot>.from(source['battery'] ?? const []),
+      'soc': List<FlSpot>.from(source['soc'] ?? const []),
     };
   }
 

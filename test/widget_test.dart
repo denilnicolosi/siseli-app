@@ -70,11 +70,12 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
-
-    await tester.tap(find.text('Automation'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Intelligent HEMS Modes'), findsOneWidget);
+    // Off-grid build: Dashboard / Data / Settings only, no Automation tab.
+    expect(
+      tester.widget<NavigationRail>(find.byType(NavigationRail)).destinations,
+      hasLength(3),
+    );
+    expect(find.text('Automation'), findsNothing);
   });
 
   testWidgets('MainScreen uses NavigationBar on compact layouts',
@@ -91,13 +92,10 @@ void main() {
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
-
-    // Tap the Automation destination — use warnIfMissed: false because on
-    // some test frame sizes the label text may sit right at the boundary.
-    await tester.tap(find.text('Automation'), warnIfMissed: false);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Intelligent HEMS Modes'), findsOneWidget);
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).destinations,
+      hasLength(3),
+    );
   });
 
   testWidgets('MainScreen opens Settings from desktop rail',

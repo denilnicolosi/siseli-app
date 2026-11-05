@@ -86,34 +86,14 @@ class HardwareSettingsSection extends StatelessWidget {
     final longitudeCtrl =
         TextEditingController(text: provider.siteLongitude.toStringAsFixed(4));
     final timeZoneCtrl = TextEditingController(text: provider.siteTimeZone);
-    final dayStartCtrl =
-        TextEditingController(text: provider.manualDayStartHour.toString());
-    final eveningStartCtrl =
-        TextEditingController(text: provider.manualEveningStartHour.toString());
-    final nightStartCtrl =
-        TextEditingController(text: provider.manualNightStartHour.toString());
     final installYearCtrl = TextEditingController(
         text: provider.batteryInstallDate.year.toString());
-    final dayTariffCtrl = TextEditingController(
-        text: provider.dayTariffUahPerKwh.toStringAsFixed(2));
-    final nightTariffCtrl = TextEditingController(
-        text: provider.nightTariffUahPerKwh.toStringAsFixed(2));
-    final nightShareCtrl = TextEditingController(
-        text: provider.nightEnergySharePercent.toStringAsFixed(0));
-    final batteryEffCtrl = TextEditingController(
-        text: provider.batteryRoundTripEfficiencyPercent.toStringAsFixed(0));
     final gridVoltageCtrl = TextEditingController(
         text: provider.nominalGridVoltage.toStringAsFixed(0));
     final reserveLoadCtrl = TextEditingController(
         text: provider.houseLoadReserveW.toStringAsFixed(0));
-    var autoWindows = provider.useAstronomicalWindows;
-    var outageEnabled = provider.plannedOutageEnabled;
-    var outageStartAt = provider.plannedOutageStartAt;
-    var outageEndAt = provider.plannedOutageEndAt;
-    var autoStormForecastEnabled = provider.autoStormByForecastEnabled;
     var selectedPreset =
         _matchPreset(provider.siteLatitude, provider.siteLongitude);
-    var selectedStrategy = provider.hemsStrategy;
     var selectedBreakerA = _matchBreakerPreset(provider.acInputBreakerAmps);
     var autoReserveEnabled = provider.autoHouseLoadReserveEnabled;
 
@@ -129,11 +109,6 @@ class HardwareSettingsSection extends StatelessWidget {
                   provider.houseLoadReserveW)
               .clamp(0.0, 12000.0)
               .toDouble();
-          final parsedBatteryEfficiency =
-              (double.tryParse(batteryEffCtrl.text) ??
-                      provider.batteryRoundTripEfficiencyPercent)
-                  .clamp(50.0, 100.0)
-                  .toDouble();
           final safeGridPowerW = (selectedBreakerA * parsedGridVoltage * 0.9)
               .clamp(0.0, 20000.0)
               .toDouble();
@@ -178,8 +153,8 @@ class HardwareSettingsSection extends StatelessWidget {
                 ((100.0 - socForEstimate.clamp(0.0, 100.0)) / 100.0)
                     .clamp(0.0, 1.0)
                     .toDouble();
-            final chargingEfficiency =
-                math.sqrt((parsedBatteryEfficiency / 100.0).clamp(0.5, 1.0));
+            // ~96% one-way charge efficiency (≈92% round trip).
+            const chargingEfficiency = 0.96;
             final requiredInputWh =
                 (capacityWh * deltaSoc) / chargingEfficiency;
             final rawHours = requiredInputWh / recommendedChargeW;
@@ -218,70 +193,6 @@ class HardwareSettingsSection extends StatelessWidget {
                       l10n.batteryInstallYearLabel,
                       '',
                       Icons.calendar_today_outlined),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                      context,
-                      dayTariffCtrl,
-                      l10n.energyTariffDayLabel,
-                      l10n.energyTariffUnit,
-                      Icons.sunny_snowing),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                      context,
-                      nightTariffCtrl,
-                      l10n.energyTariffNightLabel,
-                      l10n.energyTariffUnit,
-                      Icons.nightlight_round),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                      context,
-                      nightShareCtrl,
-                      l10n.nightEnergyShareLabel,
-                      l10n.nightEnergyShareUnit,
-                      Icons.pie_chart_outline_rounded),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.nightShareFallbackHint,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed: () {
-                        final estimated =
-                            provider.estimateNightEnergySharePercent();
-                        setStateDialog(() {
-                          nightShareCtrl.text = estimated.toStringAsFixed(0);
-                        });
-                      },
-                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                      label: Text(l10n.autoEstimateNightShare),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                      context,
-                      batteryEffCtrl,
-                      l10n.batteryRoundTripEfficiencyLabel,
-                      l10n.nightEnergyShareUnit,
-                      Icons.battery_saver_rounded),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.batteryRoundTripEfficiencyHint,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ),
                   const SizedBox(height: 16),
                   _buildTextField(context, pvCtrl, l10n.panelPowerLabel, 'W',
                       Icons.grid_4x4_rounded),
@@ -511,8 +422,10 @@ class HardwareSettingsSection extends StatelessWidget {
                               final readback =
                                   '${result.readTotalA?.toString() ?? '--'}/${result.readUtilityA?.toString() ?? '--'} A';
                               final text = result.success
-                                  ? 'Safe current applied: ${result.targetA} A (read: $readback)'
-                                  : 'Safe current check failed. Target ${result.targetA} A, read: $readback';
+                                  ? l10n.safeCurrentApplied(
+                                      result.targetA.toString(), readback)
+                                  : l10n.safeCurrentFailed(
+                                      result.targetA.toString(), readback);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(text)),
                               );
@@ -524,33 +437,12 @@ class HardwareSettingsSection extends StatelessWidget {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.electrical_services_rounded),
-                      label: const Text('Apply safe current'),
+                      label: Text(l10n.applySafeCurrent),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  // HEMS strategy selector
-                  DropdownButtonFormField<HemsOptimizationStrategy>(
-                    initialValue: selectedStrategy,
-                    decoration: InputDecoration(
-                      labelText: l10n.hemsStrategyLabel,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      prefixIcon: Icon(Icons.tune_rounded,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant),
-                    ),
-                    items: HemsOptimizationStrategy.values
-                        .map((s) => DropdownMenuItem(
-                              value: s,
-                              child: Text(_strategyLabel(l10n, s)),
-                            ))
-                        .toList(),
-                    onChanged: (s) {
-                      if (s != null) setStateDialog(() => selectedStrategy = s);
-                    },
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: selectedPreset.id,
                     decoration: InputDecoration(
                       labelText: l10n.locationPreset,
@@ -591,130 +483,6 @@ class HardwareSettingsSection extends StatelessWidget {
                       Icons.schedule_rounded,
                       allowDecimalOnly: false),
                   const SizedBox(height: 16),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.astronomicalWindowsTitle),
-                    subtitle: Text(autoWindows
-                        ? l10n.astronomicalWindowsAutoSubtitle
-                        : l10n.astronomicalWindowsManualSubtitle),
-                    value: autoWindows,
-                    onChanged: (v) => setStateDialog(() => autoWindows = v),
-                  ),
-                  if (!autoWindows) ...[
-                    const SizedBox(height: 12),
-                    _buildTextField(context, dayStartCtrl,
-                        l10n.manualDayStartHour, 'h', Icons.wb_sunny_outlined),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                        context,
-                        eveningStartCtrl,
-                        l10n.manualEveningStartHour,
-                        'h',
-                        Icons.nightlight_round),
-                    const SizedBox(height: 12),
-                    _buildTextField(context, nightStartCtrl,
-                        l10n.manualNightStartHour, 'h', Icons.bedtime_outlined),
-                  ],
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.plannedOutageTitle),
-                    subtitle: Text(outageEnabled
-                        ? l10n.plannedOutageEnabledSubtitle
-                        : l10n.plannedOutageDisabledSubtitle),
-                    value: outageEnabled,
-                    onChanged: (v) => setStateDialog(() => outageEnabled = v),
-                  ),
-                  if (outageEnabled) ...[
-                    const SizedBox(height: 8),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_available_rounded),
-                      title: Text(l10n.plannedOutageStartLabel),
-                      subtitle: Text(outageStartAt == null
-                          ? l10n.notProvided
-                          : '${outageStartAt!.day.toString().padLeft(2, '0')}.${outageStartAt!.month.toString().padLeft(2, '0')}.${outageStartAt!.year} '
-                              '${outageStartAt!.hour.toString().padLeft(2, '0')}:${outageStartAt!.minute.toString().padLeft(2, '0')}'),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          final now = DateTime.now();
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: outageStartAt ?? now,
-                            firstDate: now.subtract(const Duration(days: 1)),
-                            lastDate: now.add(const Duration(days: 365)),
-                          );
-                          if (date == null || !context.mounted) return;
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime:
-                                TimeOfDay.fromDateTime(outageStartAt ?? now),
-                          );
-                          if (time == null) return;
-                          setStateDialog(() {
-                            outageStartAt = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                              time.hour,
-                              time.minute,
-                            );
-                          });
-                        },
-                        child: Text(l10n.selectValue),
-                      ),
-                    ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_busy_rounded),
-                      title: Text(l10n.plannedOutageEndLabel),
-                      subtitle: Text(outageEndAt == null
-                          ? l10n.notProvided
-                          : '${outageEndAt!.day.toString().padLeft(2, '0')}.${outageEndAt!.month.toString().padLeft(2, '0')}.${outageEndAt!.year} '
-                              '${outageEndAt!.hour.toString().padLeft(2, '0')}:${outageEndAt!.minute.toString().padLeft(2, '0')}'),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          final base = outageStartAt ?? DateTime.now();
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: outageEndAt ??
-                                base.add(const Duration(hours: 2)),
-                            firstDate: base.subtract(const Duration(days: 1)),
-                            lastDate: base.add(const Duration(days: 365)),
-                          );
-                          if (date == null || !context.mounted) return;
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.fromDateTime(outageEndAt ??
-                                base.add(const Duration(hours: 2))),
-                          );
-                          if (time == null) return;
-                          setStateDialog(() {
-                            outageEndAt = DateTime(
-                              date.year,
-                              date.month,
-                              date.day,
-                              time.hour,
-                              time.minute,
-                            );
-                          });
-                        },
-                        child: Text(l10n.selectValue),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: const Icon(Icons.thunderstorm_outlined),
-                    title: Text(l10n.autoStormByForecastTitle),
-                    subtitle: Text(autoStormForecastEnabled
-                        ? l10n.autoStormByForecastEnabledSubtitle
-                        : l10n.autoStormByForecastDisabledSubtitle),
-                    value: autoStormForecastEnabled,
-                    onChanged: (v) =>
-                        setStateDialog(() => autoStormForecastEnabled = v),
-                  ),
                 ],
               ),
             ),
@@ -732,15 +500,6 @@ class HardwareSettingsSection extends StatelessWidget {
                       double.tryParse(pvCtrl.text) ?? provider.pvTotalCapacityW;
                   final inv = double.tryParse(inverterCtrl.text) ??
                       provider.inverterMaxPowerW;
-                  final dayTariff = double.tryParse(dayTariffCtrl.text) ??
-                      provider.dayTariffUahPerKwh;
-                  final nightTariff = double.tryParse(nightTariffCtrl.text) ??
-                      provider.nightTariffUahPerKwh;
-                  final nightShare = double.tryParse(nightShareCtrl.text) ??
-                      provider.nightEnergySharePercent;
-                  final batteryEfficiency =
-                      double.tryParse(batteryEffCtrl.text) ??
-                          provider.batteryRoundTripEfficiencyPercent;
                   final gridVoltage = double.tryParse(gridVoltageCtrl.text) ??
                       provider.nominalGridVoltage;
                   final houseReserveW = double.tryParse(reserveLoadCtrl.text) ??
@@ -764,15 +523,6 @@ class HardwareSettingsSection extends StatelessWidget {
                   final tz = timeZoneCtrl.text.trim().isEmpty
                       ? provider.siteTimeZone
                       : timeZoneCtrl.text.trim();
-                  final dayStart = (int.tryParse(dayStartCtrl.text) ??
-                          provider.manualDayStartHour)
-                      .clamp(0, 23);
-                  final eveningStart = (int.tryParse(eveningStartCtrl.text) ??
-                          provider.manualEveningStartHour)
-                      .clamp(0, 23);
-                  final nightStart = (int.tryParse(nightStartCtrl.text) ??
-                          provider.manualNightStartHour)
-                      .clamp(0, 23);
 
                   provider.saveHardwareSettings(
                     bat,
@@ -788,24 +538,7 @@ class HardwareSettingsSection extends StatelessWidget {
                     latitude: lat,
                     longitude: lon,
                     timeZone: tz,
-                    useAstronomical: autoWindows,
-                    dayStartHour: dayStart,
-                    eveningStartHour: eveningStart,
-                    nightStartHour: nightStart,
                   );
-                  provider.saveHemsStrategy(selectedStrategy);
-                  provider.saveTimeOfUseTariffs(
-                    dayTariff: dayTariff,
-                    nightTariff: nightTariff,
-                    nightSharePercent: nightShare,
-                    batteryEfficiencyPercent: batteryEfficiency,
-                  );
-                  provider.savePlannedOutage(
-                    enabled: outageEnabled,
-                    startAt: outageStartAt,
-                    endAt: outageEndAt,
-                  );
-                  provider.saveAutoStormByForecast(autoStormForecastEnabled);
                   Navigator.pop(context);
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -823,21 +556,6 @@ class HardwareSettingsSection extends StatelessWidget {
         },
       ),
     );
-  }
-
-  String _strategyLabel(AppLocalizations l10n, HemsOptimizationStrategy s) {
-    switch (s) {
-      case HemsOptimizationStrategy.economical:
-        return l10n.hemsStrategyEconomical;
-      case HemsOptimizationStrategy.solarMaxed:
-        return l10n.hemsStrategySolarMaxed;
-      case HemsOptimizationStrategy.batteryLife:
-        return l10n.hemsStrategyBatteryLife;
-      case HemsOptimizationStrategy.gridReliance:
-        return l10n.hemsStrategyGridReliance;
-      case HemsOptimizationStrategy.hybrid:
-        return l10n.hemsStrategyHybrid;
-    }
   }
 
   Widget _buildTextField(BuildContext context, TextEditingController controller,
@@ -867,11 +585,6 @@ class HardwareSettingsSection extends StatelessWidget {
     );
   }
 
-  String _fmtHour(int hour) => '${hour.toString().padLeft(2, '0')}:00';
-
-  String _fmtClock(DateTime dt) =>
-      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-
   Widget _buildDiagnosticRow(BuildContext context,
       {required String label, required String value, IconData? icon}) {
     final theme = Theme.of(context);
@@ -897,83 +610,6 @@ class HardwareSettingsSection extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildHemsDiagnosticsCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final d = provider.hemsService.buildDiagnosticsSnapshot();
-    final tariffValue = !d.tariffForecastActive
-        ? 'flat/no forecast'
-        : d.chargingCheapNow
-            ? 'cheap now'
-            : (d.nextCheapChargingWindow == null
-                ? 'expensive now'
-                : 'expensive -> ${_fmtClock(d.nextCheapChargingWindow!)}');
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.cardColor.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.45)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'HEMS diagnostics',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _buildDiagnosticRow(
-            context,
-            label: 'Windows (day/eve/night)',
-            value:
-                '${_fmtHour(d.dayStartHour)} / ${_fmtHour(d.eveningStartHour)} / ${_fmtHour(d.nightStartHour)}',
-            icon: Icons.schedule_rounded,
-          ),
-          const SizedBox(height: 6),
-          _buildDiagnosticRow(
-            context,
-            label: 'Adaptive PV surplus enter',
-            value: '${d.adaptivePvSurplusEnterW.toStringAsFixed(0)} W',
-            icon: Icons.solar_power_rounded,
-          ),
-          const SizedBox(height: 6),
-          _buildDiagnosticRow(
-            context,
-            label: 'Adaptive dwell',
-            value: '${d.adaptiveDwell.inMinutes} min',
-            icon: Icons.timer_outlined,
-          ),
-          const SizedBox(height: 6),
-          _buildDiagnosticRow(
-            context,
-            label: 'Adaptive reserve SOC',
-            value: '${d.adaptiveReserveSoc.toStringAsFixed(1)} %',
-            icon: Icons.battery_std_rounded,
-          ),
-          const SizedBox(height: 6),
-          _buildDiagnosticRow(
-            context,
-            label: 'Tariff charging hint',
-            value: tariffValue,
-            icon: Icons.bolt_rounded,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Updated ${_fmtClock(d.capturedAt)}',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1033,20 +669,6 @@ class HardwareSettingsSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      provider.useAstronomicalWindows
-                          ? l10n.windowsAstronomicalAuto
-                          : l10n.windowsManualSummary(
-                              provider.manualDayStartHour.toString(),
-                              provider.manualEveningStartHour.toString(),
-                              provider.manualNightStartHour.toString(),
-                            ),
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          height: 1.3),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
                       l10n.chargeLimitSummary(
                         provider.acInputBreakerAmps.toStringAsFixed(0),
                         provider.recommendedBatteryChargePowerW
@@ -1059,7 +681,6 @@ class HardwareSettingsSection extends StatelessWidget {
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           height: 1.3),
                     ),
-                    _buildHemsDiagnosticsCard(context),
                   ],
                 ),
               ),

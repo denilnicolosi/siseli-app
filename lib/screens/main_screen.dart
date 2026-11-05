@@ -6,7 +6,6 @@ import '../theme/app_theme.dart';
 import '../widgets/app_components.dart';
 import '../widgets/notification_panel.dart';
 import 'dashboard/dashboard_tab.dart';
-import 'automation_tab.dart';
 import 'details_tab.dart';
 import 'settings/settings_tab.dart';
 
@@ -51,8 +50,6 @@ class _MainScreenState extends State<MainScreen> {
                 isLoading: isDataLoading,
               );
       case 1:
-        return AutomationTab(provider: provider);
-      case 2:
         return viewData != null
             ? DetailsTab(data: viewData, provider: provider)
             : _NoDataState(
@@ -61,7 +58,7 @@ class _MainScreenState extends State<MainScreen> {
                 onRetry: provider.fetchData,
                 isLoading: isDataLoading,
               );
-      case 3:
+      case 2:
       default:
         return SettingsTab(provider: provider);
     }
@@ -118,10 +115,6 @@ class _MainScreenState extends State<MainScreen> {
       (
         icon: Icons.dashboard_rounded,
         label: safeLabel(l10n.dashboard, 'Dashboard')
-      ),
-      (
-        icon: Icons.smart_toy_rounded,
-        label: safeLabel(l10n.automation, 'Automation')
       ),
       (icon: Icons.list_alt_rounded, label: safeLabel(l10n.data, 'Data')),
       (

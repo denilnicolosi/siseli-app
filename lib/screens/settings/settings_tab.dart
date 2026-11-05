@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/hems_optimization_profile.dart';
 import '../../providers/app_provider.dart';
 import '../../services/log_service.dart';
 import '../../services/update_service.dart';
@@ -38,7 +37,9 @@ class SettingsTab extends StatelessWidget {
         isCompact ? 12 : 20,
         isCompact ? 8 : 20,
         isCompact ? 12 : 20,
-        20,
+        // extendBody puts the compact bottom bar over the list; Scaffold
+        // reports its height as bottom padding.
+        20 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         _buildSectionTitle(l10n.account),
@@ -91,7 +92,6 @@ class SettingsTab extends StatelessWidget {
       children: [
         AppSectionCard(
           title: l10n.appSettings,
-          subtitle: l10n.hemsSubtitle,
           icon: Icons.tune_rounded,
           child: Column(
             children: [

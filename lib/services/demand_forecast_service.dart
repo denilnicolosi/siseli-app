@@ -1,5 +1,3 @@
-import '../models/hems_optimization_profile.dart';
-
 class DemandForecastService {
   static const double _minLoadW = 100.0;
   static const double _maxLoadW = 12000.0;
@@ -47,19 +45,5 @@ class DemandForecastService {
       22: 1000,
       23: 500,
     };
-  }
-
-  DemandForecastData toDemandForecastData(Map<int, double> profile) {
-    final metrics = <int, DemandMetrics>{};
-    for (var h = 0; h < 24; h++) {
-      final base = (profile[h] ?? 500.0).clamp(_minLoadW, _maxLoadW).toDouble();
-      metrics[h] = DemandMetrics(
-        p25: base * 0.8,
-        p50: base,
-        p75: base * 1.2,
-        p90: base * 1.35,
-      );
-    }
-    return DemandForecastData(hourlyMetrics: metrics);
   }
 }

@@ -8,7 +8,6 @@
   "darkTheme": "Dark theme",
   "language": "Language",
   "dashboard": "Dashboard",
-  "automation": "Automation",
   "data": "Data",
   "energyOverview": "Energy Overview",
   "production": "Production",
@@ -24,22 +23,11 @@
   "sat": "Sat",
   "sun": "Sun",
   "battery": "Battery",
-  "grid": "Grid",
   "forecast": "Forecast",
-  "modeAdaptive": "Adaptive Intelligence (Auto)",
-  "modeAdaptiveSubtitle": "Dynamic mode: forecast, tariff, and battery state",
-  "modeAdaptiveDesc": "Adaptive mode continuously analyzes:\n• real-time PV generation and house consumption\n• solar forecast for the rest of the day\n• battery SOC and safety reserve\n• time-of-use tariff windows (night/day/evening)\n\nWhat it does:\n• At night, it predicts whether tomorrow's solar will be enough and decides whether grid charging is needed\n• During daytime, it optimizes source priority to preserve energy for evening peak\n• In evening hours, it uses battery energy down to the configured reserve threshold\n• It automatically falls back to grid if battery safety or supply stability is at risk\n\nResult: fewer manual switches, lower energy cost, and more stable day-to-day operation.",
-  "modeArbitrage": "Night Arbitrage",
-  "modeArbitrageSubtitle": "Strict cost optimization by tariff windows",
-  "modeArbitrageDesc": "This mode prioritizes minimum electricity cost:\n• During night tariff, it forces grid operation and charges battery\n• During day/evening, it prioritizes battery and solar\n• Grid charging is disabled outside night tariff\n\nBest when cost saving is the primary goal, even with more battery cycling.",
-  "modeStorm": "Reserve / Storm",
-  "modeStormSubtitle": "Maximum backup readiness for outages",
-  "modeStormDesc": "This mode prioritizes reliability over savings:\n• Keeps battery as full as possible\n• Powers home from grid to preserve battery for emergency use\n• Ignores tariff optimization when reserve readiness is critical\n\nRecommended before storms, unstable grid periods, or expected long outages.",
   "account": "Account",
   "appSettings": "Application Settings",
   "editProfile": "Edit Profile",
   "cancel": "Cancel",
-  "confirm": "Confirm",
   "save": "Save",
   "userNameDefault": "User",
   "userId": "ID: {id}",
@@ -51,9 +39,6 @@
     }
   },
   "advancedSettings": "Advanced Settings",
-  "hemsTitle": "Intelligent HEMS Modes",
-  "hemsSubtitle": "Choose your strategy: adaptive automation, savings, or backup reserve",
-  "gotIt": "Got it",
   "email": "Email",
   "password": "Password",
   "startWithWindows": "Start with Windows",
@@ -73,10 +58,6 @@
   "nameCannotBeEmpty": "Name cannot be empty",
   "copy": "Copy",
   "copiedToClipboard": "Copied to clipboard",
-  "diagnosticsSnapshot": "Diagnostics snapshot",
-  "diagnosticsSnapshotHint": "Copy a compact report for troubleshooting or support.",
-  "copyDiagnosticsSnapshot": "Copy snapshot",
-  "diagnosticsSnapshotCopied": "Diagnostics snapshot copied to clipboard",
   "updatesTitle": "Updates",
   "updatesCheckingBackground": "Checking updates in background...",
   "updatesChecking": "Checking for updates...",
@@ -271,12 +252,6 @@
   "latitudeLabel": "Latitude",
   "longitudeLabel": "Longitude",
   "timeZoneLabel": "Time zone",
-  "astronomicalWindowsTitle": "Astronomical windows (sunrise/sunset)",
-  "astronomicalWindowsAutoSubtitle": "Auto windows from geo coordinates",
-  "astronomicalWindowsManualSubtitle": "Use manual hour boundaries",
-  "manualDayStartHour": "Manual day start hour",
-  "manualEveningStartHour": "Manual evening start hour",
-  "manualNightStartHour": "Manual night start hour",
   "geoPresetKyiv": "Kyiv, UA",
   "geoPresetLviv": "Lviv, UA",
   "geoPresetOdesa": "Odesa, UA",
@@ -295,21 +270,6 @@
         "type": "String"
       },
       "timeZone": {
-        "type": "String"
-      }
-    }
-  },
-  "windowsAstronomicalAuto": "Windows: astronomical (auto)",
-  "windowsManualSummary": "Windows: manual {day}:00 / {evening}:00 / {night}:00",
-  "@windowsManualSummary": {
-    "placeholders": {
-      "day": {
-        "type": "String"
-      },
-      "evening": {
-        "type": "String"
-      },
-      "night": {
         "type": "String"
       }
     }
@@ -370,7 +330,6 @@
   "forecastUnavailable": "Forecast data is temporarily unavailable",
   "equipmentStatus": "Equipment status",
   "inverterLoad": "Inverter load",
-  "pvGeneration": "PV generation",
   "refreshChart": "Refresh chart",
   "batterySignHint": "Battery: '+' means charge, '-' means discharge.",
   "chartNoDataTitle": "No data yet",
@@ -392,67 +351,10 @@
       }
     }
   },
-  "total": "Total",
   "solar": "Solar",
   "load": "Load",
   "connectionOnline": "Online",
   "connectionOffline": "Offline",
-  "gridOutageDetectedShort": "Grid outage",
-  "gridOutageVisualTitle": "Grid power is unavailable",
-  "gridOutageVisualBody": "Detected by input voltage ({voltage} V), not by current mode switch",
-  "@gridOutageVisualBody": {
-    "placeholders": {
-      "voltage": {
-        "type": "String"
-      }
-    }
-  },
-  "backupRuntimeHybrid": "Estimated backup time (battery + solar): ~{duration}",
-  "@backupRuntimeHybrid": {
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "backupRuntimeBatteryOnly": "Battery only: ~{duration}",
-  "@backupRuntimeBatteryOnly": {
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "backupRuntimeSolarCoverHint": "Solar currently covers the load, so actual runtime may be longer.",
-  "runtimeInfinite": "continuous",
-  "runtimeNow": "now",
-  "runtimeMinutes": "{minutes} min",
-  "@runtimeMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "runtimeHoursOnly": "{hours} h",
-  "@runtimeHoursOnly": {
-    "placeholders": {
-      "hours": {
-        "type": "String"
-      }
-    }
-  },
-  "runtimeHoursMinutes": "{hours} h {minutes} min",
-  "@runtimeHoursMinutes": {
-    "placeholders": {
-      "hours": {
-        "type": "String"
-      },
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
   "lastRealtimeUpdate": "Last update",
   "updatedAt": "Updated at {time}",
   "@updatedAt": {
@@ -469,11 +371,6 @@
   "enableGrid": "Enable GRID (USB)",
   "showApp": "Show App",
   "exit": "Exit",
-  "tooltipTodayEnergy": "Total solar energy generated today",
-  "tooltipTotalEnergy": "Total solar energy generated since device installation",
-  "tooltipCo2": "Estimated CO₂ emission reduction based on solar generation",
-  "tooltipInverterLoad": "Current inverter load relative to its rated power capacity",
-  "tooltipPvGeneration": "Current PV output relative to total installed panel capacity",
   "batteryLevel": "Battery: {level}%",
   "@batteryLevel": {
     "placeholders": {
@@ -483,142 +380,9 @@
     }
   },
   "batteryInstallYearLabel": "Battery installation year",
-  "hemsStrategyLabel": "HEMS optimization strategy",
-  "hemsStrategyEconomical": "Economical (minimize grid cost)",
-  "hemsStrategySolarMaxed": "Solar Maxed (maximize self-consumption)",
-  "hemsStrategyBatteryLife": "Battery Life (conservative cycles)",
-  "hemsStrategyGridReliance": "Grid Reliance (resilience / off-grid)",
-  "hemsStrategyHybrid": "Hybrid (balanced — recommended)",
-  "moneySavedMonth": "Saved this month",
-  "paymentThisMonth": "To pay this month",
-  "currencyUah": "€",
-  "energyTariffDayLabel": "Day tariff",
-  "energyTariffNightLabel": "Night tariff",
-  "energyTariffUnit": "€/kWh",
-  "nightEnergyShareLabel": "Night energy share",
-  "nightEnergyShareUnit": "%",
-  "autoEstimateNightShare": "Auto estimate night share",
-  "batteryRoundTripEfficiencyLabel": "Battery round-trip efficiency",
-  "batteryRoundTripEfficiencyHint": "Used to reduce savings from battery-shifted energy. Set 100% to disable battery-loss correction.",
-  "nightShareFallbackHint": "Used only as a fallback when hourly telemetry economics is unavailable.",
-  "economicsMethodTelemetry": "Hourly telemetry • Battery efficiency {efficiency}%",
-  "@economicsMethodTelemetry": {
-    "placeholders": {
-      "efficiency": {
-        "type": "String"
-      }
-    }
-  },
-  "economicsMethodEstimated": "Fallback estimate • Night share {share}%",
-  "@economicsMethodEstimated": {
-    "placeholders": {
-      "share": {
-        "type": "String"
-      }
-    }
-  },
-  "calculationSourceLabel": "Calculation source",
-  "calculationAccuracyLabel": "Accuracy",
-  "calculationSourceTelemetry": "Hourly telemetry",
-  "calculationSourceFallback": "Fallback estimate",
-  "calculationAccuracyHigh": "High",
-  "calculationAccuracyEstimated": "Estimated",
-  "effectiveTariffFormula": "Formula: {day}*(1-{share}%) + {night}*{share}%",
-  "@effectiveTariffFormula": {
-    "placeholders": {
-      "day": {
-        "type": "String"
-      },
-      "night": {
-        "type": "String"
-      },
-      "share": {
-        "type": "String"
-      }
-    }
-  },
-  "tooltipMoneySavedMonthTelemetry": "Calculated from telemetry with hourly day/night tariff. Battery-shifted energy is adjusted by {efficiency}% round-trip efficiency.",
-  "@tooltipMoneySavedMonthTelemetry": {
-    "placeholders": {
-      "efficiency": {
-        "type": "String"
-      }
-    }
-  },
-  "tooltipMoneySavedMonthEstimated": "Estimated from self-consumed solar using fallback night share {share}% and battery efficiency {efficiency}%.",
-  "@tooltipMoneySavedMonthEstimated": {
-    "placeholders": {
-      "share": {
-        "type": "String"
-      },
-      "efficiency": {
-        "type": "String"
-      }
-    }
-  },
-  "tooltipPaymentThisMonthTelemetry": "Calculated from telemetry with hourly tariff windows: day from {dayStart}:00, night from {nightStart}:00.",
-  "@tooltipPaymentThisMonthTelemetry": {
-    "placeholders": {
-      "dayStart": {
-        "type": "String"
-      },
-      "nightStart": {
-        "type": "String"
-      }
-    }
-  },
-  "tooltipPaymentThisMonthEstimated": "Estimated monthly bill using fallback night share {share}% for day/night tariff split.",
-  "@tooltipPaymentThisMonthEstimated": {
-    "placeholders": {
-      "share": {
-        "type": "String"
-      }
-    }
-  },
-  "tooltipEffectiveTariffTelemetry": "Reference blended tariff only. Actual payment and savings above are calculated hourly from telemetry using day from {dayStart}:00 and night from {nightStart}:00.",
-  "@tooltipEffectiveTariffTelemetry": {
-    "placeholders": {
-      "dayStart": {
-        "type": "String"
-      },
-      "nightStart": {
-        "type": "String"
-      }
-    }
-  },
-  "projectedSavedMonth": "Projected saved by month end",
-  "projectedPaymentMonth": "Projected payment by month end",
-  "tooltipProjectedSavedMonth": "Forecast based on current month trend of self-consumed solar energy",
-  "tooltipProjectedPaymentMonth": "Forecast based on current month trend of imported grid energy",
-  "monthlyEnergyBreakdown": "Monthly energy breakdown",
-  "monthLoadEnergy": "Load this month",
-  "monthGridImport": "Grid import",
-  "monthSelfConsumed": "Self-consumed solar",
-  "monthGridCost": "Grid cost this month",
-  "monthSavedCost": "Saved cost this month",
-  "monthEffectiveTariff": "Effective tariff",
-  "tooltipMonthProgress": "Current month progress",
-  "plannedOutageTitle": "Planned outage alert",
-  "plannedOutageEnabledSubtitle": "Auto-precharge before outage",
-  "plannedOutageDisabledSubtitle": "No manual outage schedule",
-  "plannedOutageStartLabel": "Outage start",
-  "plannedOutageEndLabel": "Outage end",
-
   "notificationsTitle": "Notifications",
   "notificationsEmpty": "No notifications yet",
   "notificationsClear": "Clear all",
-
-  "notifGridOutageTitle": "Grid Power Outage",
-  "notifGridOutageBody": "Grid voltage dropped — running on solar/battery",
-  "notifGridRestoredTitle": "Grid Power Restored",
-  "notifGridRestoredBody": "Grid voltage is back to normal ({voltage} V)",
-  "@notifGridRestoredBody": {
-    "placeholders": {
-      "voltage": {
-        "type": "String"
-      }
-    }
-  },
   "notifLowBatteryTitle": "Low Battery",
   "notifLowBatteryBody": "Battery SOC is {soc}% — approaching reserve threshold",
   "@notifLowBatteryBody": {
@@ -637,122 +401,262 @@
       }
     }
   },
-  "notifModeChangedTitle": "HEMS Mode Changed",
-  "notifModeChangedBody": "Active mode: {mode}",
-  "@notifModeChangedBody": {
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "notifGridInstabilityTitle": "Grid Instability",
-  "notifGridInstabilityBody": "Frequent grid state changes detected",
-  "notifAutoStormTitle": "Auto Storm Mode Activated",
-  "notifAutoStormBody": "Grid outage detected — switched to Storm mode to protect battery",
-  "notifForecastStormTitle": "Auto Storm by Forecast",
-  "notifForecastStormBody": "Severe weather risk detected ({reason}) — switched to Storm mode",
-  "@notifForecastStormBody": {
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      }
-    }
-  },
-  "notifForecastStormRestoredTitle": "Forecast Storm Cleared",
-  "notifForecastStormRestoredBody": "Weather risk is lower — restored previous HEMS mode",
-  "notifAutoAdaptiveTitle": "Adaptive Mode Restored",
-  "notifAutoAdaptiveBody": "Grid is back — restored to Adaptive mode automatically",
   "notifAnomalyTitle": "High Consumption Detected",
   "notifAnomalyBody": "Load is {load} W — {times}× above normal for this hour",
   "@notifAnomalyBody": {
     "placeholders": {
-      "load": {"type": "String"},
-      "times": {"type": "String"}
+      "load": {
+        "type": "String"
+      },
+      "times": {
+        "type": "String"
+      }
     }
   },
   "notifCycleTitle": "Battery Cycle Completed",
   "notifCycleBody": "Total cycles: {count}. Estimated battery health: {soh}%",
   "@notifCycleBody": {
     "placeholders": {
-      "count": {"type": "String"},
-      "soh": {"type": "String"}
+      "count": {
+        "type": "String"
+      },
+      "soh": {
+        "type": "String"
+      }
     }
   },
-  "eventHistoryTitle": "Event History",
-  "eventHistoryEmpty": "No events recorded yet",
-  "eventHistoryClear": "Clear history",
-  "eventHistoryShowAll": "Show all",
-  "exportCsv": "Export CSV",
-  "exportedTo": "Saved to:\n{path}",
-  "@exportedTo": {
-    "placeholders": {
-      "path": {"type": "String"}
-    }
-  },
-  "exportFailed": "Export failed",
-  "currentCostPerHour": "Cost now",
-  "uahPerHour": "€/h",
-  "batteryCycles": "Cycles",
-  "batteryHealth": "Battery health",
-  "battSohPercent": "SOH {soh}%",
-  "@battSohPercent": {
-    "placeholders": {
-      "soh": {"type": "String"}
-    }
-  },
-
-  "autoStormByForecastTitle": "Auto Storm mode by weather forecast",
-  "autoStormByForecastEnabledSubtitle": "Switches to Storm mode when bad weather is predicted (next 12 h)",
-  "autoStormByForecastDisabledSubtitle": "Forecast-based Storm mode is off",
-  "notifForecastStormTitle": "Storm Mode — Weather Alert",
-  "notifForecastStormBody": "Bad weather ahead: {reason} — switched to Storm mode",
-  "@notifForecastStormBody": {
-    "placeholders": {
-      "reason": {"type": "String"}
-    }
-  },
-  "notifForecastStormRestoredTitle": "Adaptive Mode Restored",
-  "notifForecastStormRestoredBody": "Weather risk cleared — restored to normal HEMS mode",
-
-  "socHistoryTitle": "Battery SOC — last 24 h",
-  "socHistorySubtitle": "Charge level trend",
   "socHistoryNoData": "Not enough data yet.\nData is collected every 5 minutes.",
-  "socHistoryReserveLabel": "Reserve",
-  "socHistoryChargingLabel": "Charging",
-  "socHistoryDischargingLabel": "Discharging",
-  "socHistoryIdleLabel": "Idle",
-
-  "scheduleRulesTitle": "Schedule Rules",
-  "scheduleRulesSubtitle": "Force a HEMS mode during a recurring time window",
-  "scheduleRulesEmpty": "No schedule rules yet.\nTap + to add your first rule.",
-  "scheduleRuleAdd": "Add Rule",
-  "scheduleRuleEdit": "Edit Rule",
-  "scheduleRuleDelete": "Delete Rule",
-  "scheduleRuleDeleteConfirm": "Delete rule \"{name}\"?",
-  "@scheduleRuleDeleteConfirm": {
+  "acInput": "AC input",
+  "mainSource": "Main source",
+  "chartFullscreen": "Full screen",
+  "chartRotate": "Rotate",
+  "forecastBasis": "Estimate for {kwp} kWp of panels from Open-Meteo solar radiation",
+  "@forecastBasis": {
     "placeholders": {
-      "name": { "type": "String" }
+      "kwp": {
+        "type": "String"
+      }
     }
   },
-  "scheduleRuleName": "Rule name",
-  "scheduleRuleNameHint": "E.g. Morning solar, Weekend charge…",
-  "scheduleRuleDays": "Active days",
-  "scheduleRuleStartTime": "Start time",
-  "scheduleRuleEndTime": "End time",
-  "scheduleRuleMode": "Forced HEMS mode",
-  "scheduleRuleModeAdaptive": "Adaptive (Auto)",
-  "scheduleRuleModeArbitrage": "Night Arbitrage",
-  "scheduleRuleModeStorm": "Storm / Reserve",
-  "scheduleRuleActive": "Active now",
-  "scheduleRuleNameEmpty": "Please enter a name",
-  "scheduleRuleNoDays": "Select at least one day",
-  "scheduleRulePriority": "Priority",
-  "scheduleRulePriorityHint": "Higher priority wins when rules overlap",
-  "scheduleRuleConflict": "{count} rules overlap now — using highest priority",
-  "@scheduleRuleConflict": {
+  "applySafeCurrent": "Apply safe current",
+  "safeCurrentApplied": "Safe current applied: {target} A (read: {read})",
+  "@safeCurrentApplied": {
     "placeholders": {
-      "count": { "type": "int" }
+      "target": {
+        "type": "String"
+      },
+      "read": {
+        "type": "String"
+      }
     }
-  }
+  },
+  "safeCurrentFailed": "Safe current not confirmed. Target {target} A, read: {read}",
+  "@safeCurrentFailed": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "read": {
+        "type": "String"
+      }
+    }
+  },
+  "invSetOutputPriority": "Output source priority",
+  "invSetOutputPriorityDesc": "Which source powers the loads (program 01). USB: AC input first; solar and battery only when AC input is missing. SUB: solar charges the battery first, then feeds the loads; AC input covers the rest. SBU: solar first, then battery; AC input only when the battery falls to the back-to-AC point (program 12/43). Off-grid: use SBU.",
+  "invSetChargerPriority": "Charger source priority",
+  "invSetChargerPriorityDesc": "Which source charges the battery (program 16). CSO: solar first, AC input only when there is no sun. SNU: solar and AC input together. OSO: solar only, even when AC input is present. Without a generator on the AC input, only solar can charge.",
+  "invSetMaxChargeCurrent": "Maximum charging current",
+  "invSetMaxChargeCurrentDesc": "Total battery charging current, solar + AC input (program 02). It cannot be lower than the AC charging current (program 11). Stay within the battery maker's limit.",
+  "invSetAcChargeCurrent": "Maximum AC charging current",
+  "invSetAcChargeCurrentDesc": "Maximum current used to charge the battery from the AC input, grid or generator (program 11). Keep it low enough for the generator and the input breaker.",
+  "invSetAcInputRange": "AC input voltage range",
+  "invSetAcInputRangeDesc": "Accepted AC input voltage (program 03). APL (appliances): 90-280 V, wide range. UPS: 170-280 V, narrow range for sensitive loads. The wide range copes better with a generator whose voltage fluctuates.",
+  "invSetBatteryType": "Battery type",
+  "invSetBatteryTypeDesc": "Battery chemistry; it sets the charge voltages (program 05). AGM and Flooded: lead-acid presets. User-defined: you set bulk, float and cut-off voltages (programs 26, 27, 29). LIB/LiFe: lithium.",
+  "invSetOverloadRestart": "Auto restart after overload",
+  "invSetOverloadRestartDesc": "If enabled, the output turns back on by itself after an overload shutdown (program 06).",
+  "invSetOverTempRestart": "Auto restart after over-temperature",
+  "invSetOverTempRestartDesc": "If enabled, the output turns back on by itself after an over-temperature shutdown (program 07).",
+  "invSetOutputVoltage": "Output voltage",
+  "invSetOutputVoltageDesc": "AC voltage supplied to the loads (program 08). Europe: 230 V.",
+  "invSetOutputFrequency": "Output frequency",
+  "invSetOutputFrequencyDesc": "AC frequency supplied to the loads (program 09). Europe: 50 Hz.",
+  "invSetOverloadBypass": "Bypass on overload",
+  "invSetOverloadBypassDesc": "If enabled, on overload in battery mode the inverter moves the loads to the AC input (program 23). It only helps when a generator is connected.",
+  "invSetBuzzer": "Buzzer alarm",
+  "invSetBuzzerDesc": "Turns the inverter buzzer on or off for warnings and faults (program 18).",
+  "invSetSourceLossBeep": "Beep when primary source is lost",
+  "invSetSourceLossBeepDesc": "If enabled, the inverter beeps when the primary source chosen in program 01 is interrupted (program 22).",
+  "invSetReturnToDefaultScreen": "Return to default screen",
+  "invSetReturnToDefaultScreenDesc": "If enabled, the LCD goes back to the default screen about 1 minute after the last key press; otherwise it stays on the last screen (program 19).",
+  "invSetBacklight": "LCD backlight",
+  "invSetBacklightDesc": "Keeps the LCD backlight always on, or lets it switch off when idle (program 20).",
+  "invSetRecordFaults": "Record fault codes",
+  "invSetRecordFaultsDesc": "If enabled, the inverter stores fault codes in its history (program 25).",
+  "invSetEqualization": "Battery equalization",
+  "invSetEqualizationDesc": "Periodic controlled overcharge that balances lead-acid cells (program 33). Only for Flooded or User-defined batteries; keep it off for lithium.",
+  "invSetEqualizationNow": "Start equalization now",
+  "invSetEqualizationNowDesc": "Starts an equalization cycle right away (program 39). Works only if equalization (program 33) is enabled.",
+  "invSetBatteryPowerLimit": "Battery power limiting",
+  "invSetBatteryPowerLimitDesc": "Limits the power taken from the battery. Not described in the Easun manual: check the inverter documentation before changing it.",
+  "invSetSmartLoadCutOff": "Smart load cut-off on battery voltage",
+  "invSetSmartLoadCutOffDesc": "Disconnects the smart (secondary) load output based on battery voltage. Not described in the Easun manual: check the inverter documentation before changing it.",
+  "invSetRgbLight": "RGB light",
+  "invSetRgbLightDesc": "Turns the inverter RGB status light on or off.",
+  "rdDualOutputVoltageSwitch": "Dual output",
+  "rdDualOutputVoltageSwitchDesc": "Second AC output for non-essential loads; it is switched off when the battery drops to the turn-off voltage.",
+  "rdAcInputFrequency": "AC input frequency",
+  "rdAcInputFrequencyDesc": "Frequency on the AC input (grid or generator). 0 Hz means nothing is connected.",
+  "rdLedPatternLight1": "LED lights",
+  "rdLedPatternLight1Desc": "State of the inverter status LED lights.",
+  "rdBatteryNumber": "Battery system voltage",
+  "rdBatteryNumberDesc": "Battery bank voltage class the inverter is built for.",
+  "rdAcInputVoltage": "AC input voltage",
+  "rdAcInputVoltageDesc": "Voltage on the AC input. 0 V means no grid or generator is connected.",
+  "rdWorkingStates": "Working state",
+  "rdWorkingStatesDesc": "Current inverter mode: Invert (loads from battery/solar), Line (loads from the AC input), Standby or Fault.",
+  "rdAcOutputActivePower": "Output active power",
+  "rdAcOutputActivePowerDesc": "Real power the loads are using now.",
+  "rdBatteryEqualizationMode": "Battery equalization",
+  "rdBatteryEqualizationModeDesc": "Whether periodic equalization is enabled (program 33). Lead-acid batteries only.",
+  "rdGridConnectedSwitch1": "Grid feed-in",
+  "rdGridConnectedSwitch1Desc": "Whether the inverter may feed power into the grid. Off-grid: keep it off.",
+  "rdGenerationPower": "Generation power",
+  "rdGenerationPowerDesc": "Power the solar panels are producing now.",
+  "rdRatingOutputCurrent": "Nominal output current",
+  "rdRatingOutputCurrentDesc": "Maximum continuous AC output current of the inverter (rating plate value).",
+  "rdLowBatteryCutOffVoltage": "Low battery cut-off voltage",
+  "rdLowBatteryCutOffVoltageDesc": "Below this voltage the inverter turns the output off to protect the battery (program 29).",
+  "rdBatteryCapacity": "Battery charge (SOC)",
+  "rdBatteryCapacityDesc": "State of charge reported by the inverter.",
+  "rdStartBalancing": "Start equalization now",
+  "rdStartBalancingDesc": "Whether an immediate equalization cycle is requested (program 39).",
+  "rdBatteryDischargeCurrent": "Battery discharge current",
+  "rdBatteryDischargeCurrentDesc": "Current flowing out of the battery now.",
+  "rdGridConnectedCurrent": "Grid feed-in current",
+  "rdGridConnectedCurrentDesc": "Maximum current fed into the grid when feed-in is on. Not used off-grid.",
+  "rdRatedBatteryVoltage": "Nominal battery voltage",
+  "rdRatedBatteryVoltageDesc": "Rated voltage of the battery bank.",
+  "rdOutputApparentPower": "Output apparent power",
+  "rdOutputApparentPowerDesc": "Apparent power (VA) drawn by the loads, reactive part included: it is what the inverter has to supply.",
+  "rdDualOutputTurnOffVoltage": "Dual output turn-off voltage",
+  "rdDualOutputTurnOffVoltageDesc": "Battery voltage at which the second output is switched off.",
+  "rdMainCPUVersion1": "Main CPU firmware",
+  "rdMainCPUVersion1Desc": "Firmware version of the inverter main processor.",
+  "rdChargerSourcePriority": "Charger source priority",
+  "rdChargerSourcePriorityDesc": "Current charger priority (program 16). CSO: solar first. SNU: solar + AC input. OSO: solar only.",
+  "rdComebackUtilityModeVolSBUPriorityStatus": "Back-to-AC voltage (SBU)",
+  "rdComebackUtilityModeVolSBUPriorityStatusDesc": "With SBU or solar first, below this battery voltage the loads move to the AC input (program 12). Without a generator it has no effect.",
+  "rdNominalAcVoltage": "Nominal AC voltage",
+  "rdNominalAcVoltageDesc": "Rated AC voltage of the inverter.",
+  "rdNominalAcCurrent": "Nominal AC current",
+  "rdNominalAcCurrentDesc": "Rated AC current of the inverter.",
+  "rdOutputRelayStatus": "Output relay",
+  "rdOutputRelayStatusDesc": "ON means the AC output is powered.",
+  "rdPhotovoltaicAccessFlag": "PV connection",
+  "rdPhotovoltaicAccessFlagDesc": "Whether the inverter detects the solar panels.",
+  "rdPvStatuss": "PV status",
+  "rdPvStatussDesc": "Working state of the solar input (MPPT charger).",
+  "rdRatedOutputFrequency": "Nominal output frequency",
+  "rdRatedOutputFrequencyDesc": "Output frequency set on the inverter (program 09).",
+  "rdRatedOutputVoltage": "Nominal output voltage",
+  "rdRatedOutputVoltageDesc": "Output voltage set on the inverter (program 08).",
+  "rdGridState": "AC input state",
+  "rdGridStateDesc": "Whether the AC input (grid or generator) is connected.",
+  "rdBatteryEqualizationInterval": "Equalization interval",
+  "rdBatteryEqualizationIntervalDesc": "Days between two equalization cycles (program 37).",
+  "rdLoadPercentage": "Load percentage",
+  "rdLoadPercentageDesc": "Output load as a share of the inverter rated power.",
+  "rdComebackBatteryModeVolSBUPriorityStatus": "Back-to-battery voltage (SBU)",
+  "rdComebackBatteryModeVolSBUPriorityStatusDesc": "With SBU or solar first, above this battery voltage the loads go back to the battery (program 13).",
+  "rdPvInputPower": "PV input power",
+  "rdPvInputPowerDesc": "Power entering from the solar panels into the MPPT charger.",
+  "rdMaxTotalChargeCurrent1": "Max total charge current",
+  "rdMaxTotalChargeCurrent1Desc": "Total charging limit, solar + AC input (program 02).",
+  "rdBatState": "Battery state",
+  "rdBatStateDesc": "Whether the battery is charging, discharging or idle.",
+  "rdOutputSourcePriority": "Output source priority",
+  "rdOutputSourcePriorityDesc": "Current output priority (program 01). USB: AC input first. SUB: solar charges first, AC covers the rest. SBU: solar, then battery, then AC.",
+  "rdFloatChargingVoltage": "Float charging voltage",
+  "rdFloatChargingVoltageDesc": "Voltage held once the battery is full (program 27).",
+  "rdBatteryChargingCurrent": "Battery charging current",
+  "rdBatteryChargingCurrentDesc": "Current flowing into the battery now.",
+  "rdAcOutputRatingApparentPower": "Nominal apparent power",
+  "rdAcOutputRatingApparentPowerDesc": "Rated output power of the inverter in VA.",
+  "rdLoadStatus": "Load status",
+  "rdLoadStatusDesc": "Whether the output load is normal or overloaded.",
+  "rdBatteryEqualizationVoltage": "Equalization voltage",
+  "rdBatteryEqualizationVoltageDesc": "Charging voltage used during equalization (program 34).",
+  "rdBatteryVoltage": "Battery voltage",
+  "rdBatteryVoltageDesc": "Battery voltage measured now.",
+  "rdOutputVoltage": "Output voltage",
+  "rdOutputVoltageDesc": "AC voltage on the output now.",
+  "rdBulkChargingVoltage": "Bulk charging voltage",
+  "rdBulkChargingVoltageDesc": "Constant-voltage charging target (program 26).",
+  "rdBatteryEqualizationTimeout": "Equalization timeout",
+  "rdBatteryEqualizationTimeoutDesc": "Maximum extra time allowed for an equalization cycle (program 36).",
+  "rdFeedInPower": "Feed-in power",
+  "rdFeedInPowerDesc": "Power sent to the grid. Off-grid it stays at 0.",
+  "rdNtcMaximumTemperature": "Max internal temperature",
+  "rdNtcMaximumTemperatureDesc": "Highest temperature measured by the inverter internal sensors (NTC).",
+  "rdMainsRelayStatus": "AC input relay",
+  "rdMainsRelayStatusDesc": "ON means loads or charger are connected to the AC input.",
+  "rdBatteryRatingVoltage": "Rated voltage",
+  "rdBatteryRatingVoltageDesc": "Rated voltage reported by the inverter.",
+  "rdRatedActivePower": "Nominal active power",
+  "rdRatedActivePowerDesc": "Rated continuous output power of the inverter in W.",
+  "rdPvInputVoltage": "PV input voltage",
+  "rdPvInputVoltageDesc": "Voltage of the solar string; it must stay inside the MPPT voltage range.",
+  "rdMainsInputRange": "AC input range",
+  "rdMainsInputRangeDesc": "Accepted AC input voltage range (program 03). APL: 90-280 V. UPS: 170-280 V.",
+  "rdOutputFrequency": "Output frequency",
+  "rdOutputFrequencyDesc": "AC frequency measured on the output.",
+  "rdBatteryEqualizationTime": "Equalization time",
+  "rdBatteryEqualizationTimeDesc": "Duration of an equalization cycle (program 35).",
+  "rdBatteryType": "Battery type",
+  "rdBatteryTypeDesc": "Battery type set on the inverter (program 05).",
+  "rdMaxUtilityChargeCurrent1": "AC charging current",
+  "rdMaxUtilityChargeCurrent1Desc": "Maximum current for charging from the AC input (program 11).",
+  "rdValOn": "On",
+  "rdValOff": "Off",
+  "rdValEnabled": "Enabled",
+  "rdValDisabled": "Disabled",
+  "rdValCharging": "Charging",
+  "rdValDischarging": "Discharging",
+  "rdValInvertMode": "Inverter mode",
+  "rdValLineMode": "Line mode",
+  "rdValStandbyMode": "Standby",
+  "rdValFaultMode": "Fault",
+  "rdValAcNotConnected": "AC input not connected",
+  "rdValAcConnected": "AC input connected",
+  "rdValNormal": "Normal",
+  "rdValPvWorking": "Connected and working",
+  "rdValPvConnected": "Panels connected",
+  "invSetBackToAcVoltage": "Back-to-AC voltage (SBU)",
+  "invSetBackToAcVoltageDesc": "With SBU or solar first in program 01, below this battery voltage the loads move to the AC input (program 12). It must be lower than the back-to-battery voltage. Without a generator it has no effect.",
+  "invSetBackToBatteryVoltage": "Back-to-battery voltage (SBU)",
+  "invSetBackToBatteryVoltageDesc": "With SBU or solar first, once the battery is back above this voltage the loads return to battery power (program 13). It must be higher than the back-to-AC voltage.",
+  "invSetBulkVoltage": "Bulk charging voltage (C.V.)",
+  "invSetBulkVoltageDesc": "Constant-voltage charging target (program 26). Editable only with a User-defined battery; it must be at least the float voltage. Follow the battery maker's values.",
+  "invSetFloatVoltage": "Float charging voltage",
+  "invSetFloatVoltageDesc": "Voltage held once the battery is full (program 27). Editable only with a User-defined battery; it cannot exceed the bulk voltage.",
+  "invSetLowCutOffVoltage": "Low DC cut-off voltage",
+  "invSetLowCutOffVoltageDesc": "Below this battery voltage the inverter turns the output off to protect the battery (program 29). It must be lower than the back-to-AC voltage.",
+  "invSetLowCutOffSoc": "Low DC cut-off SOC",
+  "invSetLowCutOffSocDesc": "With a lithium battery that talks to the inverter: below this state of charge the output turns off (program 45, default 20%, range 3-30%).",
+  "invSetEqVoltage": "Equalization voltage",
+  "invSetEqVoltageDesc": "Charging voltage used during equalization (program 34). Lead-acid only.",
+  "invSetEqTime": "Equalization time",
+  "invSetEqTimeDesc": "How long the equalization voltage is held (program 35, 0-900 min).",
+  "invSetEqTimeout": "Equalization timeout",
+  "invSetEqTimeoutDesc": "Extra time allowed if the equalization voltage is not reached (program 36, 0-900 min).",
+  "invSetEqInterval": "Equalization interval",
+  "invSetEqIntervalDesc": "Days between two equalization cycles (program 37, 1-90 days).",
+  "invSetOutputDelay": "Output delay",
+  "invSetOutputDelayDesc": "Delay before the AC output turns on. Not described in the Easun manual: check the inverter documentation before changing it.",
+  "socDayChartTitle": "Battery charge (SOC) during the day",
+  "flowLosses": "Losses",
+  "flowLossesHint": "Power coming in (solar, AC input, battery) that does not reach the loads or the battery: inverter self-consumption and conversion losses.",
+  "flowMismatch": "Reading mismatch",
+  "flowMismatchHint": "More power goes out than the readings show coming in: the values were sampled at slightly different moments."
 }

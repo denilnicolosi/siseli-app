@@ -154,12 +154,6 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboard;
 
-  /// No description provided for @automation.
-  ///
-  /// In en, this message translates to:
-  /// **'Automation'**
-  String get automation;
-
   /// No description provided for @data.
   ///
   /// In en, this message translates to:
@@ -250,71 +244,11 @@ abstract class AppLocalizations {
   /// **'Battery'**
   String get battery;
 
-  /// No description provided for @grid.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid'**
-  String get grid;
-
   /// No description provided for @forecast.
   ///
   /// In en, this message translates to:
   /// **'Forecast'**
   String get forecast;
-
-  /// No description provided for @modeAdaptive.
-  ///
-  /// In en, this message translates to:
-  /// **'Adaptive Intelligence (Auto)'**
-  String get modeAdaptive;
-
-  /// No description provided for @modeAdaptiveSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Dynamic mode: forecast, tariff, and battery state'**
-  String get modeAdaptiveSubtitle;
-
-  /// No description provided for @modeAdaptiveDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Adaptive mode continuously analyzes:\n• real-time PV generation and house consumption\n• solar forecast for the rest of the day\n• battery SOC and safety reserve\n• time-of-use tariff windows (night/day/evening)\n\nWhat it does:\n• At night, it predicts whether tomorrow\'s solar will be enough and decides whether grid charging is needed\n• During daytime, it optimizes source priority to preserve energy for evening peak\n• In evening hours, it uses battery energy down to the configured reserve threshold\n• It automatically falls back to grid if battery safety or supply stability is at risk\n\nResult: fewer manual switches, lower energy cost, and more stable day-to-day operation.'**
-  String get modeAdaptiveDesc;
-
-  /// No description provided for @modeArbitrage.
-  ///
-  /// In en, this message translates to:
-  /// **'Night Arbitrage'**
-  String get modeArbitrage;
-
-  /// No description provided for @modeArbitrageSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Strict cost optimization by tariff windows'**
-  String get modeArbitrageSubtitle;
-
-  /// No description provided for @modeArbitrageDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'This mode prioritizes minimum electricity cost:\n• During night tariff, it forces grid operation and charges battery\n• During day/evening, it prioritizes battery and solar\n• Grid charging is disabled outside night tariff\n\nBest when cost saving is the primary goal, even with more battery cycling.'**
-  String get modeArbitrageDesc;
-
-  /// No description provided for @modeStorm.
-  ///
-  /// In en, this message translates to:
-  /// **'Reserve / Storm'**
-  String get modeStorm;
-
-  /// No description provided for @modeStormSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum backup readiness for outages'**
-  String get modeStormSubtitle;
-
-  /// No description provided for @modeStormDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'This mode prioritizes reliability over savings:\n• Keeps battery as full as possible\n• Powers home from grid to preserve battery for emergency use\n• Ignores tariff optimization when reserve readiness is critical\n\nRecommended before storms, unstable grid periods, or expected long outages.'**
-  String get modeStormDesc;
 
   /// No description provided for @account.
   ///
@@ -340,12 +274,6 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
-  /// No description provided for @confirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm'**
-  String get confirm;
-
   /// No description provided for @save.
   ///
   /// In en, this message translates to:
@@ -369,24 +297,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Advanced Settings'**
   String get advancedSettings;
-
-  /// No description provided for @hemsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Intelligent HEMS Modes'**
-  String get hemsTitle;
-
-  /// No description provided for @hemsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose your strategy: adaptive automation, savings, or backup reserve'**
-  String get hemsSubtitle;
-
-  /// No description provided for @gotIt.
-  ///
-  /// In en, this message translates to:
-  /// **'Got it'**
-  String get gotIt;
 
   /// No description provided for @email.
   ///
@@ -501,30 +411,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
   String get copiedToClipboard;
-
-  /// No description provided for @diagnosticsSnapshot.
-  ///
-  /// In en, this message translates to:
-  /// **'Diagnostics snapshot'**
-  String get diagnosticsSnapshot;
-
-  /// No description provided for @diagnosticsSnapshotHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy a compact report for troubleshooting or support.'**
-  String get diagnosticsSnapshotHint;
-
-  /// No description provided for @copyDiagnosticsSnapshot.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy snapshot'**
-  String get copyDiagnosticsSnapshot;
-
-  /// No description provided for @diagnosticsSnapshotCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Diagnostics snapshot copied to clipboard'**
-  String get diagnosticsSnapshotCopied;
 
   /// No description provided for @updatesTitle.
   ///
@@ -1018,42 +904,6 @@ abstract class AppLocalizations {
   /// **'Time zone'**
   String get timeZoneLabel;
 
-  /// No description provided for @astronomicalWindowsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Astronomical windows (sunrise/sunset)'**
-  String get astronomicalWindowsTitle;
-
-  /// No description provided for @astronomicalWindowsAutoSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto windows from geo coordinates'**
-  String get astronomicalWindowsAutoSubtitle;
-
-  /// No description provided for @astronomicalWindowsManualSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Use manual hour boundaries'**
-  String get astronomicalWindowsManualSubtitle;
-
-  /// No description provided for @manualDayStartHour.
-  ///
-  /// In en, this message translates to:
-  /// **'Manual day start hour'**
-  String get manualDayStartHour;
-
-  /// No description provided for @manualEveningStartHour.
-  ///
-  /// In en, this message translates to:
-  /// **'Manual evening start hour'**
-  String get manualEveningStartHour;
-
-  /// No description provided for @manualNightStartHour.
-  ///
-  /// In en, this message translates to:
-  /// **'Manual night start hour'**
-  String get manualNightStartHour;
-
   /// No description provided for @geoPresetKyiv.
   ///
   /// In en, this message translates to:
@@ -1107,18 +957,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Geo: {latitude}, {longitude} ({timeZone})'**
   String geoSummary(String latitude, String longitude, String timeZone);
-
-  /// No description provided for @windowsAstronomicalAuto.
-  ///
-  /// In en, this message translates to:
-  /// **'Windows: astronomical (auto)'**
-  String get windowsAstronomicalAuto;
-
-  /// No description provided for @windowsManualSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Windows: manual {day}:00 / {evening}:00 / {night}:00'**
-  String windowsManualSummary(String day, String evening, String night);
 
   /// No description provided for @hardwareSettingsSaved.
   ///
@@ -1300,12 +1138,6 @@ abstract class AppLocalizations {
   /// **'Inverter load'**
   String get inverterLoad;
 
-  /// No description provided for @pvGeneration.
-  ///
-  /// In en, this message translates to:
-  /// **'PV generation'**
-  String get pvGeneration;
-
   /// No description provided for @refreshChart.
   ///
   /// In en, this message translates to:
@@ -1348,12 +1180,6 @@ abstract class AppLocalizations {
   /// **'{count} hr ago'**
   String hoursAgo(String count);
 
-  /// No description provided for @total.
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get total;
-
   /// No description provided for @solar.
   ///
   /// In en, this message translates to:
@@ -1377,72 +1203,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offline'**
   String get connectionOffline;
-
-  /// No description provided for @gridOutageDetectedShort.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid outage'**
-  String get gridOutageDetectedShort;
-
-  /// No description provided for @gridOutageVisualTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid power is unavailable'**
-  String get gridOutageVisualTitle;
-
-  /// No description provided for @gridOutageVisualBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Detected by input voltage ({voltage} V), not by current mode switch'**
-  String gridOutageVisualBody(String voltage);
-
-  /// No description provided for @backupRuntimeHybrid.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated backup time (battery + solar): ~{duration}'**
-  String backupRuntimeHybrid(String duration);
-
-  /// No description provided for @backupRuntimeBatteryOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Battery only: ~{duration}'**
-  String backupRuntimeBatteryOnly(String duration);
-
-  /// No description provided for @backupRuntimeSolarCoverHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Solar currently covers the load, so actual runtime may be longer.'**
-  String get backupRuntimeSolarCoverHint;
-
-  /// No description provided for @runtimeInfinite.
-  ///
-  /// In en, this message translates to:
-  /// **'continuous'**
-  String get runtimeInfinite;
-
-  /// No description provided for @runtimeNow.
-  ///
-  /// In en, this message translates to:
-  /// **'now'**
-  String get runtimeNow;
-
-  /// No description provided for @runtimeMinutes.
-  ///
-  /// In en, this message translates to:
-  /// **'{minutes} min'**
-  String runtimeMinutes(String minutes);
-
-  /// No description provided for @runtimeHoursOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours} h'**
-  String runtimeHoursOnly(String hours);
-
-  /// No description provided for @runtimeHoursMinutes.
-  ///
-  /// In en, this message translates to:
-  /// **'{hours} h {minutes} min'**
-  String runtimeHoursMinutes(String hours, String minutes);
 
   /// No description provided for @lastRealtimeUpdate.
   ///
@@ -1498,36 +1258,6 @@ abstract class AppLocalizations {
   /// **'Exit'**
   String get exit;
 
-  /// No description provided for @tooltipTodayEnergy.
-  ///
-  /// In en, this message translates to:
-  /// **'Total solar energy generated today'**
-  String get tooltipTodayEnergy;
-
-  /// No description provided for @tooltipTotalEnergy.
-  ///
-  /// In en, this message translates to:
-  /// **'Total solar energy generated since device installation'**
-  String get tooltipTotalEnergy;
-
-  /// No description provided for @tooltipCo2.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated CO₂ emission reduction based on solar generation'**
-  String get tooltipCo2;
-
-  /// No description provided for @tooltipInverterLoad.
-  ///
-  /// In en, this message translates to:
-  /// **'Current inverter load relative to its rated power capacity'**
-  String get tooltipInverterLoad;
-
-  /// No description provided for @tooltipPvGeneration.
-  ///
-  /// In en, this message translates to:
-  /// **'Current PV output relative to total installed panel capacity'**
-  String get tooltipPvGeneration;
-
   /// No description provided for @batteryLevel.
   ///
   /// In en, this message translates to:
@@ -1539,300 +1269,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Battery installation year'**
   String get batteryInstallYearLabel;
-
-  /// No description provided for @hemsStrategyLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'HEMS optimization strategy'**
-  String get hemsStrategyLabel;
-
-  /// No description provided for @hemsStrategyEconomical.
-  ///
-  /// In en, this message translates to:
-  /// **'Economical (minimize grid cost)'**
-  String get hemsStrategyEconomical;
-
-  /// No description provided for @hemsStrategySolarMaxed.
-  ///
-  /// In en, this message translates to:
-  /// **'Solar Maxed (maximize self-consumption)'**
-  String get hemsStrategySolarMaxed;
-
-  /// No description provided for @hemsStrategyBatteryLife.
-  ///
-  /// In en, this message translates to:
-  /// **'Battery Life (conservative cycles)'**
-  String get hemsStrategyBatteryLife;
-
-  /// No description provided for @hemsStrategyGridReliance.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid Reliance (resilience / off-grid)'**
-  String get hemsStrategyGridReliance;
-
-  /// No description provided for @hemsStrategyHybrid.
-  ///
-  /// In en, this message translates to:
-  /// **'Hybrid (balanced — recommended)'**
-  String get hemsStrategyHybrid;
-
-  /// No description provided for @moneySavedMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved this month'**
-  String get moneySavedMonth;
-
-  /// No description provided for @paymentThisMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'To pay this month'**
-  String get paymentThisMonth;
-
-  /// No description provided for @currencyUah.
-  ///
-  /// In en, this message translates to:
-  /// **'€'**
-  String get currencyUah;
-
-  /// No description provided for @energyTariffDayLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Day tariff'**
-  String get energyTariffDayLabel;
-
-  /// No description provided for @energyTariffNightLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Night tariff'**
-  String get energyTariffNightLabel;
-
-  /// No description provided for @energyTariffUnit.
-  ///
-  /// In en, this message translates to:
-  /// **'€/kWh'**
-  String get energyTariffUnit;
-
-  /// No description provided for @nightEnergyShareLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Night energy share'**
-  String get nightEnergyShareLabel;
-
-  /// No description provided for @nightEnergyShareUnit.
-  ///
-  /// In en, this message translates to:
-  /// **'%'**
-  String get nightEnergyShareUnit;
-
-  /// No description provided for @autoEstimateNightShare.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto estimate night share'**
-  String get autoEstimateNightShare;
-
-  /// No description provided for @batteryRoundTripEfficiencyLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Battery round-trip efficiency'**
-  String get batteryRoundTripEfficiencyLabel;
-
-  /// No description provided for @batteryRoundTripEfficiencyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Used to reduce savings from battery-shifted energy. Set 100% to disable battery-loss correction.'**
-  String get batteryRoundTripEfficiencyHint;
-
-  /// No description provided for @nightShareFallbackHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Used only as a fallback when hourly telemetry economics is unavailable.'**
-  String get nightShareFallbackHint;
-
-  /// No description provided for @economicsMethodTelemetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Hourly telemetry • Battery efficiency {efficiency}%'**
-  String economicsMethodTelemetry(String efficiency);
-
-  /// No description provided for @economicsMethodEstimated.
-  ///
-  /// In en, this message translates to:
-  /// **'Fallback estimate • Night share {share}%'**
-  String economicsMethodEstimated(String share);
-
-  /// No description provided for @calculationSourceLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Calculation source'**
-  String get calculationSourceLabel;
-
-  /// No description provided for @calculationAccuracyLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Accuracy'**
-  String get calculationAccuracyLabel;
-
-  /// No description provided for @calculationSourceTelemetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Hourly telemetry'**
-  String get calculationSourceTelemetry;
-
-  /// No description provided for @calculationSourceFallback.
-  ///
-  /// In en, this message translates to:
-  /// **'Fallback estimate'**
-  String get calculationSourceFallback;
-
-  /// No description provided for @calculationAccuracyHigh.
-  ///
-  /// In en, this message translates to:
-  /// **'High'**
-  String get calculationAccuracyHigh;
-
-  /// No description provided for @calculationAccuracyEstimated.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated'**
-  String get calculationAccuracyEstimated;
-
-  /// No description provided for @effectiveTariffFormula.
-  ///
-  /// In en, this message translates to:
-  /// **'Formula: {day}*(1-{share}%) + {night}*{share}%'**
-  String effectiveTariffFormula(String day, String night, String share);
-
-  /// No description provided for @tooltipMoneySavedMonthTelemetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Calculated from telemetry with hourly day/night tariff. Battery-shifted energy is adjusted by {efficiency}% round-trip efficiency.'**
-  String tooltipMoneySavedMonthTelemetry(String efficiency);
-
-  /// No description provided for @tooltipMoneySavedMonthEstimated.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated from self-consumed solar using fallback night share {share}% and battery efficiency {efficiency}%.'**
-  String tooltipMoneySavedMonthEstimated(String share, String efficiency);
-
-  /// No description provided for @tooltipPaymentThisMonthTelemetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Calculated from telemetry with hourly tariff windows: day from {dayStart}:00, night from {nightStart}:00.'**
-  String tooltipPaymentThisMonthTelemetry(String dayStart, String nightStart);
-
-  /// No description provided for @tooltipPaymentThisMonthEstimated.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated monthly bill using fallback night share {share}% for day/night tariff split.'**
-  String tooltipPaymentThisMonthEstimated(String share);
-
-  /// No description provided for @tooltipEffectiveTariffTelemetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Reference blended tariff only. Actual payment and savings above are calculated hourly from telemetry using day from {dayStart}:00 and night from {nightStart}:00.'**
-  String tooltipEffectiveTariffTelemetry(String dayStart, String nightStart);
-
-  /// No description provided for @projectedSavedMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Projected saved by month end'**
-  String get projectedSavedMonth;
-
-  /// No description provided for @projectedPaymentMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Projected payment by month end'**
-  String get projectedPaymentMonth;
-
-  /// No description provided for @tooltipProjectedSavedMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Forecast based on current month trend of self-consumed solar energy'**
-  String get tooltipProjectedSavedMonth;
-
-  /// No description provided for @tooltipProjectedPaymentMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Forecast based on current month trend of imported grid energy'**
-  String get tooltipProjectedPaymentMonth;
-
-  /// No description provided for @monthlyEnergyBreakdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly energy breakdown'**
-  String get monthlyEnergyBreakdown;
-
-  /// No description provided for @monthLoadEnergy.
-  ///
-  /// In en, this message translates to:
-  /// **'Load this month'**
-  String get monthLoadEnergy;
-
-  /// No description provided for @monthGridImport.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid import'**
-  String get monthGridImport;
-
-  /// No description provided for @monthSelfConsumed.
-  ///
-  /// In en, this message translates to:
-  /// **'Self-consumed solar'**
-  String get monthSelfConsumed;
-
-  /// No description provided for @monthGridCost.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid cost this month'**
-  String get monthGridCost;
-
-  /// No description provided for @monthSavedCost.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved cost this month'**
-  String get monthSavedCost;
-
-  /// No description provided for @monthEffectiveTariff.
-  ///
-  /// In en, this message translates to:
-  /// **'Effective tariff'**
-  String get monthEffectiveTariff;
-
-  /// No description provided for @tooltipMonthProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Current month progress'**
-  String get tooltipMonthProgress;
-
-  /// No description provided for @plannedOutageTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Planned outage alert'**
-  String get plannedOutageTitle;
-
-  /// No description provided for @plannedOutageEnabledSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-precharge before outage'**
-  String get plannedOutageEnabledSubtitle;
-
-  /// No description provided for @plannedOutageDisabledSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No manual outage schedule'**
-  String get plannedOutageDisabledSubtitle;
-
-  /// No description provided for @plannedOutageStartLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Outage start'**
-  String get plannedOutageStartLabel;
-
-  /// No description provided for @plannedOutageEndLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Outage end'**
-  String get plannedOutageEndLabel;
 
   /// No description provided for @notificationsTitle.
   ///
@@ -1851,30 +1287,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear all'**
   String get notificationsClear;
-
-  /// No description provided for @notifGridOutageTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid Power Outage'**
-  String get notifGridOutageTitle;
-
-  /// No description provided for @notifGridOutageBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid voltage dropped — running on solar/battery'**
-  String get notifGridOutageBody;
-
-  /// No description provided for @notifGridRestoredTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid Power Restored'**
-  String get notifGridRestoredTitle;
-
-  /// No description provided for @notifGridRestoredBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid voltage is back to normal ({voltage} V)'**
-  String notifGridRestoredBody(String voltage);
 
   /// No description provided for @notifLowBatteryTitle.
   ///
@@ -1900,78 +1312,6 @@ abstract class AppLocalizations {
   /// **'Battery SOC recovered to {soc}%'**
   String notifBatteryRecoveredBody(String soc);
 
-  /// No description provided for @notifModeChangedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'HEMS Mode Changed'**
-  String get notifModeChangedTitle;
-
-  /// No description provided for @notifModeChangedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Active mode: {mode}'**
-  String notifModeChangedBody(String mode);
-
-  /// No description provided for @notifGridInstabilityTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid Instability'**
-  String get notifGridInstabilityTitle;
-
-  /// No description provided for @notifGridInstabilityBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Frequent grid state changes detected'**
-  String get notifGridInstabilityBody;
-
-  /// No description provided for @notifAutoStormTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto Storm Mode Activated'**
-  String get notifAutoStormTitle;
-
-  /// No description provided for @notifAutoStormBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid outage detected — switched to Storm mode to protect battery'**
-  String get notifAutoStormBody;
-
-  /// No description provided for @notifForecastStormTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Storm Mode — Weather Alert'**
-  String get notifForecastStormTitle;
-
-  /// No description provided for @notifForecastStormBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Bad weather ahead: {reason} — switched to Storm mode'**
-  String notifForecastStormBody(String reason);
-
-  /// No description provided for @notifForecastStormRestoredTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Adaptive Mode Restored'**
-  String get notifForecastStormRestoredTitle;
-
-  /// No description provided for @notifForecastStormRestoredBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Weather risk cleared — restored to normal HEMS mode'**
-  String get notifForecastStormRestoredBody;
-
-  /// No description provided for @notifAutoAdaptiveTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Adaptive Mode Restored'**
-  String get notifAutoAdaptiveTitle;
-
-  /// No description provided for @notifAutoAdaptiveBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Grid is back — restored to Adaptive mode automatically'**
-  String get notifAutoAdaptiveBody;
-
   /// No description provided for @notifAnomalyTitle.
   ///
   /// In en, this message translates to:
@@ -1996,269 +1336,1247 @@ abstract class AppLocalizations {
   /// **'Total cycles: {count}. Estimated battery health: {soh}%'**
   String notifCycleBody(String count, String soh);
 
-  /// No description provided for @eventHistoryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Event History'**
-  String get eventHistoryTitle;
-
-  /// No description provided for @eventHistoryEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No events recorded yet'**
-  String get eventHistoryEmpty;
-
-  /// No description provided for @eventHistoryClear.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear history'**
-  String get eventHistoryClear;
-
-  /// No description provided for @eventHistoryShowAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Show all'**
-  String get eventHistoryShowAll;
-
-  /// No description provided for @exportCsv.
-  ///
-  /// In en, this message translates to:
-  /// **'Export CSV'**
-  String get exportCsv;
-
-  /// No description provided for @exportedTo.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved to:\n{path}'**
-  String exportedTo(String path);
-
-  /// No description provided for @exportFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Export failed'**
-  String get exportFailed;
-
-  /// No description provided for @currentCostPerHour.
-  ///
-  /// In en, this message translates to:
-  /// **'Cost now'**
-  String get currentCostPerHour;
-
-  /// No description provided for @uahPerHour.
-  ///
-  /// In en, this message translates to:
-  /// **'€/h'**
-  String get uahPerHour;
-
-  /// No description provided for @batteryCycles.
-  ///
-  /// In en, this message translates to:
-  /// **'Cycles'**
-  String get batteryCycles;
-
-  /// No description provided for @batteryHealth.
-  ///
-  /// In en, this message translates to:
-  /// **'Battery health'**
-  String get batteryHealth;
-
-  /// No description provided for @battSohPercent.
-  ///
-  /// In en, this message translates to:
-  /// **'SOH {soh}%'**
-  String battSohPercent(String soh);
-
-  /// No description provided for @autoStormByForecastTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto Storm mode by weather forecast'**
-  String get autoStormByForecastTitle;
-
-  /// No description provided for @autoStormByForecastEnabledSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Switches to Storm mode when bad weather is predicted (next 12 h)'**
-  String get autoStormByForecastEnabledSubtitle;
-
-  /// No description provided for @autoStormByForecastDisabledSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Forecast-based Storm mode is off'**
-  String get autoStormByForecastDisabledSubtitle;
-
-  /// No description provided for @socHistoryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Battery SOC — last 24 h'**
-  String get socHistoryTitle;
-
-  /// No description provided for @socHistorySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Charge level trend'**
-  String get socHistorySubtitle;
-
   /// No description provided for @socHistoryNoData.
   ///
   /// In en, this message translates to:
   /// **'Not enough data yet.\nData is collected every 5 minutes.'**
   String get socHistoryNoData;
 
-  /// No description provided for @socHistoryReserveLabel.
+  /// No description provided for @acInput.
   ///
   /// In en, this message translates to:
-  /// **'Reserve'**
-  String get socHistoryReserveLabel;
+  /// **'AC input'**
+  String get acInput;
 
-  /// No description provided for @socHistoryChargingLabel.
+  /// No description provided for @mainSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Main source'**
+  String get mainSource;
+
+  /// No description provided for @chartFullscreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full screen'**
+  String get chartFullscreen;
+
+  /// No description provided for @chartRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get chartRotate;
+
+  /// No description provided for @forecastBasis.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate for {kwp} kWp of panels from Open-Meteo solar radiation'**
+  String forecastBasis(String kwp);
+
+  /// No description provided for @applySafeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply safe current'**
+  String get applySafeCurrent;
+
+  /// No description provided for @safeCurrentApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe current applied: {target} A (read: {read})'**
+  String safeCurrentApplied(String target, String read);
+
+  /// No description provided for @safeCurrentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe current not confirmed. Target {target} A, read: {read}'**
+  String safeCurrentFailed(String target, String read);
+
+  /// No description provided for @invSetOutputPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Output source priority'**
+  String get invSetOutputPriority;
+
+  /// No description provided for @invSetOutputPriorityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Which source powers the loads (program 01). USB: AC input first; solar and battery only when AC input is missing. SUB: solar charges the battery first, then feeds the loads; AC input covers the rest. SBU: solar first, then battery; AC input only when the battery falls to the back-to-AC point (program 12/43). Off-grid: use SBU.'**
+  String get invSetOutputPriorityDesc;
+
+  /// No description provided for @invSetChargerPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Charger source priority'**
+  String get invSetChargerPriority;
+
+  /// No description provided for @invSetChargerPriorityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Which source charges the battery (program 16). CSO: solar first, AC input only when there is no sun. SNU: solar and AC input together. OSO: solar only, even when AC input is present. Without a generator on the AC input, only solar can charge.'**
+  String get invSetChargerPriorityDesc;
+
+  /// No description provided for @invSetMaxChargeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum charging current'**
+  String get invSetMaxChargeCurrent;
+
+  /// No description provided for @invSetMaxChargeCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Total battery charging current, solar + AC input (program 02). It cannot be lower than the AC charging current (program 11). Stay within the battery maker\'s limit.'**
+  String get invSetMaxChargeCurrentDesc;
+
+  /// No description provided for @invSetAcChargeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum AC charging current'**
+  String get invSetAcChargeCurrent;
+
+  /// No description provided for @invSetAcChargeCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum current used to charge the battery from the AC input, grid or generator (program 11). Keep it low enough for the generator and the input breaker.'**
+  String get invSetAcChargeCurrentDesc;
+
+  /// No description provided for @invSetAcInputRange.
+  ///
+  /// In en, this message translates to:
+  /// **'AC input voltage range'**
+  String get invSetAcInputRange;
+
+  /// No description provided for @invSetAcInputRangeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted AC input voltage (program 03). APL (appliances): 90-280 V, wide range. UPS: 170-280 V, narrow range for sensitive loads. The wide range copes better with a generator whose voltage fluctuates.'**
+  String get invSetAcInputRangeDesc;
+
+  /// No description provided for @invSetBatteryType.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery type'**
+  String get invSetBatteryType;
+
+  /// No description provided for @invSetBatteryTypeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery chemistry; it sets the charge voltages (program 05). AGM and Flooded: lead-acid presets. User-defined: you set bulk, float and cut-off voltages (programs 26, 27, 29). LIB/LiFe: lithium.'**
+  String get invSetBatteryTypeDesc;
+
+  /// No description provided for @invSetOverloadRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto restart after overload'**
+  String get invSetOverloadRestart;
+
+  /// No description provided for @invSetOverloadRestartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, the output turns back on by itself after an overload shutdown (program 06).'**
+  String get invSetOverloadRestartDesc;
+
+  /// No description provided for @invSetOverTempRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto restart after over-temperature'**
+  String get invSetOverTempRestart;
+
+  /// No description provided for @invSetOverTempRestartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, the output turns back on by itself after an over-temperature shutdown (program 07).'**
+  String get invSetOverTempRestartDesc;
+
+  /// No description provided for @invSetOutputVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Output voltage'**
+  String get invSetOutputVoltage;
+
+  /// No description provided for @invSetOutputVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AC voltage supplied to the loads (program 08). Europe: 230 V.'**
+  String get invSetOutputVoltageDesc;
+
+  /// No description provided for @invSetOutputFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Output frequency'**
+  String get invSetOutputFrequency;
+
+  /// No description provided for @invSetOutputFrequencyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AC frequency supplied to the loads (program 09). Europe: 50 Hz.'**
+  String get invSetOutputFrequencyDesc;
+
+  /// No description provided for @invSetOverloadBypass.
+  ///
+  /// In en, this message translates to:
+  /// **'Bypass on overload'**
+  String get invSetOverloadBypass;
+
+  /// No description provided for @invSetOverloadBypassDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, on overload in battery mode the inverter moves the loads to the AC input (program 23). It only helps when a generator is connected.'**
+  String get invSetOverloadBypassDesc;
+
+  /// No description provided for @invSetBuzzer.
+  ///
+  /// In en, this message translates to:
+  /// **'Buzzer alarm'**
+  String get invSetBuzzer;
+
+  /// No description provided for @invSetBuzzerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns the inverter buzzer on or off for warnings and faults (program 18).'**
+  String get invSetBuzzerDesc;
+
+  /// No description provided for @invSetSourceLossBeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Beep when primary source is lost'**
+  String get invSetSourceLossBeep;
+
+  /// No description provided for @invSetSourceLossBeepDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, the inverter beeps when the primary source chosen in program 01 is interrupted (program 22).'**
+  String get invSetSourceLossBeepDesc;
+
+  /// No description provided for @invSetReturnToDefaultScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to default screen'**
+  String get invSetReturnToDefaultScreen;
+
+  /// No description provided for @invSetReturnToDefaultScreenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, the LCD goes back to the default screen about 1 minute after the last key press; otherwise it stays on the last screen (program 19).'**
+  String get invSetReturnToDefaultScreenDesc;
+
+  /// No description provided for @invSetBacklight.
+  ///
+  /// In en, this message translates to:
+  /// **'LCD backlight'**
+  String get invSetBacklight;
+
+  /// No description provided for @invSetBacklightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the LCD backlight always on, or lets it switch off when idle (program 20).'**
+  String get invSetBacklightDesc;
+
+  /// No description provided for @invSetRecordFaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Record fault codes'**
+  String get invSetRecordFaults;
+
+  /// No description provided for @invSetRecordFaultsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, the inverter stores fault codes in its history (program 25).'**
+  String get invSetRecordFaultsDesc;
+
+  /// No description provided for @invSetEqualization.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery equalization'**
+  String get invSetEqualization;
+
+  /// No description provided for @invSetEqualizationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Periodic controlled overcharge that balances lead-acid cells (program 33). Only for Flooded or User-defined batteries; keep it off for lithium.'**
+  String get invSetEqualizationDesc;
+
+  /// No description provided for @invSetEqualizationNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start equalization now'**
+  String get invSetEqualizationNow;
+
+  /// No description provided for @invSetEqualizationNowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts an equalization cycle right away (program 39). Works only if equalization (program 33) is enabled.'**
+  String get invSetEqualizationNowDesc;
+
+  /// No description provided for @invSetBatteryPowerLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery power limiting'**
+  String get invSetBatteryPowerLimit;
+
+  /// No description provided for @invSetBatteryPowerLimitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Limits the power taken from the battery. Not described in the Easun manual: check the inverter documentation before changing it.'**
+  String get invSetBatteryPowerLimitDesc;
+
+  /// No description provided for @invSetSmartLoadCutOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart load cut-off on battery voltage'**
+  String get invSetSmartLoadCutOff;
+
+  /// No description provided for @invSetSmartLoadCutOffDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnects the smart (secondary) load output based on battery voltage. Not described in the Easun manual: check the inverter documentation before changing it.'**
+  String get invSetSmartLoadCutOffDesc;
+
+  /// No description provided for @invSetRgbLight.
+  ///
+  /// In en, this message translates to:
+  /// **'RGB light'**
+  String get invSetRgbLight;
+
+  /// No description provided for @invSetRgbLightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns the inverter RGB status light on or off.'**
+  String get invSetRgbLightDesc;
+
+  /// No description provided for @rdDualOutputVoltageSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Dual output'**
+  String get rdDualOutputVoltageSwitch;
+
+  /// No description provided for @rdDualOutputVoltageSwitchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Second AC output for non-essential loads; it is switched off when the battery drops to the turn-off voltage.'**
+  String get rdDualOutputVoltageSwitchDesc;
+
+  /// No description provided for @rdAcInputFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'AC input frequency'**
+  String get rdAcInputFrequency;
+
+  /// No description provided for @rdAcInputFrequencyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency on the AC input (grid or generator). 0 Hz means nothing is connected.'**
+  String get rdAcInputFrequencyDesc;
+
+  /// No description provided for @rdLedPatternLight1.
+  ///
+  /// In en, this message translates to:
+  /// **'LED lights'**
+  String get rdLedPatternLight1;
+
+  /// No description provided for @rdLedPatternLight1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'State of the inverter status LED lights.'**
+  String get rdLedPatternLight1Desc;
+
+  /// No description provided for @rdBatteryNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery system voltage'**
+  String get rdBatteryNumber;
+
+  /// No description provided for @rdBatteryNumberDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery bank voltage class the inverter is built for.'**
+  String get rdBatteryNumberDesc;
+
+  /// No description provided for @rdAcInputVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'AC input voltage'**
+  String get rdAcInputVoltage;
+
+  /// No description provided for @rdAcInputVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage on the AC input. 0 V means no grid or generator is connected.'**
+  String get rdAcInputVoltageDesc;
+
+  /// No description provided for @rdWorkingStates.
+  ///
+  /// In en, this message translates to:
+  /// **'Working state'**
+  String get rdWorkingStates;
+
+  /// No description provided for @rdWorkingStatesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Current inverter mode: Invert (loads from battery/solar), Line (loads from the AC input), Standby or Fault.'**
+  String get rdWorkingStatesDesc;
+
+  /// No description provided for @rdAcOutputActivePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Output active power'**
+  String get rdAcOutputActivePower;
+
+  /// No description provided for @rdAcOutputActivePowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Real power the loads are using now.'**
+  String get rdAcOutputActivePowerDesc;
+
+  /// No description provided for @rdBatteryEqualizationMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery equalization'**
+  String get rdBatteryEqualizationMode;
+
+  /// No description provided for @rdBatteryEqualizationModeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether periodic equalization is enabled (program 33). Lead-acid batteries only.'**
+  String get rdBatteryEqualizationModeDesc;
+
+  /// No description provided for @rdGridConnectedSwitch1.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid feed-in'**
+  String get rdGridConnectedSwitch1;
+
+  /// No description provided for @rdGridConnectedSwitch1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether the inverter may feed power into the grid. Off-grid: keep it off.'**
+  String get rdGridConnectedSwitch1Desc;
+
+  /// No description provided for @rdGenerationPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation power'**
+  String get rdGenerationPower;
+
+  /// No description provided for @rdGenerationPowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Power the solar panels are producing now.'**
+  String get rdGenerationPowerDesc;
+
+  /// No description provided for @rdRatingOutputCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal output current'**
+  String get rdRatingOutputCurrent;
+
+  /// No description provided for @rdRatingOutputCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum continuous AC output current of the inverter (rating plate value).'**
+  String get rdRatingOutputCurrentDesc;
+
+  /// No description provided for @rdLowBatteryCutOffVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Low battery cut-off voltage'**
+  String get rdLowBatteryCutOffVoltage;
+
+  /// No description provided for @rdLowBatteryCutOffVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Below this voltage the inverter turns the output off to protect the battery (program 29).'**
+  String get rdLowBatteryCutOffVoltageDesc;
+
+  /// No description provided for @rdBatteryCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery charge (SOC)'**
+  String get rdBatteryCapacity;
+
+  /// No description provided for @rdBatteryCapacityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'State of charge reported by the inverter.'**
+  String get rdBatteryCapacityDesc;
+
+  /// No description provided for @rdStartBalancing.
+  ///
+  /// In en, this message translates to:
+  /// **'Start equalization now'**
+  String get rdStartBalancing;
+
+  /// No description provided for @rdStartBalancingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether an immediate equalization cycle is requested (program 39).'**
+  String get rdStartBalancingDesc;
+
+  /// No description provided for @rdBatteryDischargeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery discharge current'**
+  String get rdBatteryDischargeCurrent;
+
+  /// No description provided for @rdBatteryDischargeCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Current flowing out of the battery now.'**
+  String get rdBatteryDischargeCurrentDesc;
+
+  /// No description provided for @rdGridConnectedCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid feed-in current'**
+  String get rdGridConnectedCurrent;
+
+  /// No description provided for @rdGridConnectedCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum current fed into the grid when feed-in is on. Not used off-grid.'**
+  String get rdGridConnectedCurrentDesc;
+
+  /// No description provided for @rdRatedBatteryVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal battery voltage'**
+  String get rdRatedBatteryVoltage;
+
+  /// No description provided for @rdRatedBatteryVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated voltage of the battery bank.'**
+  String get rdRatedBatteryVoltageDesc;
+
+  /// No description provided for @rdOutputApparentPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Output apparent power'**
+  String get rdOutputApparentPower;
+
+  /// No description provided for @rdOutputApparentPowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Apparent power (VA) drawn by the loads, reactive part included: it is what the inverter has to supply.'**
+  String get rdOutputApparentPowerDesc;
+
+  /// No description provided for @rdDualOutputTurnOffVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Dual output turn-off voltage'**
+  String get rdDualOutputTurnOffVoltage;
+
+  /// No description provided for @rdDualOutputTurnOffVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery voltage at which the second output is switched off.'**
+  String get rdDualOutputTurnOffVoltageDesc;
+
+  /// No description provided for @rdMainCPUVersion1.
+  ///
+  /// In en, this message translates to:
+  /// **'Main CPU firmware'**
+  String get rdMainCPUVersion1;
+
+  /// No description provided for @rdMainCPUVersion1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware version of the inverter main processor.'**
+  String get rdMainCPUVersion1Desc;
+
+  /// No description provided for @rdChargerSourcePriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Charger source priority'**
+  String get rdChargerSourcePriority;
+
+  /// No description provided for @rdChargerSourcePriorityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Current charger priority (program 16). CSO: solar first. SNU: solar + AC input. OSO: solar only.'**
+  String get rdChargerSourcePriorityDesc;
+
+  /// No description provided for @rdComebackUtilityModeVolSBUPriorityStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Back-to-AC voltage (SBU)'**
+  String get rdComebackUtilityModeVolSBUPriorityStatus;
+
+  /// No description provided for @rdComebackUtilityModeVolSBUPriorityStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'With SBU or solar first, below this battery voltage the loads move to the AC input (program 12). Without a generator it has no effect.'**
+  String get rdComebackUtilityModeVolSBUPriorityStatusDesc;
+
+  /// No description provided for @rdNominalAcVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal AC voltage'**
+  String get rdNominalAcVoltage;
+
+  /// No description provided for @rdNominalAcVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated AC voltage of the inverter.'**
+  String get rdNominalAcVoltageDesc;
+
+  /// No description provided for @rdNominalAcCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal AC current'**
+  String get rdNominalAcCurrent;
+
+  /// No description provided for @rdNominalAcCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated AC current of the inverter.'**
+  String get rdNominalAcCurrentDesc;
+
+  /// No description provided for @rdOutputRelayStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Output relay'**
+  String get rdOutputRelayStatus;
+
+  /// No description provided for @rdOutputRelayStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'ON means the AC output is powered.'**
+  String get rdOutputRelayStatusDesc;
+
+  /// No description provided for @rdPhotovoltaicAccessFlag.
+  ///
+  /// In en, this message translates to:
+  /// **'PV connection'**
+  String get rdPhotovoltaicAccessFlag;
+
+  /// No description provided for @rdPhotovoltaicAccessFlagDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether the inverter detects the solar panels.'**
+  String get rdPhotovoltaicAccessFlagDesc;
+
+  /// No description provided for @rdPvStatuss.
+  ///
+  /// In en, this message translates to:
+  /// **'PV status'**
+  String get rdPvStatuss;
+
+  /// No description provided for @rdPvStatussDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Working state of the solar input (MPPT charger).'**
+  String get rdPvStatussDesc;
+
+  /// No description provided for @rdRatedOutputFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal output frequency'**
+  String get rdRatedOutputFrequency;
+
+  /// No description provided for @rdRatedOutputFrequencyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Output frequency set on the inverter (program 09).'**
+  String get rdRatedOutputFrequencyDesc;
+
+  /// No description provided for @rdRatedOutputVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal output voltage'**
+  String get rdRatedOutputVoltage;
+
+  /// No description provided for @rdRatedOutputVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Output voltage set on the inverter (program 08).'**
+  String get rdRatedOutputVoltageDesc;
+
+  /// No description provided for @rdGridState.
+  ///
+  /// In en, this message translates to:
+  /// **'AC input state'**
+  String get rdGridState;
+
+  /// No description provided for @rdGridStateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether the AC input (grid or generator) is connected.'**
+  String get rdGridStateDesc;
+
+  /// No description provided for @rdBatteryEqualizationInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization interval'**
+  String get rdBatteryEqualizationInterval;
+
+  /// No description provided for @rdBatteryEqualizationIntervalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Days between two equalization cycles (program 37).'**
+  String get rdBatteryEqualizationIntervalDesc;
+
+  /// No description provided for @rdLoadPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Load percentage'**
+  String get rdLoadPercentage;
+
+  /// No description provided for @rdLoadPercentageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Output load as a share of the inverter rated power.'**
+  String get rdLoadPercentageDesc;
+
+  /// No description provided for @rdComebackBatteryModeVolSBUPriorityStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Back-to-battery voltage (SBU)'**
+  String get rdComebackBatteryModeVolSBUPriorityStatus;
+
+  /// No description provided for @rdComebackBatteryModeVolSBUPriorityStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'With SBU or solar first, above this battery voltage the loads go back to the battery (program 13).'**
+  String get rdComebackBatteryModeVolSBUPriorityStatusDesc;
+
+  /// No description provided for @rdPvInputPower.
+  ///
+  /// In en, this message translates to:
+  /// **'PV input power'**
+  String get rdPvInputPower;
+
+  /// No description provided for @rdPvInputPowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Power entering from the solar panels into the MPPT charger.'**
+  String get rdPvInputPowerDesc;
+
+  /// No description provided for @rdMaxTotalChargeCurrent1.
+  ///
+  /// In en, this message translates to:
+  /// **'Max total charge current'**
+  String get rdMaxTotalChargeCurrent1;
+
+  /// No description provided for @rdMaxTotalChargeCurrent1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Total charging limit, solar + AC input (program 02).'**
+  String get rdMaxTotalChargeCurrent1Desc;
+
+  /// No description provided for @rdBatState.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery state'**
+  String get rdBatState;
+
+  /// No description provided for @rdBatStateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether the battery is charging, discharging or idle.'**
+  String get rdBatStateDesc;
+
+  /// No description provided for @rdOutputSourcePriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Output source priority'**
+  String get rdOutputSourcePriority;
+
+  /// No description provided for @rdOutputSourcePriorityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Current output priority (program 01). USB: AC input first. SUB: solar charges first, AC covers the rest. SBU: solar, then battery, then AC.'**
+  String get rdOutputSourcePriorityDesc;
+
+  /// No description provided for @rdFloatChargingVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Float charging voltage'**
+  String get rdFloatChargingVoltage;
+
+  /// No description provided for @rdFloatChargingVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage held once the battery is full (program 27).'**
+  String get rdFloatChargingVoltageDesc;
+
+  /// No description provided for @rdBatteryChargingCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery charging current'**
+  String get rdBatteryChargingCurrent;
+
+  /// No description provided for @rdBatteryChargingCurrentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Current flowing into the battery now.'**
+  String get rdBatteryChargingCurrentDesc;
+
+  /// No description provided for @rdAcOutputRatingApparentPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal apparent power'**
+  String get rdAcOutputRatingApparentPower;
+
+  /// No description provided for @rdAcOutputRatingApparentPowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated output power of the inverter in VA.'**
+  String get rdAcOutputRatingApparentPowerDesc;
+
+  /// No description provided for @rdLoadStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Load status'**
+  String get rdLoadStatus;
+
+  /// No description provided for @rdLoadStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether the output load is normal or overloaded.'**
+  String get rdLoadStatusDesc;
+
+  /// No description provided for @rdBatteryEqualizationVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization voltage'**
+  String get rdBatteryEqualizationVoltage;
+
+  /// No description provided for @rdBatteryEqualizationVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Charging voltage used during equalization (program 34).'**
+  String get rdBatteryEqualizationVoltageDesc;
+
+  /// No description provided for @rdBatteryVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery voltage'**
+  String get rdBatteryVoltage;
+
+  /// No description provided for @rdBatteryVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery voltage measured now.'**
+  String get rdBatteryVoltageDesc;
+
+  /// No description provided for @rdOutputVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Output voltage'**
+  String get rdOutputVoltage;
+
+  /// No description provided for @rdOutputVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AC voltage on the output now.'**
+  String get rdOutputVoltageDesc;
+
+  /// No description provided for @rdBulkChargingVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk charging voltage'**
+  String get rdBulkChargingVoltage;
+
+  /// No description provided for @rdBulkChargingVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Constant-voltage charging target (program 26).'**
+  String get rdBulkChargingVoltageDesc;
+
+  /// No description provided for @rdBatteryEqualizationTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization timeout'**
+  String get rdBatteryEqualizationTimeout;
+
+  /// No description provided for @rdBatteryEqualizationTimeoutDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum extra time allowed for an equalization cycle (program 36).'**
+  String get rdBatteryEqualizationTimeoutDesc;
+
+  /// No description provided for @rdFeedInPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed-in power'**
+  String get rdFeedInPower;
+
+  /// No description provided for @rdFeedInPowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Power sent to the grid. Off-grid it stays at 0.'**
+  String get rdFeedInPowerDesc;
+
+  /// No description provided for @rdNtcMaximumTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Max internal temperature'**
+  String get rdNtcMaximumTemperature;
+
+  /// No description provided for @rdNtcMaximumTemperatureDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest temperature measured by the inverter internal sensors (NTC).'**
+  String get rdNtcMaximumTemperatureDesc;
+
+  /// No description provided for @rdMainsRelayStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'AC input relay'**
+  String get rdMainsRelayStatus;
+
+  /// No description provided for @rdMainsRelayStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'ON means loads or charger are connected to the AC input.'**
+  String get rdMainsRelayStatusDesc;
+
+  /// No description provided for @rdBatteryRatingVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated voltage'**
+  String get rdBatteryRatingVoltage;
+
+  /// No description provided for @rdBatteryRatingVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated voltage reported by the inverter.'**
+  String get rdBatteryRatingVoltageDesc;
+
+  /// No description provided for @rdRatedActivePower.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal active power'**
+  String get rdRatedActivePower;
+
+  /// No description provided for @rdRatedActivePowerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated continuous output power of the inverter in W.'**
+  String get rdRatedActivePowerDesc;
+
+  /// No description provided for @rdPvInputVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'PV input voltage'**
+  String get rdPvInputVoltage;
+
+  /// No description provided for @rdPvInputVoltageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage of the solar string; it must stay inside the MPPT voltage range.'**
+  String get rdPvInputVoltageDesc;
+
+  /// No description provided for @rdMainsInputRange.
+  ///
+  /// In en, this message translates to:
+  /// **'AC input range'**
+  String get rdMainsInputRange;
+
+  /// No description provided for @rdMainsInputRangeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted AC input voltage range (program 03). APL: 90-280 V. UPS: 170-280 V.'**
+  String get rdMainsInputRangeDesc;
+
+  /// No description provided for @rdOutputFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Output frequency'**
+  String get rdOutputFrequency;
+
+  /// No description provided for @rdOutputFrequencyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'AC frequency measured on the output.'**
+  String get rdOutputFrequencyDesc;
+
+  /// No description provided for @rdBatteryEqualizationTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization time'**
+  String get rdBatteryEqualizationTime;
+
+  /// No description provided for @rdBatteryEqualizationTimeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration of an equalization cycle (program 35).'**
+  String get rdBatteryEqualizationTimeDesc;
+
+  /// No description provided for @rdBatteryType.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery type'**
+  String get rdBatteryType;
+
+  /// No description provided for @rdBatteryTypeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery type set on the inverter (program 05).'**
+  String get rdBatteryTypeDesc;
+
+  /// No description provided for @rdMaxUtilityChargeCurrent1.
+  ///
+  /// In en, this message translates to:
+  /// **'AC charging current'**
+  String get rdMaxUtilityChargeCurrent1;
+
+  /// No description provided for @rdMaxUtilityChargeCurrent1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum current for charging from the AC input (program 11).'**
+  String get rdMaxUtilityChargeCurrent1Desc;
+
+  /// No description provided for @rdValOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get rdValOn;
+
+  /// No description provided for @rdValOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get rdValOff;
+
+  /// No description provided for @rdValEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get rdValEnabled;
+
+  /// No description provided for @rdValDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get rdValDisabled;
+
+  /// No description provided for @rdValCharging.
   ///
   /// In en, this message translates to:
   /// **'Charging'**
-  String get socHistoryChargingLabel;
+  String get rdValCharging;
 
-  /// No description provided for @socHistoryDischargingLabel.
+  /// No description provided for @rdValDischarging.
   ///
   /// In en, this message translates to:
   /// **'Discharging'**
-  String get socHistoryDischargingLabel;
+  String get rdValDischarging;
 
-  /// No description provided for @socHistoryIdleLabel.
+  /// No description provided for @rdValInvertMode.
   ///
   /// In en, this message translates to:
-  /// **'Idle'**
-  String get socHistoryIdleLabel;
+  /// **'Inverter mode'**
+  String get rdValInvertMode;
 
-  /// No description provided for @scheduleRulesTitle.
+  /// No description provided for @rdValLineMode.
   ///
   /// In en, this message translates to:
-  /// **'Schedule Rules'**
-  String get scheduleRulesTitle;
+  /// **'Line mode'**
+  String get rdValLineMode;
 
-  /// No description provided for @scheduleRulesSubtitle.
+  /// No description provided for @rdValStandbyMode.
   ///
   /// In en, this message translates to:
-  /// **'Force a HEMS mode during a recurring time window'**
-  String get scheduleRulesSubtitle;
+  /// **'Standby'**
+  String get rdValStandbyMode;
 
-  /// No description provided for @scheduleRulesEmpty.
+  /// No description provided for @rdValFaultMode.
   ///
   /// In en, this message translates to:
-  /// **'No schedule rules yet.\nTap + to add your first rule.'**
-  String get scheduleRulesEmpty;
+  /// **'Fault'**
+  String get rdValFaultMode;
 
-  /// No description provided for @scheduleRuleAdd.
+  /// No description provided for @rdValAcNotConnected.
   ///
   /// In en, this message translates to:
-  /// **'Add Rule'**
-  String get scheduleRuleAdd;
+  /// **'AC input not connected'**
+  String get rdValAcNotConnected;
 
-  /// No description provided for @scheduleRuleEdit.
+  /// No description provided for @rdValAcConnected.
   ///
   /// In en, this message translates to:
-  /// **'Edit Rule'**
-  String get scheduleRuleEdit;
+  /// **'AC input connected'**
+  String get rdValAcConnected;
 
-  /// No description provided for @scheduleRuleDelete.
+  /// No description provided for @rdValNormal.
   ///
   /// In en, this message translates to:
-  /// **'Delete Rule'**
-  String get scheduleRuleDelete;
+  /// **'Normal'**
+  String get rdValNormal;
 
-  /// No description provided for @scheduleRuleDeleteConfirm.
+  /// No description provided for @rdValPvWorking.
   ///
   /// In en, this message translates to:
-  /// **'Delete rule \"{name}\"?'**
-  String scheduleRuleDeleteConfirm(String name);
+  /// **'Connected and working'**
+  String get rdValPvWorking;
 
-  /// No description provided for @scheduleRuleName.
+  /// No description provided for @rdValPvConnected.
   ///
   /// In en, this message translates to:
-  /// **'Rule name'**
-  String get scheduleRuleName;
+  /// **'Panels connected'**
+  String get rdValPvConnected;
 
-  /// No description provided for @scheduleRuleNameHint.
+  /// No description provided for @invSetBackToAcVoltage.
   ///
   /// In en, this message translates to:
-  /// **'E.g. Morning solar, Weekend charge…'**
-  String get scheduleRuleNameHint;
+  /// **'Back-to-AC voltage (SBU)'**
+  String get invSetBackToAcVoltage;
 
-  /// No description provided for @scheduleRuleDays.
+  /// No description provided for @invSetBackToAcVoltageDesc.
   ///
   /// In en, this message translates to:
-  /// **'Active days'**
-  String get scheduleRuleDays;
+  /// **'With SBU or solar first in program 01, below this battery voltage the loads move to the AC input (program 12). It must be lower than the back-to-battery voltage. Without a generator it has no effect.'**
+  String get invSetBackToAcVoltageDesc;
 
-  /// No description provided for @scheduleRuleStartTime.
+  /// No description provided for @invSetBackToBatteryVoltage.
   ///
   /// In en, this message translates to:
-  /// **'Start time'**
-  String get scheduleRuleStartTime;
+  /// **'Back-to-battery voltage (SBU)'**
+  String get invSetBackToBatteryVoltage;
 
-  /// No description provided for @scheduleRuleEndTime.
+  /// No description provided for @invSetBackToBatteryVoltageDesc.
   ///
   /// In en, this message translates to:
-  /// **'End time'**
-  String get scheduleRuleEndTime;
+  /// **'With SBU or solar first, once the battery is back above this voltage the loads return to battery power (program 13). It must be higher than the back-to-AC voltage.'**
+  String get invSetBackToBatteryVoltageDesc;
 
-  /// No description provided for @scheduleRuleMode.
+  /// No description provided for @invSetBulkVoltage.
   ///
   /// In en, this message translates to:
-  /// **'Forced HEMS mode'**
-  String get scheduleRuleMode;
+  /// **'Bulk charging voltage (C.V.)'**
+  String get invSetBulkVoltage;
 
-  /// No description provided for @scheduleRuleModeAdaptive.
+  /// No description provided for @invSetBulkVoltageDesc.
   ///
   /// In en, this message translates to:
-  /// **'Adaptive (Auto)'**
-  String get scheduleRuleModeAdaptive;
+  /// **'Constant-voltage charging target (program 26). Editable only with a User-defined battery; it must be at least the float voltage. Follow the battery maker\'s values.'**
+  String get invSetBulkVoltageDesc;
 
-  /// No description provided for @scheduleRuleModeArbitrage.
+  /// No description provided for @invSetFloatVoltage.
   ///
   /// In en, this message translates to:
-  /// **'Night Arbitrage'**
-  String get scheduleRuleModeArbitrage;
+  /// **'Float charging voltage'**
+  String get invSetFloatVoltage;
 
-  /// No description provided for @scheduleRuleModeStorm.
+  /// No description provided for @invSetFloatVoltageDesc.
   ///
   /// In en, this message translates to:
-  /// **'Storm / Reserve'**
-  String get scheduleRuleModeStorm;
+  /// **'Voltage held once the battery is full (program 27). Editable only with a User-defined battery; it cannot exceed the bulk voltage.'**
+  String get invSetFloatVoltageDesc;
 
-  /// No description provided for @scheduleRuleActive.
+  /// No description provided for @invSetLowCutOffVoltage.
   ///
   /// In en, this message translates to:
-  /// **'Active now'**
-  String get scheduleRuleActive;
+  /// **'Low DC cut-off voltage'**
+  String get invSetLowCutOffVoltage;
 
-  /// No description provided for @scheduleRuleNameEmpty.
+  /// No description provided for @invSetLowCutOffVoltageDesc.
   ///
   /// In en, this message translates to:
-  /// **'Please enter a name'**
-  String get scheduleRuleNameEmpty;
+  /// **'Below this battery voltage the inverter turns the output off to protect the battery (program 29). It must be lower than the back-to-AC voltage.'**
+  String get invSetLowCutOffVoltageDesc;
 
-  /// No description provided for @scheduleRuleNoDays.
+  /// No description provided for @invSetLowCutOffSoc.
   ///
   /// In en, this message translates to:
-  /// **'Select at least one day'**
-  String get scheduleRuleNoDays;
+  /// **'Low DC cut-off SOC'**
+  String get invSetLowCutOffSoc;
 
-  /// No description provided for @scheduleRulePriority.
+  /// No description provided for @invSetLowCutOffSocDesc.
   ///
   /// In en, this message translates to:
-  /// **'Priority'**
-  String get scheduleRulePriority;
+  /// **'With a lithium battery that talks to the inverter: below this state of charge the output turns off (program 45, default 20%, range 3-30%).'**
+  String get invSetLowCutOffSocDesc;
 
-  /// No description provided for @scheduleRulePriorityHint.
+  /// No description provided for @invSetEqVoltage.
   ///
   /// In en, this message translates to:
-  /// **'Higher priority wins when rules overlap'**
-  String get scheduleRulePriorityHint;
+  /// **'Equalization voltage'**
+  String get invSetEqVoltage;
 
-  /// No description provided for @scheduleRuleConflict.
+  /// No description provided for @invSetEqVoltageDesc.
   ///
   /// In en, this message translates to:
-  /// **'{count} rules overlap now — using highest priority'**
-  String scheduleRuleConflict(int count);
+  /// **'Charging voltage used during equalization (program 34). Lead-acid only.'**
+  String get invSetEqVoltageDesc;
+
+  /// No description provided for @invSetEqTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization time'**
+  String get invSetEqTime;
+
+  /// No description provided for @invSetEqTimeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'How long the equalization voltage is held (program 35, 0-900 min).'**
+  String get invSetEqTimeDesc;
+
+  /// No description provided for @invSetEqTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization timeout'**
+  String get invSetEqTimeout;
+
+  /// No description provided for @invSetEqTimeoutDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra time allowed if the equalization voltage is not reached (program 36, 0-900 min).'**
+  String get invSetEqTimeoutDesc;
+
+  /// No description provided for @invSetEqInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Equalization interval'**
+  String get invSetEqInterval;
+
+  /// No description provided for @invSetEqIntervalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Days between two equalization cycles (program 37, 1-90 days).'**
+  String get invSetEqIntervalDesc;
+
+  /// No description provided for @invSetOutputDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Output delay'**
+  String get invSetOutputDelay;
+
+  /// No description provided for @invSetOutputDelayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Delay before the AC output turns on. Not described in the Easun manual: check the inverter documentation before changing it.'**
+  String get invSetOutputDelayDesc;
+
+  /// No description provided for @socDayChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery charge (SOC) during the day'**
+  String get socDayChartTitle;
+
+  /// No description provided for @flowLosses.
+  ///
+  /// In en, this message translates to:
+  /// **'Losses'**
+  String get flowLosses;
+
+  /// No description provided for @flowLossesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Power coming in (solar, AC input, battery) that does not reach the loads or the battery: inverter self-consumption and conversion losses.'**
+  String get flowLossesHint;
+
+  /// No description provided for @flowMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading mismatch'**
+  String get flowMismatch;
+
+  /// No description provided for @flowMismatchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'More power goes out than the readings show coming in: the values were sampled at slightly different moments.'**
+  String get flowMismatchHint;
 }
 
 class _AppLocalizationsDelegate

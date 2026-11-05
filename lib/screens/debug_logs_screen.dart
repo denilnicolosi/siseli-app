@@ -81,7 +81,7 @@ class _DebugLogsScreenState extends State<DebugLogsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🔍 Debug Logs (HEMS Events)'),
+        title: const Text('🔍 Debug Logs'),
         backgroundColor: theme.colorScheme.primary,
         actions: [
           IconButton(

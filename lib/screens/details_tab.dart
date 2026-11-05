@@ -4,6 +4,8 @@ import '../l10n/app_localizations.dart';
 import '../models/inverter_data.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/inverter_reading_info.dart';
+import '../utils/inverter_setting_info.dart';
 import '../widgets/app_components.dart';
 
 class DetailsTab extends StatelessWidget {
@@ -30,7 +32,11 @@ class DetailsTab extends StatelessWidget {
     // Realtime fields - everything except the 'fullConfigs' sub-map.
     final realtimeFields = Map<String, dynamic>.from(data.rawFields)
       ..remove('fullConfigs');
-    final stateKeys = realtimeFields.keys.toList()..sort();
+    // Sort by the label the user reads, not by the API key.
+    String readingLabel(String k) =>
+        (inverterReadingInfo(l10n, k)?.name ?? k).toLowerCase();
+    final stateKeys = realtimeFields.keys.toList()
+      ..sort((a, b) => readingLabel(a).compareTo(readingLabel(b)));
 
     final isCompact = MediaQuery.sizeOf(context).width < 600;
     return Stack(
@@ -40,7 +46,9 @@ class DetailsTab extends StatelessWidget {
             isCompact ? AppTheme.spacingM : AppTheme.spacingL,
             isCompact ? AppTheme.spacingS : AppTheme.spacingL,
             isCompact ? AppTheme.spacingM : AppTheme.spacingL,
-            AppTheme.spacingL,
+            // Bottom bar overlays the list (extendBody); Scaffold reports
+            // its height here.
+            AppTheme.spacingL + MediaQuery.paddingOf(context).bottom,
           ),
           children: [
             AppSectionCard(
@@ -163,12 +171,24 @@ class DetailsTab extends StatelessWidget {
   Widget _buildConfigTile(BuildContext context, Map<String, dynamic> cfg) {
     final theme = Theme.of(context);
     final key = cfg['key']?.toString() ?? '';
-    final name =
-        cfg['nameDisplay']?.toString() ?? cfg['name']?.toString() ?? key;
-    final valueDisplay =
-        cfg['valueDisplay']?.toString().trim().isNotEmpty == true
-            ? cfg['valueDisplay']?.toString() ?? '-'
-            : cfg['value']?.toString() ?? '-';
+    final info = inverterSettingInfo(AppLocalizations.of(context)!, key);
+    final name = info?.name ??
+        cfg['nameDisplay']?.toString() ??
+        cfg['name']?.toString() ??
+        key;
+    final l10n = AppLocalizations.of(context)!;
+    final rawValue = cfg['value']?.toString();
+    // A known option ("4" -> "LiFe") reads better than the raw number.
+    final presetLabel = _getPresets(key, l10n)
+        ?.where((item) => item.value == rawValue)
+        .map((item) => (item.child as Text).data)
+        .firstOrNull;
+    final valueDisplay = presetLabel ??
+        translateReadingValue(
+            l10n,
+            cfg['valueDisplay']?.toString().trim().isNotEmpty == true
+                ? cfg['valueDisplay']?.toString() ?? '-'
+                : rawValue ?? '-');
     final unit = cfg['unit']?.toString() ?? '';
     final displayText = (unit.isNotEmpty && unit != 'null')
         ? '$valueDisplay $unit'
@@ -190,13 +210,27 @@ class DetailsTab extends StatelessWidget {
           name,
           style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
         ),
-        subtitle: Text(
-          displayText,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-            color: theme.colorScheme.primary,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              displayText,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            if (info != null)
+              Text(
+                info.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ),
         trailing: provider.isSettingChanging
             ? const SizedBox(
@@ -228,13 +262,20 @@ class DetailsTab extends StatelessWidget {
     } else if (fieldData != null) {
       value = fieldData.toString();
     }
+    final l10n = AppLocalizations.of(context)!;
+    final info = inverterReadingInfo(l10n, key);
+    name = info?.name ?? name;
+    value = translateReadingValue(l10n, value);
+    final showInfo =
+        info == null ? null : () => _showReadingInfo(context, info);
 
     return AppCard(
       backgroundColor: theme.colorScheme.surfaceContainerHigh,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacingM,
-          vertical: AppTheme.spacingXS,
+        dense: true,
+        contentPadding: const EdgeInsets.only(
+          left: AppTheme.spacingM,
+          right: AppTheme.spacingXS,
         ),
         leading: Icon(
           _iconForSetting(key),
@@ -245,20 +286,52 @@ class DetailsTab extends StatelessWidget {
           name,
           style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
         ),
-        trailing: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 140),
-          child: Text(
-            (unit.isNotEmpty && unit != 'null') ? '$value $unit' : value,
-            textAlign: TextAlign.end,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: theme.colorScheme.primary,
+        onTap: showInfo,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 110),
+              child: Text(
+                (unit.isNotEmpty && unit != 'null') ? '$value $unit' : value,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
             ),
-          ),
+            if (showInfo != null)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.info_outline_rounded, size: 18),
+                tooltip: info!.name,
+                onPressed: showInfo,
+              )
+            else
+              const SizedBox(width: AppTheme.spacingS),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _showReadingInfo(
+      BuildContext context, ({String name, String description}) info) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(info.name, style: const TextStyle(fontSize: 16)),
+        content: Text(info.description),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
+          ),
+        ],
       ),
     );
   }
@@ -278,6 +351,7 @@ class DetailsTab extends StatelessWidget {
     final currentValue = cfg['value']?.toString() ?? '';
     final unit = cfg['unit']?.toString() ?? '';
 
+    final description = inverterSettingInfo(l10n, key)?.description;
     final presets = _getPresets(key, l10n);
     var selected = currentValue;
     // Ensure selected is a valid preset option
@@ -291,47 +365,59 @@ class DetailsTab extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
           title: Text(name, style: const TextStyle(fontSize: 16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (unit.isNotEmpty && unit != 'null')
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    l10n.unitOfMeasure(unit),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.secondary,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (description != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      description,
+                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                          ),
                     ),
                   ),
-                ),
-              if (presets != null)
-                DropdownButtonFormField<String>(
-                  initialValue: selected,
-                  items: presets,
-                  onChanged: (val) {
-                    if (val != null) setState(() => selected = val);
-                  },
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: l10n.selectValue,
+                if (unit.isNotEmpty && unit != 'null')
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      l10n.unitOfMeasure(unit),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
                   ),
-                )
-              else
-                TextField(
-                  controller: controller,
-                  keyboardType: valueType == 1
-                      ? const TextInputType.numberWithOptions(decimal: true)
-                      : TextInputType.text,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    labelText: l10n.newValue,
-                    suffixText:
-                        (unit.isNotEmpty && unit != 'null') ? unit : null,
+                if (presets != null)
+                  DropdownButtonFormField<String>(
+                    initialValue: selected,
+                    items: presets,
+                    onChanged: (val) {
+                      if (val != null) setState(() => selected = val);
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: l10n.selectValue,
+                    ),
+                  )
+                else
+                  TextField(
+                    controller: controller,
+                    keyboardType: valueType == 1
+                        ? const TextInputType.numberWithOptions(decimal: true)
+                        : TextInputType.text,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: l10n.newValue,
+                      suffixText:
+                          (unit.isNotEmpty && unit != 'null') ? unit : null,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -364,10 +450,6 @@ class DetailsTab extends StatelessWidget {
     final enableDisable = [
       DropdownMenuItem(value: '0', child: Text(l10n.presetDisabled)),
       DropdownMenuItem(value: '1', child: Text(l10n.presetEnabled)),
-    ];
-    const onOff = [
-      DropdownMenuItem(value: '0', child: Text('OFF')),
-      DropdownMenuItem(value: '1', child: Text('ON')),
     ];
 
     switch (key) {
@@ -415,7 +497,6 @@ class DetailsTab extends StatelessWidget {
       case 'batteryPowerLimitingSetting':
       case 'cutOffVoltBatteryForSmartMainLoad':
       case 'rgbOnAndOffControlSetting':
-        return onOff;
       case 'batteryEqualizationSetting':
       case 'batteryEqualizationActivateImmediate':
       case 'overLoadRestartSetting':

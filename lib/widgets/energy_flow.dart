@@ -81,8 +81,10 @@ class _FlowSnapshot {
 
     final solarExcess = math.max(pv - solarToLoad, 0.0);
     final solarToBattery = math.min(solarExcess, batteryCharge);
-    final solarToGrid =
-        math.max(solarExcess - solarToBattery, 0.0) + gridExport;
+    // Only measured export counts as solar -> AC; unexplained PV surplus
+    // (inverter self-use, losses) stays in the Δ balance chip. Off-grid
+    // there is no export at all.
+    final solarToGrid = gridExport.toDouble();
     final gridToBattery = math.max(gridImport - gridToLoad, 0.0);
 
     final balanceError = (pv + gridImport + batteryDischarge) -
@@ -407,7 +409,7 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
             child: _NodeWidget(
               icon: Icons.electric_bolt_rounded,
               color: AppTheme.gridColor,
-              title: l10n.grid,
+              title: l10n.acInput,
               value: _gridNodeLabel(snapshot),
               selected: selectedLink == _InteractiveFlowLink.gridToLoad ||
                   selectedLink == _InteractiveFlowLink.gridToBattery ||
@@ -643,21 +645,21 @@ class _FlowLegendBar extends StatelessWidget {
       (
         icon: Icons.electric_bolt_rounded,
         color: AppTheme.gridColor,
-        text: '${l10n.grid} -> ${l10n.load}',
+        text: '${l10n.acInput} -> ${l10n.load}',
         power: snapshot.gridToLoadW,
         link: _InteractiveFlowLink.gridToLoad,
       ),
       (
         icon: Icons.battery_full_rounded,
         color: AppTheme.gridColor,
-        text: '${l10n.grid} -> ${l10n.battery}',
+        text: '${l10n.acInput} -> ${l10n.battery}',
         power: snapshot.gridToBatteryW,
         link: _InteractiveFlowLink.gridToBattery,
       ),
       (
         icon: Icons.upload_rounded,
         color: AppTheme.gridColor,
-        text: '${l10n.solar} -> ${l10n.grid}',
+        text: '${l10n.solar} -> ${l10n.acInput}',
         power: snapshot.solarToGridW,
         link: _InteractiveFlowLink.solarToGrid,
       ),
@@ -676,14 +678,26 @@ class _FlowLegendBar extends StatelessWidget {
               selected: selectedLink == e.link,
               onTap: () => onSelectLink(e.link),
             ),
-        _FlowLegendChip(
-          icon: snapshot.balanceStable
-              ? Icons.check_circle_rounded
-              : Icons.warning_amber_rounded,
-          color: snapshot.balanceStable
-              ? const Color(0xFF10B981)
-              : theme.colorScheme.error,
-          label: 'Δ ${snapshot.balanceErrorW.abs().toStringAsFixed(0)} W',
+        // Δ = power in (PV + AC + battery discharge) − power out (loads +
+        // battery charge + export). Positive: inverter self-use and
+        // conversion losses. Negative: the readings do not add up.
+        Tooltip(
+          message: snapshot.balanceErrorW >= 0
+              ? l10n.flowLossesHint
+              : l10n.flowMismatchHint,
+          triggerMode: TooltipTriggerMode.tap,
+          showDuration: const Duration(seconds: 6),
+          child: _FlowLegendChip(
+            icon: snapshot.balanceErrorW >= 0
+                ? Icons.local_fire_department_rounded
+                : Icons.compare_arrows_rounded,
+            color: snapshot.balanceStable
+                ? theme.colorScheme.onSurfaceVariant
+                : theme.colorScheme.error,
+            label:
+                '${snapshot.balanceErrorW >= 0 ? l10n.flowLosses : l10n.flowMismatch}: '
+                '${snapshot.balanceErrorW.abs().toStringAsFixed(0)} W',
+          ),
         ),
       ],
     );

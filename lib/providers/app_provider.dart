@@ -10,34 +10,26 @@ import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:window_manager/window_manager.dart';
 import '../l10n/app_localizations.dart';
 import '../services/inverter_service.dart';
-import '../services/hems_algorithm.dart';
-import '../services/hems_tuning_service.dart';
-import '../services/tariff_forecast_service.dart';
 import '../services/demand_forecast_service.dart';
 import '../services/weather_service.dart';
 import '../services/log_service.dart';
 import '../services/notification_service.dart';
 import '../services/update_service.dart';
 import '../services/secure_storage_service.dart';
-import '../services/event_history_service.dart';
 import '../services/battery_tracker_service.dart';
-import '../services/soc_history_service.dart';
-import '../services/schedule_rules_service.dart';
-import '../services/grid_outage_detector.dart';
 import '../models/inverter_data.dart';
-import '../models/hems_optimization_profile.dart';
-import '../models/schedule_rule.dart';
 
 class AppStateProvider extends ChangeNotifier {
   static const String _defaultAppVersionLabel = 'Version --';
   static const String _lastSnapshotKey = 'last_inverter_snapshot';
   static const String _skippedUpdateVersionKey = 'skipped_update_version';
   static const String _startInTrayKey = 'start_in_tray';
+  // ponytail: fixed low-battery alert threshold (old HEMS reserve 20% + 5),
+  // make it a setting if 25% is wrong for the battery bank.
+  static const double lowBatteryNotifySoc = 25.0;
   final InverterService service = InverterService();
   final WeatherService weatherService = WeatherService();
-  final TariffForecastService tariffForecastService = TariffForecastService();
   final DemandForecastService demandForecastService = DemandForecastService();
-  late HemsAlgorithmService hemsService;
   final SystemTray systemTray = SystemTray();
 
   bool get _supportsDesktopIntegrations =>
@@ -48,11 +40,8 @@ class AppStateProvider extends ChangeNotifier {
   String statusMessage = '';
 
   Timer? _dataTimer;
-  Timer? _automationTimer;
   Timer? _weatherTimer;
 
-  // 0 = Адаптивний (Auto), 1 = Нічний арбітраж, 2 = Шторм/Резерв
-  int smartMode = 0;
   double batteryCapacityAh = 230.0;
   double pvTotalCapacityW = 3000.0;
   double inverterMaxPowerW = 5000.0;
@@ -62,47 +51,14 @@ class AppStateProvider extends ChangeNotifier {
   bool autoHouseLoadReserveEnabled = false;
   DateTime? _lastAutoReservePersistAt;
 
-  /// Battery installation date — used by BatteryHealthModel for adaptive reserve SOC.
+  /// Battery installation date — used for the battery health (SOH) estimate.
   DateTime batteryInstallDate = DateTime(DateTime.now().year - 2, 1, 1);
-
-  /// HEMS optimization strategy selected by user.
-  HemsOptimizationStrategy hemsStrategy = HemsOptimizationStrategy.hybrid;
 
   // Geo settings are editable by user; defaults are practical for Ukraine.
   double siteLatitude = 49.0;
   double siteLongitude = 31.0;
   String siteTimeZone = 'Europe/Kyiv';
 
-  // HEMS time windows: user can choose astronomical (auto) or manual hours.
-  bool useAstronomicalWindows = true;
-  int manualDayStartHour = 7;
-  int manualEveningStartHour = 17;
-  int manualNightStartHour = 23;
-
-  // Phase 3c: manual grid reliability input (no external API).
-  bool plannedOutageEnabled = false;
-  DateTime? plannedOutageStartAt;
-  DateTime? plannedOutageEndAt;
-
-  // Economics (monthly estimate cards on dashboard)
-  double dayTariffUahPerKwh = 0.25;
-  double nightTariffUahPerKwh = 0.125;
-  double nightEnergySharePercent = 35.0;
-  double batteryRoundTripEfficiencyPercent = 92.0;
-  double? _monthLoadWh;
-  double? _monthGridWh;
-  double? _monthSelfConsumedWh;
-  double? _monthPayableUah;
-  double? _monthSavedUah;
-  List<({int day, double payableUah, double savedUah})> _monthDailyEconomics =
-      const [];
-  DateTime? _lastEconomicsRefreshAt;
-  bool _monthEconomicsUsesTelemetryTou = false;
-  Future<void>? _monthlyEconomicsInFlight;
-  bool _monthlyEconomicsPendingForce = false;
-
-
-  // --- НОВІ ЗМІННІ ДЛЯ РОЗУМНОГО АЛГОРИТМУ ---
   Map<String, double> hourlyForecast = {};
   Map<int, double> avgHourlyConsumptionStats = {};
 
@@ -131,25 +87,11 @@ class AppStateProvider extends ChangeNotifier {
   int _consecutiveRealtimeNulls = 0;
 
   // --- Notification tracking ---
-  final GridOutageDetector _gridOutageDetector = GridOutageDetector();
   bool _lowBatteryNotified = false;
   final NotificationService _notifService = NotificationService.instance;
 
-  // --- Event history & battery tracker (singletons) ---
-  final EventHistoryService _eventHistory = EventHistoryService.instance;
+  // --- Battery tracker (singleton) ---
   final BatteryTrackerService _batteryTracker = BatteryTrackerService.instance;
-  final SocHistoryService _socHistory = SocHistoryService.instance;
-  final ScheduleRulesService _scheduleRules = ScheduleRulesService.instance;
-
-  // Auto-Storm state: activated on grid outage if smartMode == 0
-  bool _gridOutageAutoStormActive = false;
-  int _prevSmartModeBeforeOutage = 0;
-
-  // Forecast-based Storm: auto-activates when bad weather is predicted
-  bool autoStormByForecastEnabled = false;
-  bool _forecastStormActive = false;
-  bool _emergencyChargeActive =
-      false; // set true when daytime SNU top-up is triggered; cleared on recovery
 
   // Anomaly detection: rolling samples per hour
   final Map<int, List<double>> _loadSamplesByHour = {};
@@ -178,258 +120,10 @@ class AppStateProvider extends ChangeNotifier {
   DateTime? get lastUpdateCheckAt => _lastUpdateCheckAt;
   String? get skippedUpdateVersion => _skippedUpdateVersion;
 
-  // New: event history + battery tracker
-  EventHistoryService get eventHistory => _eventHistory;
-  SocHistoryService get socHistory => _socHistory;
-  bool get isGridOutageDetected {
-    if (isInverterOffline) return false;
-    final snapshot = data;
-    if (snapshot == null) return false;
-    if (_gridOutageDetector.isInitialized) {
-      return !_gridOutageDetector.gridAvailable;
-    }
-    // Conservative fallback before detector initialization.
-    return snapshot.gridVoltage < 120.0;
-  }
-
-  double get usableBatteryEnergyWhNow {
-    final snapshot = data;
-    if (snapshot == null) return 0.0;
-    final reserveSoc = hemsService.tun.reserveSoc.clamp(0.0, 95.0).toDouble();
-    final socAboveReserve =
-        (snapshot.batterySoc.clamp(0.0, 100.0) - reserveSoc).clamp(0.0, 100.0);
-    final healthFactor =
-        (batteryHealthPercent / 100.0).clamp(0.5, 1.0).toDouble();
-    final nominalWh = batteryCapacityAh * 51.2;
-    return (nominalWh * (socAboveReserve / 100.0) * healthFactor)
-        .clamp(0.0, 100000.0)
-        .toDouble();
-  }
-
-  double get hybridBackupDeficitW {
-    final snapshot = data;
-    if (snapshot == null) return 0.0;
-    return (snapshot.loadPower - snapshot.pvPower)
-        .clamp(0.0, 50000.0)
-        .toDouble();
-  }
-
-  bool get isLoadCoveredBySolarNow => hybridBackupDeficitW <= 40.0;
-
-  double? estimateBackupHoursRemaining() {
-    final snapshot = data;
-    if (snapshot == null) return null;
-
-    final startEnergyWh = usableBatteryEnergyWhNow;
-    if (startEnergyWh <= 1.0) return 0.0;
-
-    final maxUsableWh = _maxUsableBatteryEnergyWh;
-    final roundTrip = batteryRoundTripEfficiencyFraction.clamp(0.5, 1.0);
-    final chargeEff = math.sqrt(roundTrip);
-    final dischargeEff = math.sqrt(roundTrip);
-
-    const stepMinutes = 15;
-    const maxHours = 72;
-    const minDeficitW = 35.0;
-    final stepHours = stepMinutes / 60.0;
-
-    var storedWh = startEnergyWh;
-    var elapsedHours = 0.0;
-    final now = DateTime.now();
-
-    while (elapsedHours < maxHours) {
-      final at = now.add(Duration(minutes: (elapsedHours * 60).round()));
-      final hourFromNow = elapsedHours.floor();
-      final loadW = _expectedLoadForOutageHour(
-        at,
-        fallbackLoadW: snapshot.loadPower,
-        hourFromNow: hourFromNow,
-      );
-      final pvW = _forecastPvForOutageHour(
-        at,
-        fallbackPvW: snapshot.pvPower,
-      );
-
-      final netLoadW = loadW - pvW;
-      if (netLoadW > minDeficitW) {
-        final batteryDrainWh = (netLoadW / dischargeEff) * stepHours;
-        if (storedWh <= batteryDrainWh) {
-          final safeStepFraction =
-              batteryDrainWh <= 0 ? 0.0 : (storedWh / batteryDrainWh);
-          final depletionHours = elapsedHours + (safeStepFraction * stepHours);
-          return depletionHours.clamp(0.0, 240.0).toDouble();
-        }
-        storedWh -= batteryDrainWh;
-      } else {
-        final surplusW = -netLoadW;
-        if (surplusW > minDeficitW) {
-          final chargeWh = surplusW * chargeEff * stepHours;
-          storedWh = (storedWh + chargeWh).clamp(0.0, maxUsableWh).toDouble();
-        }
-      }
-
-      elapsedHours += stepHours;
-    }
-
-    return double.infinity;
-  }
-
-  double? estimateBatteryOnlyHoursRemaining() {
-    final snapshot = data;
-    if (snapshot == null) return null;
-    final loadW = snapshot.loadPower.clamp(0.0, 50000.0).toDouble();
-    final usableWh = usableBatteryEnergyWhNow;
-    if (usableWh <= 1.0) return 0.0;
-    if (loadW <= 40.0) return double.infinity;
-    final hours = usableWh / loadW;
-    if (!hours.isFinite) return null;
-    return hours.clamp(0.0, 240.0).toDouble();
-  }
-
-  double get _maxUsableBatteryEnergyWh {
-    final reserveSoc = hemsService.tun.reserveSoc.clamp(0.0, 95.0).toDouble();
-    final usableSocSpan = (100.0 - reserveSoc).clamp(0.0, 100.0) / 100.0;
-    final healthFactor =
-        (batteryHealthPercent / 100.0).clamp(0.5, 1.0).toDouble();
-    final nominalWh = batteryCapacityAh * 51.2;
-    return (nominalWh * usableSocSpan * healthFactor)
-        .clamp(0.0, 120000.0)
-        .toDouble();
-  }
-
-  double _expectedLoadForOutageHour(
-    DateTime at, {
-    required double fallbackLoadW,
-    required int hourFromNow,
-  }) {
-    final profiled = (avgHourlyConsumptionStats[at.hour] ?? 0.0)
-        .clamp(0.0, 50000.0)
-        .toDouble();
-    final base = fallbackLoadW.clamp(0.0, 50000.0).toDouble();
-    if (profiled <= 1.0) return base;
-
-    // Use current load near-term and gradually move to hourly profile.
-    final blend = (hourFromNow / 4.0).clamp(0.0, 1.0);
-    return (base * (1.0 - blend) + profiled * blend)
-        .clamp(0.0, 50000.0)
-        .toDouble();
-  }
-
-  double _forecastPvForOutageHour(DateTime at, {required double fallbackPvW}) {
-    final hourKey = _formatForecastHourKey(at);
-    final forecastW = hourlyForecast[hourKey];
-    if (forecastW != null) {
-      return forecastW.clamp(0.0, pvTotalCapacityW).toDouble();
-    }
-
-    // Forecast map usually contains daylight hours only; missing key at night means 0.
-    final isNight = at.hour < 5 || at.hour > 21;
-    if (isNight) return 0.0;
-
-    // For current hour while forecast is refreshing, keep runtime stable.
-    final now = DateTime.now();
-    final sameHour = at.year == now.year &&
-        at.month == now.month &&
-        at.day == now.day &&
-        at.hour == now.hour;
-    if (sameHour) {
-      return fallbackPvW.clamp(0.0, pvTotalCapacityW).toDouble();
-    }
-
-    return 0.0;
-  }
-
-  String _formatForecastHourKey(DateTime dt) {
-    final y = dt.year.toString().padLeft(4, '0');
-    final m = dt.month.toString().padLeft(2, '0');
-    final d = dt.day.toString().padLeft(2, '0');
-    final h = dt.hour.toString().padLeft(2, '0');
-    return '$y-$m-$d $h:00';
-  }
-
   bool get hasPendingUpdate =>
       _updateInfo != null &&
       _updateInfo!.hasUpdate &&
       _updateInfo!.latestVersion != _skippedUpdateVersion;
-  double? get monthLoadKwh =>
-      _monthLoadWh == null ? null : _monthLoadWh! / 1000.0;
-  double? get monthGridKwh =>
-      _monthGridWh == null ? null : _monthGridWh! / 1000.0;
-  double get nightEnergyShareFraction =>
-      (nightEnergySharePercent / 100.0).clamp(0.0, 1.0).toDouble();
-  double get batteryRoundTripEfficiencyFraction =>
-      (batteryRoundTripEfficiencyPercent / 100.0).clamp(0.5, 1.0).toDouble();
-  int get tariffDayStartHour => 7;
-  int get tariffNightStartHour => 23;
-  double get effectiveTariffUahPerKwh =>
-      (dayTariffUahPerKwh * (1.0 - nightEnergyShareFraction)) +
-      (nightTariffUahPerKwh * nightEnergyShareFraction);
-  bool get monthEconomicsUsesTelemetryTou => _monthEconomicsUsesTelemetryTou;
-  bool get monthEconomicsUsesEstimatedFallback =>
-      !_monthEconomicsUsesTelemetryTou;
-
-  double? get monthToPayUah {
-    if (_monthPayableUah != null) return _monthPayableUah;
-    final grid = monthGridKwh;
-    if (grid == null) return null;
-    final dayPart = grid * (1.0 - nightEnergyShareFraction);
-    final nightPart = grid * nightEnergyShareFraction;
-    return (dayPart * dayTariffUahPerKwh) + (nightPart * nightTariffUahPerKwh);
-  }
-
-  double? get monthSelfConsumedKwh {
-    if (_monthSelfConsumedWh != null) {
-      return (_monthSelfConsumedWh! / 1000.0)
-          .clamp(0.0, double.infinity)
-          .toDouble();
-    }
-    if (monthLoadKwh == null || monthGridKwh == null) return null;
-    return (monthLoadKwh! - monthGridKwh!)
-        .clamp(0.0, double.infinity)
-        .toDouble();
-  }
-
-  double? get monthSavedUah {
-    if (_monthSavedUah != null) return _monthSavedUah;
-    final selfConsumed = monthSelfConsumedKwh;
-    if (selfConsumed == null) return null;
-    return selfConsumed * effectiveTariffUahPerKwh;
-  }
-
-  List<({int day, double payableUah, double savedUah})>
-      get monthDailyEconomics => _monthDailyEconomics;
-
-  double get _monthProgressFraction {
-    final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final elapsed = (now.day - 1) + (now.hour / 24.0) + (now.minute / 1440.0);
-    // Keep a small non-zero floor to avoid extreme division during app startup.
-    return (elapsed / daysInMonth).clamp(1.0 / daysInMonth, 1.0).toDouble();
-  }
-
-  double get monthProgressFraction => _monthProgressFraction;
-  int get monthProgressPercent => (monthProgressFraction * 100).round();
-
-  double? get projectedMonthToPayUah {
-    final actual = monthToPayUah;
-    if (actual == null) return null;
-    final projected = actual / _monthProgressFraction;
-    return projected.isFinite ? projected : null;
-  }
-
-  double? get projectedMonthSavedUah {
-    final actual = monthSavedUah;
-    if (actual == null) return null;
-    final projected = actual / _monthProgressFraction;
-    return projected.isFinite ? projected : null;
-  }
-
-  /// Real-time cost: current load power × effective tariff → ₴/hour.
-  double get currentCostPerHourUah {
-    final loadW = data?.loadPower ?? 0.0;
-    return loadW * effectiveTariffUahPerKwh / 1000.0;
-  }
-
   double get safeGridInputPowerW {
     final amps = acInputBreakerAmps.clamp(6.0, 80.0).toDouble();
     final volts = nominalGridVoltage.clamp(180.0, 260.0).toDouble();
@@ -504,45 +198,6 @@ class AppStateProvider extends ChangeNotifier {
   double get batteryHealthPercent =>
       _batteryTracker.estimatedSohPercent(installDate: batteryInstallDate);
 
-  AppStateProvider() {
-    // Initial build with defaults; will be rebuilt after loadSettings().
-    _rebuildHemsService();
-  }
-
-  /// (Re)creates HemsOptimizationProfile + HemsTuningService from current
-  /// provider fields and wires them into hemsService.
-  /// Call this after loading or changing any HEMS-relevant setting.
-  void _rebuildHemsService() {
-    final tariffForecast = tariffForecastService.buildDayNightForecast(
-      dayTariffUahPerKwh: dayTariffUahPerKwh,
-      nightTariffUahPerKwh: nightTariffUahPerKwh,
-      dayStartHour: manualDayStartHour,
-      nightStartHour: manualNightStartHour,
-    );
-    final demandForecast =
-        demandForecastService.toDemandForecastData(avgHourlyConsumptionStats);
-
-    final profile = HemsOptimizationProfile(
-      systemId: 'home',
-      pvPeakW: pvTotalCapacityW,
-      batteryCapacityAh: batteryCapacityAh,
-      optimizationStrategy: hemsStrategy,
-      batteryHealth: BatteryHealthModel(installationDate: batteryInstallDate),
-      tariffForecast: tariffForecast,
-      demandForecast: demandForecast,
-    );
-    final tuning = HemsTuningService(profile);
-    hemsService = HemsAlgorithmService(
-      this,
-      optimizationProfile: profile,
-      tuningService: tuning,
-    );
-    LogService.log(
-      '⚙️ HEMS profile rebuilt: pv=${pvTotalCapacityW.toInt()}W bat=${batteryCapacityAh.toInt()}Ah '
-      'strategy=${hemsStrategy.name} installDate=${batteryInstallDate.year}',
-    );
-  }
-
   Future<AppLocalizations> _getL10n() async {
     return await AppLocalizations.delegate.load(Locale(lang));
   }
@@ -585,46 +240,12 @@ class AppStateProvider extends ChangeNotifier {
     siteLatitude = prefs.getDouble('site_latitude') ?? 49.0;
     siteLongitude = prefs.getDouble('site_longitude') ?? 31.0;
     siteTimeZone = prefs.getString('site_time_zone') ?? 'Europe/Kyiv';
-    useAstronomicalWindows = prefs.getBool('use_astronomical_windows') ?? true;
-    manualDayStartHour = prefs.getInt('manual_day_start_hour') ?? 7;
-    manualEveningStartHour = prefs.getInt('manual_evening_start_hour') ?? 17;
-    manualNightStartHour = prefs.getInt('manual_night_start_hour') ?? 23;
-    plannedOutageEnabled = prefs.getBool('planned_outage_enabled') ?? false;
-    final plannedStartMs = prefs.getInt('planned_outage_start_ms');
-    final plannedEndMs = prefs.getInt('planned_outage_end_ms');
-    plannedOutageStartAt = plannedStartMs == null
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(plannedStartMs);
-    plannedOutageEndAt = plannedEndMs == null
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(plannedEndMs);
-    final legacyTariff = prefs.getDouble('energy_tariff_uah_per_kwh');
-    dayTariffUahPerKwh = prefs.getDouble('energy_tariff_day_uah_per_kwh') ??
-        legacyTariff ??
-        0.25;
-    nightTariffUahPerKwh = prefs.getDouble('energy_tariff_night_uah_per_kwh') ??
-        ((legacyTariff ?? dayTariffUahPerKwh) * 0.5);
-    nightEnergySharePercent =
-        prefs.getDouble('energy_night_share_percent') ?? 35.0;
-    batteryRoundTripEfficiencyPercent =
-        prefs.getDouble('battery_round_trip_efficiency_percent') ?? 92.0;
 
     // Battery health
     final installMs = prefs.getInt('battery_install_date_ms');
     if (installMs != null) {
       batteryInstallDate = DateTime.fromMillisecondsSinceEpoch(installMs);
     }
-    // HEMS strategy
-    final strategyIdx = prefs.getInt('hems_strategy_index') ?? 4; // hybrid
-    hemsStrategy = HemsOptimizationStrategy.values[
-        strategyIdx.clamp(0, HemsOptimizationStrategy.values.length - 1)];
-
-    // Rebuild service now that real settings are loaded.
-    _rebuildHemsService();
-
-    smartMode = prefs.getInt('smart_mode') ?? 0;
-    autoStormByForecastEnabled =
-        prefs.getBool('auto_storm_by_forecast') ?? false;
     lang = prefs.getString('app_lang') ?? 'it';
     if (_supportsDesktopIntegrations) {
       isAutostartEnabled = await launchAtStartup.isEnabled();
@@ -688,14 +309,8 @@ class AppStateProvider extends ChangeNotifier {
 
     await _loadAppVersion();
     await _updateWeatherForecast();
-    if (loggedIn) {
-      await _updateMonthlyEconomics(force: true);
-    }
-    // Load persisted event history and battery tracker
-    await _eventHistory.load();
+    // Load persisted battery tracker and SOC history
     await _batteryTracker.load();
-    await _socHistory.load();
-    await _scheduleRules.load();
     await _updateStatusMessage(true);
     // Fire-and-forget startup check for a non-intrusive update badge in Settings.
     // ignore: unawaited_futures
@@ -783,216 +398,6 @@ class AppStateProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> saveTimeOfUseTariffs({
-    required double dayTariff,
-    required double nightTariff,
-    required double nightSharePercent,
-    required double batteryEfficiencyPercent,
-  }) async {
-    dayTariffUahPerKwh = dayTariff.clamp(0.0, 999.0).toDouble();
-    nightTariffUahPerKwh = nightTariff.clamp(0.0, 999.0).toDouble();
-    nightEnergySharePercent = nightSharePercent.clamp(0.0, 100.0).toDouble();
-    batteryRoundTripEfficiencyPercent =
-        batteryEfficiencyPercent.clamp(50.0, 100.0).toDouble();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('energy_tariff_day_uah_per_kwh', dayTariffUahPerKwh);
-    await prefs.setDouble(
-        'energy_tariff_night_uah_per_kwh', nightTariffUahPerKwh);
-    await prefs.setDouble(
-        'energy_night_share_percent', nightEnergySharePercent);
-    await prefs.setDouble('battery_round_trip_efficiency_percent',
-        batteryRoundTripEfficiencyPercent);
-    // Keep legacy key in sync for older builds/migrations.
-    await prefs.setDouble(
-        'energy_tariff_uah_per_kwh', effectiveTariffUahPerKwh);
-
-    notifyListeners();
-    await _updateMonthlyEconomics(force: true);
-  }
-
-  double estimateNightEnergySharePercent() {
-    if (avgHourlyConsumptionStats.isEmpty) {
-      return nightEnergySharePercent;
-    }
-    var total = 0.0;
-    var night = 0.0;
-    var day = 0.0;
-    for (var h = 0; h < 24; h++) {
-      final raw = avgHourlyConsumptionStats[h] ?? 0.0;
-      final v = raw.isFinite ? raw.clamp(0.0, 1e9).toDouble() : 0.0;
-      total += v;
-      if (TariffForecastService.isNightTariffHour(h,
-          dayStartHour: tariffDayStartHour,
-          nightStartHour: tariffNightStartHour)) {
-        night += v;
-      } else {
-        day += v;
-      }
-    }
-    // Keep existing value when profile is too sparse/biased (prevents accidental 0%).
-    if (total < 100 || night <= 0 || day <= 0) return nightEnergySharePercent;
-    final estimated = (night / total) * 100.0;
-    if (!estimated.isFinite) return nightEnergySharePercent;
-    return estimated.clamp(1.0, 99.0).toDouble();
-  }
-
-  Future<void> _updateMonthlyEconomics({bool force = false}) async {
-    if (_monthlyEconomicsInFlight != null) {
-      if (force) {
-        _monthlyEconomicsPendingForce = true;
-      }
-      LogService.log(
-          '📊 monthly economics: join in-flight refresh (force=$force, pendingForce=$_monthlyEconomicsPendingForce)');
-      await _monthlyEconomicsInFlight;
-      return;
-    }
-
-    do {
-      final runForce = force || _monthlyEconomicsPendingForce;
-      _monthlyEconomicsPendingForce = false;
-
-      final refreshFuture = _updateMonthlyEconomicsInternal(force: runForce);
-      _monthlyEconomicsInFlight = refreshFuture;
-      try {
-        await refreshFuture;
-      } finally {
-        _monthlyEconomicsInFlight = null;
-      }
-
-      force = false;
-    } while (_monthlyEconomicsPendingForce);
-  }
-
-  Future<void> _updateMonthlyEconomicsInternal({bool force = false}) async {
-    if (service.currentStationId == null) {
-      LogService.log('⚠️ monthly economics: no station ID, skipping');
-      return;
-    }
-    final now = DateTime.now();
-
-    // Force update if values are null (first load) or after 20 minutes
-    final shouldUpdate = force ||
-        _monthLoadWh == null ||
-        _monthGridWh == null ||
-        (_lastEconomicsRefreshAt != null &&
-            now.difference(_lastEconomicsRefreshAt!) >=
-                const Duration(minutes: 20));
-
-    if (!shouldUpdate) {
-      LogService.log(
-          '📊 monthly economics: skipping (cached, force=$force, lastRefresh=${_lastEconomicsRefreshAt?.toString() ?? "never"})');
-      return;
-    }
-
-    try {
-      LogService.log(
-          '📊 monthly economics: fetching (force=$force, loadWh=${_monthLoadWh?.toStringAsFixed(0) ?? "null"}, gridWh=${_monthGridWh?.toStringAsFixed(0) ?? "null"})');
-
-      final telemetryEconomics = await service.getMonthlyTouEconomics(
-        targetDate: now,
-        dayTariffUahPerKwh: dayTariffUahPerKwh,
-        nightTariffUahPerKwh: nightTariffUahPerKwh,
-        dayStartHour: tariffDayStartHour,
-        nightStartHour: tariffNightStartHour,
-        batteryRoundTripEfficiency: batteryRoundTripEfficiencyFraction,
-      );
-
-      if (telemetryEconomics != null) {
-        _monthLoadWh = telemetryEconomics.loadWh;
-        _monthGridWh = telemetryEconomics.gridWh;
-        _monthSelfConsumedWh = telemetryEconomics.selfConsumedWh;
-        _monthPayableUah = telemetryEconomics.payableUah;
-        _monthSavedUah = telemetryEconomics.savedUah;
-        _monthDailyEconomics = telemetryEconomics.daily;
-        _monthEconomicsUsesTelemetryTou = true;
-
-        final expectedLoadWh = (_monthGridWh! + _monthSelfConsumedWh!);
-        if (_monthLoadWh! + 1.0 < expectedLoadWh) {
-          LogService.logCritical(
-            'monthly economics normalized: load ${_monthLoadWh!.toStringAsFixed(0)}Wh '
-            '-> ${expectedLoadWh.toStringAsFixed(0)}Wh '
-            '(grid=${_monthGridWh!.toStringAsFixed(0)}Wh, self=${_monthSelfConsumedWh!.toStringAsFixed(0)}Wh)',
-            category: 'ECONOMICS',
-          );
-          _monthLoadWh = expectedLoadWh;
-        }
-
-        LogService.log(
-            '📊 TOU TELEMETRY: load=${_monthLoadWh?.toStringAsFixed(0)}Wh, grid=${_monthGridWh?.toStringAsFixed(0)}Wh');
-        LogService.log(
-            '📊 TOU MONEY: payable=${_monthPayableUah?.toStringAsFixed(1)}UAH, saved=${_monthSavedUah?.toStringAsFixed(1)}UAH, self=${monthSelfConsumedKwh?.toStringAsFixed(1)}kWh, batteryEff=${batteryRoundTripEfficiencyPercent.toStringAsFixed(0)}%');
-        LogService.log(
-            '📊 CALC PROPS: monthLoadKwh=${monthLoadKwh?.toStringAsFixed(1)}, monthGridKwh=${monthGridKwh?.toStringAsFixed(1)}');
-        LogService.log(
-            '📊 SELF CONSUMED: monthSelfConsumedKwh=${monthSelfConsumedKwh?.toStringAsFixed(1)}');
-        LogService.log(
-            '✅ FINAL SAVED (telemetry): monthSavedUah=${monthSavedUah?.toStringAsFixed(1)}');
-
-        _lastEconomicsRefreshAt = now;
-        notifyListeners();
-        return;
-      }
-
-      final summary = await service.getMonthlyEnergySummary(now);
-      final dailyEnergy = await service.getMonthlyDailyEnergy(now);
-
-      _monthPayableUah = null;
-      _monthSavedUah = null;
-      _monthSelfConsumedWh = null;
-      _monthEconomicsUsesTelemetryTou = false;
-
-      _monthDailyEconomics = dailyEnergy.map((e) {
-        final gridKwh = e.gridWh / 1000.0;
-        final loadKwh = e.loadWh / 1000.0;
-        final selfKwh = (loadKwh - gridKwh).clamp(0.0, double.infinity);
-        final dayPart = gridKwh * (1.0 - nightEnergyShareFraction);
-        final nightPart = gridKwh * nightEnergyShareFraction;
-        final payable =
-            (dayPart * dayTariffUahPerKwh) + (nightPart * nightTariffUahPerKwh);
-        final saved = selfKwh * effectiveTariffUahPerKwh;
-        return (day: e.day, payableUah: payable, savedUah: saved);
-      }).toList(growable: false);
-
-      if (summary != null) {
-        _monthLoadWh = summary.loadWh;
-        _monthGridWh = summary.gridWh;
-        _monthSelfConsumedWh =
-            (_monthLoadWh! - _monthGridWh!).clamp(0.0, double.infinity);
-        LogService.log(
-            '📊 RAW SUMMARY: load=${summary.loadWh.toStringAsFixed(0)}Wh, grid=${summary.gridWh.toStringAsFixed(0)}Wh');
-        LogService.log(
-            '📊 AFTER SET: _monthLoadWh=${_monthLoadWh?.toStringAsFixed(0)}, _monthGridWh=${_monthGridWh?.toStringAsFixed(0)}');
-        LogService.log(
-            '📊 CALC PROPS: monthLoadKwh=${monthLoadKwh?.toStringAsFixed(1)}, monthGridKwh=${monthGridKwh?.toStringAsFixed(1)}');
-        LogService.log(
-            '📊 SELF CONSUMED: monthSelfConsumedKwh=${monthSelfConsumedKwh?.toStringAsFixed(1)}');
-        LogService.log(
-            '📊 TARIFF FALLBACK: effective=${effectiveTariffUahPerKwh.toStringAsFixed(2)}, nightShare=${nightEnergySharePercent.toStringAsFixed(0)}%');
-        LogService.log(
-            '✅ FINAL SAVED (estimated): monthSavedUah=${monthSavedUah?.toStringAsFixed(1)}');
-      } else if (dailyEnergy.isNotEmpty) {
-        _monthLoadWh =
-            dailyEnergy.fold<double>(0.0, (sum, e) => sum + e.loadWh);
-        _monthGridWh =
-            dailyEnergy.fold<double>(0.0, (sum, e) => sum + e.gridWh);
-        _monthSelfConsumedWh =
-            (_monthLoadWh! - _monthGridWh!).clamp(0.0, double.infinity);
-        LogService.log(
-            '📊 AGGREGATED: load=${_monthLoadWh?.toStringAsFixed(0)}Wh, grid=${_monthGridWh?.toStringAsFixed(0)}Wh');
-      } else {
-        _monthSelfConsumedWh = null;
-        LogService.log(
-            '⚠️ monthly economics: no data available (summary=null, daily_count=${dailyEnergy.length})');
-      }
-
-      _lastEconomicsRefreshAt = now;
-      notifyListeners();
-    } catch (e) {
-      LogService.log('❌ monthly economics refresh failed', error: e);
-    }
-  }
-
   Future<void> saveHardwareSettings(double battery, double pv, double inverter,
       {DateTime? installDate,
       double? breakerAmps,
@@ -1028,97 +433,32 @@ class AppStateProvider extends ChangeNotifier {
       await prefs.setInt(
           'battery_install_date_ms', installDate.millisecondsSinceEpoch);
     }
-    _rebuildHemsService();
     notifyListeners();
     await _updateWeatherForecast();
-  }
-
-  Future<void> saveHemsStrategy(HemsOptimizationStrategy strategy) async {
-    hemsStrategy = strategy;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('hems_strategy_index',
-        HemsOptimizationStrategy.values.indexOf(strategy));
-    _rebuildHemsService();
-    notifyListeners();
-    LogService.log('⚙️ HEMS strategy changed: ${strategy.name}');
   }
 
   Future<void> saveGeoSettings({
     required double latitude,
     required double longitude,
     required String timeZone,
-    bool? useAstronomical,
-    int? dayStartHour,
-    int? eveningStartHour,
-    int? nightStartHour,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     siteLatitude = latitude;
     siteLongitude = longitude;
     siteTimeZone = timeZone.trim().isEmpty ? 'UTC' : timeZone.trim();
-    if (useAstronomical != null) {
-      useAstronomicalWindows = useAstronomical;
-    }
-    if (dayStartHour != null) {
-      manualDayStartHour = dayStartHour.clamp(0, 23);
-    }
-    if (eveningStartHour != null) {
-      manualEveningStartHour = eveningStartHour.clamp(0, 23);
-    }
-    if (nightStartHour != null) {
-      manualNightStartHour = nightStartHour.clamp(0, 23);
-    }
     await prefs.setDouble('site_latitude', siteLatitude);
     await prefs.setDouble('site_longitude', siteLongitude);
     await prefs.setString('site_time_zone', siteTimeZone);
-    await prefs.setBool('use_astronomical_windows', useAstronomicalWindows);
-    await prefs.setInt('manual_day_start_hour', manualDayStartHour);
-    await prefs.setInt('manual_evening_start_hour', manualEveningStartHour);
-    await prefs.setInt('manual_night_start_hour', manualNightStartHour);
-    _rebuildHemsService();
     LogService.log(
-        '📍 geo/settings updated: lat=${siteLatitude.toStringAsFixed(4)}, lon=${siteLongitude.toStringAsFixed(4)}, tz=$siteTimeZone, astro=$useAstronomicalWindows, manual=[$manualDayStartHour,$manualEveningStartHour,$manualNightStartHour]');
+        '📍 geo settings updated: lat=${siteLatitude.toStringAsFixed(4)}, lon=${siteLongitude.toStringAsFixed(4)}, tz=$siteTimeZone');
     notifyListeners();
-  }
-
-  Future<void> savePlannedOutage({
-    required bool enabled,
-    DateTime? startAt,
-    DateTime? endAt,
-  }) async {
-    plannedOutageEnabled = enabled;
-    plannedOutageStartAt = startAt;
-    plannedOutageEndAt = endAt;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('planned_outage_enabled', plannedOutageEnabled);
-    if (startAt != null) {
-      await prefs.setInt(
-          'planned_outage_start_ms', startAt.millisecondsSinceEpoch);
-    } else {
-      await prefs.remove('planned_outage_start_ms');
-    }
-    if (endAt != null) {
-      await prefs.setInt('planned_outage_end_ms', endAt.millisecondsSinceEpoch);
-    } else {
-      await prefs.remove('planned_outage_end_ms');
-    }
-    _rebuildHemsService();
-    notifyListeners();
-  }
-
-  /// Saves the "auto Storm mode by weather forecast" toggle.
-  Future<void> saveAutoStormByForecast(bool enabled) async {
-    autoStormByForecastEnabled = enabled;
-    if (!enabled && _forecastStormActive) {
-      _forecastStormActive = false;
-    }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('auto_storm_by_forecast', enabled);
-    notifyListeners();
+    await _updateWeatherForecast();
   }
 
   Future<void> _updateWeatherForecast() async {
     final dynamicForecastMap = await weatherService.fetchLocalForecast(
+      lat: siteLatitude,
+      lon: siteLongitude,
       pvCapacityW: pvTotalCapacityW,
       efficiency: 0.85,
       historicalPvData: historicalPvData,
@@ -1149,7 +489,12 @@ class AppStateProvider extends ChangeNotifier {
     await prefs.setString('consumption_profile_ewma', json.encode(encoded));
   }
 
+  /// Off-grid: with the battery (nearly) full the MPPT throttles PV down to
+  /// the load, so those samples say nothing about what the panels could make.
+  static const double _pvCurtailmentSoc = 95.0;
+
   void _recordPvHistory(InverterData currentData) async {
+    if (currentData.batterySoc >= _pvCurtailmentSoc) return;
     try {
       final now = DateTime.now();
       final timeKey =
@@ -1206,8 +551,6 @@ class AppStateProvider extends ChangeNotifier {
     }
     fetchData();
     _dataTimer = Timer.periodic(const Duration(minutes: 1), (_) => fetchData());
-    _automationTimer =
-        Timer.periodic(const Duration(minutes: 1), (_) => _checkAutomations());
     _weatherTimer = Timer.periodic(
         const Duration(hours: 1), (_) => _updateWeatherForecast());
   }
@@ -1216,7 +559,6 @@ class AppStateProvider extends ChangeNotifier {
     if (!_timersStarted) return;
     _timersStarted = false;
     _dataTimer?.cancel();
-    _automationTimer?.cancel();
     _weatherTimer?.cancel();
     if (_supportsDesktopIntegrations) {
       systemTray.destroy();
@@ -1251,142 +593,10 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setSmartMode(int mode) async {
-    final prevMode = smartMode;
-    smartMode = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('smart_mode', mode);
-    notifyListeners();
-    // Notify on intentional mode changes
-    if (prevMode != mode) {
-      final l10n = await _getL10n();
-      final modeName = switch (mode) {
-        0 => l10n.modeAdaptive,
-        1 => l10n.modeArbitrage,
-        2 => l10n.modeStorm,
-        _ => 'Mode $mode',
-      };
-      await _notifService.show(
-        type: AppNotificationType.modeChanged,
-        title: l10n.notifModeChangedTitle,
-        body: l10n.notifModeChangedBody(modeName),
-      );
-      _eventHistory.addEvent(
-        HemsEventType.modeChanged,
-        l10n.notifModeChangedBody(modeName),
-        meta: {'prevMode': prevMode, 'newMode': mode},
-      );
-      // If user manually changes mode, cancel any auto-Storm override
-      if (_gridOutageAutoStormActive) {
-        _gridOutageAutoStormActive = false;
-        LogService.log(
-            '🔄 Auto-Storm override cancelled by manual mode change → mode=$mode');
-      }
-    }
-    await _checkAutomations(isManualTrigger: true);
-  }
-
-  /// Detects grid outage / restore events and fires notifications.
-  Future<void> _checkGridState(InverterData d) async {
-    final decision = _gridOutageDetector.evaluate(
-      gridVoltage: d.gridVoltage,
-      now: DateTime.now(),
-    );
-
-    if (decision.transition == GridTransition.outage) {
-      // Grid just went down
-      final l10n = await _getL10n();
-      await _notifService.show(
-        type: AppNotificationType.gridOutage,
-        title: l10n.notifGridOutageTitle,
-        body: l10n.notifGridOutageBody,
-      );
-      _eventHistory.addEvent(
-        HemsEventType.gridOutage,
-        '${l10n.notifGridOutageTitle} — ${l10n.notifGridOutageBody}',
-        meta: {'voltage': d.gridVoltage, 'soc': d.batterySoc},
-      );
-      LogService.logCritical(
-          'GRID OUTAGE: voltage=${d.gridVoltage}V SOC=${d.batterySoc}%',
-          category: 'GRID_OUTAGE');
-
-      // Auto-switch to Storm mode if in Adaptive mode
-      if (smartMode == 0 && !_gridOutageAutoStormActive) {
-        _prevSmartModeBeforeOutage = smartMode;
-        _gridOutageAutoStormActive = true;
-        smartMode = 2; // Storm
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('smart_mode', 2);
-        notifyListeners();
-        await _notifService.show(
-          type: AppNotificationType.modeChanged,
-          title: l10n.notifAutoStormTitle,
-          body: l10n.notifAutoStormBody,
-        );
-        _eventHistory.addEvent(
-          HemsEventType.stormAutoActivated,
-          l10n.notifAutoStormBody,
-          meta: {'prevMode': _prevSmartModeBeforeOutage, 'soc': d.batterySoc},
-        );
-        LogService.logCritical(
-            'AUTO STORM: grid outage → Storm mode activated (prev mode=$_prevSmartModeBeforeOutage)',
-            category: 'MODE_CONFLICT');
-      }
-    } else if (decision.transition == GridTransition.restored) {
-      // Grid just restored
-      final l10n = await _getL10n();
-      await _notifService.show(
-        type: AppNotificationType.gridRestored,
-        title: l10n.notifGridRestoredTitle,
-        body: l10n.notifGridRestoredBody(d.gridVoltage.toStringAsFixed(0)),
-      );
-      _eventHistory.addEvent(
-        HemsEventType.gridRestored,
-        '${l10n.notifGridRestoredTitle} — ${d.gridVoltage.toStringAsFixed(0)} V',
-        meta: {'voltage': d.gridVoltage, 'soc': d.batterySoc},
-      );
-
-      // Restore previous HEMS mode if Auto-Storm was activated
-      if (_gridOutageAutoStormActive) {
-        _gridOutageAutoStormActive = false;
-        smartMode = _prevSmartModeBeforeOutage;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('smart_mode', smartMode);
-        notifyListeners();
-        await _notifService.show(
-          type: AppNotificationType.modeChanged,
-          title: l10n.notifAutoAdaptiveTitle,
-          body: l10n.notifAutoAdaptiveBody,
-        );
-        _eventHistory.addEvent(
-          HemsEventType.stormAutoDeactivated,
-          l10n.notifAutoAdaptiveBody,
-          meta: {'restoredMode': smartMode, 'soc': d.batterySoc},
-        );
-        LogService.logCritical(
-            'AUTO STORM DEACTIVATED: grid restored → mode=$smartMode',
-            category: 'MODE_CONFLICT');
-      }
-    }
-
-    if (decision.instabilityAlert) {
-      final l10n = await _getL10n();
-      await _notifService.show(
-        type: AppNotificationType.gridInstability,
-        title: l10n.notifGridInstabilityTitle,
-        body: l10n.notifGridInstabilityBody,
-      );
-      _eventHistory.addEvent(
-        HemsEventType.gridInstability,
-        l10n.notifGridInstabilityBody,
-      );
-    }
-  }
-
-  /// Detects low-battery and recovery events.  SOC threshold matches HEMS reserve.
+  /// Detects low-battery and recovery events.
   Future<void> _checkBatterySoc(InverterData d) async {
     final soc = d.batterySoc;
-    final threshold = hemsService.tun.reserveSoc + 5.0; // just above reserve
+    const threshold = lowBatteryNotifySoc;
 
     // Battery cycle tracking
     final cycleCompleted = _batteryTracker.trackSoc(soc);
@@ -1403,14 +613,6 @@ class AppStateProvider extends ChangeNotifier {
         ),
         showOsToast: false, // informational only
       );
-      _eventHistory.addEvent(
-        HemsEventType.batteryRecovered,
-        l10n.notifCycleBody(
-          _batteryTracker.cycleCount.toString(),
-          soh.toStringAsFixed(0),
-        ),
-        meta: {'cycles': _batteryTracker.cycleCount, 'soh': soh},
-      );
     }
 
     if (soc < threshold && !_lowBatteryNotified) {
@@ -1421,11 +623,6 @@ class AppStateProvider extends ChangeNotifier {
         title: l10n.notifLowBatteryTitle,
         body: l10n.notifLowBatteryBody(soc.toStringAsFixed(0)),
       );
-      _eventHistory.addEvent(
-        HemsEventType.lowBattery,
-        l10n.notifLowBatteryBody(soc.toStringAsFixed(0)),
-        meta: {'soc': soc, 'threshold': threshold},
-      );
     } else if (soc >= threshold + 10.0 && _lowBatteryNotified) {
       _lowBatteryNotified = false;
       final l10n = await _getL10n();
@@ -1433,11 +630,6 @@ class AppStateProvider extends ChangeNotifier {
         type: AppNotificationType.batteryRecovered,
         title: l10n.notifBatteryRecoveredTitle,
         body: l10n.notifBatteryRecoveredBody(soc.toStringAsFixed(0)),
-      );
-      _eventHistory.addEvent(
-        HemsEventType.batteryRecovered,
-        l10n.notifBatteryRecoveredBody(soc.toStringAsFixed(0)),
-        meta: {'soc': soc},
       );
     }
   }
@@ -1464,11 +656,6 @@ class AppStateProvider extends ChangeNotifier {
           title: l10n.notifAnomalyTitle,
           body: l10n.notifAnomalyBody(loadW.toStringAsFixed(0), times),
           showOsToast: true,
-        );
-        _eventHistory.addEvent(
-          HemsEventType.anomaly,
-          l10n.notifAnomalyBody(loadW.toStringAsFixed(0), times),
-          meta: {'loadW': loadW, 'avgW': avg, 'hour': hour, 'times': times},
         );
         LogService.log(
             '📊 Load anomaly: ${loadW.toStringAsFixed(0)}W vs avg ${avg.toStringAsFixed(0)}W ($times×)');
@@ -1581,17 +768,6 @@ class AppStateProvider extends ChangeNotifier {
     data = null;
     _lastSuccessfulRealtimeAt = null;
     _cachedSnapshotData = null;
-    _monthLoadWh = null;
-    _monthGridWh = null;
-    _monthSelfConsumedWh = null;
-    _monthPayableUah = null;
-    _monthSavedUah = null;
-    _monthDailyEconomics = const [];
-    _lastEconomicsRefreshAt = null;
-    _monthEconomicsUsesTelemetryTou = false;
-    _monthlyEconomicsPendingForce = false;
-    _monthlyEconomicsInFlight = null;
-    _gridOutageDetector.reset();
     await prefs.remove(_lastSnapshotKey);
 
     stopTimers();
@@ -1703,8 +879,6 @@ class AppStateProvider extends ChangeNotifier {
     }
     _consecutiveDeviceNotFoundCount = 0;
 
-    final previousConfigs = data?.rawFields['fullConfigs'];
-
     isDataLoading = true;
     notifyListeners();
 
@@ -1713,18 +887,16 @@ class AppStateProvider extends ChangeNotifier {
     if (newData != null) {
       _consecutiveRealtimeNulls = 0;
       _lastSuccessfulRealtimeAt = DateTime.now();
+      // Read configs only now: a background config poll may have finished
+      // while the realtime request was in flight.
+      final previousConfigs =
+          data?.rawFields['fullConfigs'] ?? service.cachedFullConfigs;
       if (previousConfigs != null) {
         newData.rawFields['fullConfigs'] = previousConfigs;
       }
       data = newData;
       _cachedSnapshotData = newData;
       _recordPvHistory(newData);
-      _socHistory.addSample(
-        soc: newData.batterySoc,
-        pvPower: newData.pvPower,
-        loadPower: newData.loadPower,
-        batteryPower: newData.batteryPower,
-      );
       avgHourlyConsumptionStats = demandForecastService.updateEwmaProfile(
         avgHourlyConsumptionStats,
         timestamp: DateTime.now(),
@@ -1740,9 +912,6 @@ class AppStateProvider extends ChangeNotifier {
         await _updateTrayMenu();
       }
 
-      // --- Grid outage / restore detection ---
-      await _checkGridState(newData);
-
       // --- Low battery alert + cycle tracking ---
       await _checkBatterySoc(newData);
 
@@ -1753,7 +922,6 @@ class AppStateProvider extends ChangeNotifier {
           service.currentStationId != null) {
         await _updateConsumptionStats();
       }
-      await _updateMonthlyEconomics();
       await service.updateDailyEnergyStats(DateTime.now());
     } else {
       _consecutiveRealtimeNulls++;
@@ -1809,6 +977,7 @@ class AppStateProvider extends ChangeNotifier {
     // Quick check — may return from cache or trigger the batch
     final initial = await service.getDeviceFullConfigs();
     if (initial != null) {
+      LogService.log('⚙️ config keys: ${initial.keys.join(', ')}');
       data?.rawFields['fullConfigs'] = initial;
       notifyListeners();
       return;
@@ -1821,6 +990,7 @@ class AppStateProvider extends ChangeNotifier {
     try {
       final polled = await service.pollForConfigsBackground();
       if (polled != null) {
+        LogService.log('⚙️ config keys: ${polled.keys.join(', ')}');
         data?.rawFields['fullConfigs'] = polled;
       }
     } finally {
@@ -1967,7 +1137,7 @@ class AppStateProvider extends ChangeNotifier {
         );
       } else {
         LogService.log(
-            '✅ safe current confirmed: target=${targetA}A read=${readTotalA}/${readUtilityA}A');
+            '✅ safe current confirmed: target=${targetA}A read=$readTotalA/${readUtilityA}A');
       }
 
       return (
@@ -2027,204 +1197,5 @@ class AppStateProvider extends ChangeNotifier {
 
   Future<bool> setMode(int mode) async {
     return changeSetting('outputSourcePrioritySetting', mode.toString());
-  }
-
-  Future<void> _checkAutomations({bool isManualTrigger = false}) async {
-    if (data == null) return;
-
-    // Emergency battery protection: if data is stale (device unreachable for
-    // >30 min) and battery SOC is low, force USB (grid) mode to prevent drain.
-    final staleThreshold = const Duration(minutes: 30);
-    final isDataStale = _lastSuccessfulRealtimeAt != null &&
-        DateTime.now().difference(_lastSuccessfulRealtimeAt!) > staleThreshold;
-    if (isDataStale) {
-      final soc = data!.batterySoc;
-      final hour = DateTime.now().hour;
-      final isNight = hour >= 22 || hour < 7;
-      if (soc < 30 || isNight) {
-        final currentOutput =
-            data!.rawFields['outputSourcePriority']?['value']?.toString();
-        if (currentOutput != '0') {
-          final gridV = data!.gridVoltage;
-          final gridUnavailable = gridV < 120.0;
-          LogService.log(
-              '🆘 ЗАХИСТ АКБ: дані застарілі (${DateTime.now().difference(_lastSuccessfulRealtimeAt!).inMinutes} хв), '
-              'SOC=$soc%, нічний=$isNight → примусово USB (мережа) для захисту акумулятора!',
-              level: LogLevel.error);
-          LogService.log(
-              '🔎 DEBUG USB switch: stale-data protection requests USB '
-              '(gridV=${gridV.toStringAsFixed(1)}V, gridUnavailable=$gridUnavailable, '
-              'currentOutput=$currentOutput, reason=stale_data_emergency)');
-          if (gridUnavailable) {
-            LogService.logCritical(
-                'DEBUG USB PATH: grid unavailable during stale-data USB request '
-                '(gridV=${gridV.toStringAsFixed(1)}V). Output priority will be set to USB, '
-                'but inverter may continue off-grid until mains returns.',
-                category: 'GRID_OUTAGE');
-          }
-          LogService.logCritical(
-              'STALE DATA EMERGENCY: '
-              'no realtime for ${DateTime.now().difference(_lastSuccessfulRealtimeAt!).inMinutes}m, '
-              'SOC=$soc% (${isNight ? 'night' : 'day'}) → Force USB for protection',
-              category: 'STALE_DATA');
-          await service.setMode(0);
-        } else {
-          LogService.log('🛡️ ЗАХИСТ АКБ: дані застарілі, вже на USB — добре.',
-              level: LogLevel.warn);
-        }
-      }
-      return; // skip HEMS when data is stale
-    }
-
-    // *** NEW: Emergency top-up reserve when SOC is near critical
-    // If SOC < 25% and grid is available, enable SNU (grid top-up) temporarily.
-    // Skip this block entirely in Storm mode (smartMode==2) because Storm mode
-    // intentionally keeps charger=SNU and would cause an infinite recovery loop.
-    final soc = data!.batterySoc;
-    final currentCharger =
-        data!.rawFields['chargerSourcePriority']?['value']?.toString();
-    final hour = DateTime.now().hour;
-    final isNight = hour >= 22 || hour < 7;
-
-    final _isStormMode = smartMode == 2;
-    if (!_isStormMode) {
-      if (soc < 25.0 && !isNight) {
-        // Daytime emergency: charge from grid to prevent lights-out
-        if (currentCharger != '1') {
-          LogService.log(
-              '🚨 Emergency reserve top-up: SOC=$soc% < 25% → enabling SNU (grid+solar top-up)');
-          LogService.logCritical(
-              'EMERGENCY TOP-UP: SOC=$soc% < 25% at hour=$hour (day) '
-              '→ Enable SNU for immediate grid charging',
-              category: 'EMERGENCY_CHARGE');
-          await service.setConfigItem('chargerSourcePrioritySetting', '1');
-        }
-      } else if (soc >= 45.0 && isNight && currentCharger == '1') {
-        // Recovery complete: back to night strategy.
-        // Guard: only log+act on the first tick of recovery, not every minute.
-        if (_emergencyChargeActive) {
-          _emergencyChargeActive = false;
-          LogService.log(
-              '✅ Emergency reserve recovered: SOC=$soc% > 45% → OSO during night');
-          LogService.logCritical(
-              'RECOVERY COMPLETE: SOC=$soc% >= 45% at hour=$hour (night) '
-              '→ Back to OSO strategy',
-              category: 'EMERGENCY_CHARGE');
-          await service.setConfigItem('chargerSourcePrioritySetting', '2');
-        }
-      }
-      if (soc < 25.0 && !isNight) {
-        _emergencyChargeActive = true;
-      }
-    }
-
-    if (!isManualTrigger) {
-      await hemsService.enforceAcousticComfort(data!);
-    }
-
-    // Phase 3c: if a planned outage is near, precharge by forcing Storm mode.
-    if (plannedOutageEnabled && plannedOutageStartAt != null) {
-      final now = DateTime.now();
-      final untilOutage = plannedOutageStartAt!.difference(now);
-      if (untilOutage.inMinutes >= 0 &&
-          untilOutage <= const Duration(hours: 6)) {
-        LogService.log(
-            '⚠️ Grid alert: planned outage in ${untilOutage.inMinutes}m — forcing Storm mode precharge.');
-        await hemsService.executeStormMode(data!);
-        return;
-      }
-    }
-
-    // Schedule rules: if a time-based rule is active, override smartMode for this tick.
-    final activeRule = _scheduleRules.getActiveRuleNow();
-    final effectiveSmartMode =
-        activeRule != null ? activeRule.mode.smartModeIndex : smartMode;
-    if (activeRule != null) {
-      LogService.log(
-          '📅 ScheduleRule active: "${activeRule.name}" → mode=${activeRule.mode.name} '
-          '(${activeRule.timeRangeLabel})');
-    }
-
-    // ── Forecast-based Storm auto-activation ────────────────────────────────
-    // If the feature is enabled, fetch storm risk for the next 12 hours.
-    // High risk (score ≥ 0.6) overrides HEMS and locks Storm mode until clear.
-    if (autoStormByForecastEnabled) {
-      final risk = await weatherService.fetchStormRisk(
-        lat: siteLatitude,
-        lon: siteLongitude,
-      );
-
-      if (risk.isHighRisk && !_forecastStormActive) {
-        // Activate storm mode
-        _forecastStormActive = true;
-        LogService.log(
-            '🌩️ Auto-Storm by forecast: score=${risk.score.toStringAsFixed(2)}, '
-            'reason="${risk.reason}" → Storm mode activated');
-        final l10n = await _getL10n();
-        _eventHistory.addEvent(
-          HemsEventType.stormAutoActivated,
-          l10n.notifForecastStormBody(risk.reason),
-          meta: {
-            'score': risk.score,
-            'reason': risk.reason,
-            'soc': data!.batterySoc
-          },
-        );
-        await _notifService.show(
-          type: AppNotificationType.modeChanged,
-          title: l10n.notifForecastStormTitle,
-          body: l10n.notifForecastStormBody(risk.reason),
-        );
-        await hemsService.executeStormMode(data!);
-        return;
-      } else if (risk.isHighRisk && _forecastStormActive) {
-        // Stay in storm mode
-        await hemsService.executeStormMode(data!);
-        return;
-      } else if (!risk.isHighRisk && _forecastStormActive) {
-        // Weather cleared — deactivate
-        _forecastStormActive = false;
-        LogService.log(
-            '☀️ Auto-Storm by forecast: risk cleared (score=${risk.score.toStringAsFixed(2)}) '
-            '→ restoring normal HEMS');
-        final l10n = await _getL10n();
-        _eventHistory.addEvent(
-          HemsEventType.stormAutoDeactivated,
-          l10n.notifForecastStormRestoredBody,
-          meta: {'score': risk.score, 'soc': data!.batterySoc},
-        );
-        await _notifService.show(
-          type: AppNotificationType.modeChanged,
-          title: l10n.notifForecastStormRestoredTitle,
-          body: l10n.notifForecastStormRestoredBody,
-        );
-        // Fall through to normal HEMS below
-      }
-    }
-
-    switch (effectiveSmartMode) {
-      case 0: // Адаптивний (Прогноз + Піки)
-        // Викликаємо метод, передаючи параметри, сумісні з твоєю версією алгоритму
-        await hemsService.executeAdaptiveMode(
-          data: data!,
-          batteryCapacityAh: batteryCapacityAh,
-          hourlyForecast: hourlyForecast,
-          avgHourlyConsumptionStats: avgHourlyConsumptionStats,
-          productionCoefficient: 0.85,
-          useAstronomicalWindows: useAstronomicalWindows,
-          latitude: siteLatitude,
-          longitude: siteLongitude,
-          manualDayStartHour: manualDayStartHour,
-          manualEveningStartHour: manualEveningStartHour,
-          manualNightStartHour: manualNightStartHour,
-        );
-        break;
-      case 1: // Нічний арбітраж
-        await hemsService.executeNightArbitrage(data!);
-        break;
-      case 2: // Шторм / Резерв
-        await hemsService.executeStormMode(data!);
-        break;
-    }
   }
 }
