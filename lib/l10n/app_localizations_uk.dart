@@ -662,6 +662,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get lastRealtimeUpdate => 'Останнє оновлення';
 
   @override
+  String get dashboardAutoRefresh =>
+      'Дані автоматично оновлюються кожні 60 секунд';
+
+  @override
   String updatedAt(String time) {
     return 'Оновлено о $time';
   }
@@ -1434,6 +1438,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get socDayChartTitle => 'Заряд батареї (SOC) протягом дня';
+
+  @override
+  String batteryDurationForecast(Object time, Object date) {
+    return 'Прогноз тривалості роботи батареї: до $time $date';
+  }
 
   @override
   String get flowLosses => 'Втрати';

@@ -181,7 +181,7 @@
   "forecastNextDays": "Previsione solare per i prossimi giorni",
   "forecastPeak": "Picco",
   "forecastUnavailable": "Dati di previsione temporaneamente non disponibili",
-  "equipmentStatus": "Stato apparecchiature",
+  "equipmentStatus": "Stato impianto",
   "inverterLoad": "Carico inverter",
   "refreshChart": "Aggiorna grafico",
   "batterySignHint": "Batteria: '+' significa carica, '-' significa scarica.",
@@ -195,6 +195,7 @@
   "connectionOnline": "Online",
   "connectionOffline": "Offline",
   "lastRealtimeUpdate": "Ultimo aggiornamento",
+  "dashboardAutoRefresh": "Dati aggiornati automaticamente ogni 60 secondi",
   "updatedAt": "Aggiornato alle {time}",
   "updateFailed": "Aggiornamento non riuscito",
   "retry": "Riprova",
@@ -419,6 +420,13 @@
   "invSetOutputDelay": "Ritardo uscita",
   "invSetOutputDelayDesc": "Ritardo prima che l'uscita AC si accenda. Non descritto nel manuale Easun: verifica la documentazione dell'inverter prima di modificarlo.",
   "socDayChartTitle": "Carica batteria (SOC) nella giornata",
+  "batteryDurationForecast": "Previsione durata della batteria: fino alle ore {time} del giorno {date}",
+  "@batteryDurationForecast": {
+    "placeholders": {
+      "time": {},
+      "date": {}
+    }
+  },
   "flowLosses": "Perdite",
   "flowLossesHint": "Potenza in ingresso (sole, ingresso AC, batteria) che non arriva ai carichi né alla batteria: consumo proprio dell'inverter e perdite di conversione.",
   "flowMismatch": "Scarto misure",

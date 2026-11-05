@@ -869,12 +869,16 @@ class InverterService {
 
       var xValue = dt.hour + (dt.minute / 60.0);
 
-      // Додаємо точки ТІЛЬКИ якщо значення існує
+      // Missing load samples mean that consumption is unavailable at that
+      // timestamp. Plot them as zero so the chart does not interpolate a
+      // misleading straight line across the missing interval.
       if (i < genPower.length && genPower[i] != null) {
         pv.add(FlSpot(xValue, (genPower[i] as num).toDouble() * 1000));
       }
       if (i < loadPwr.length && loadPwr[i] != null) {
         load.add(FlSpot(xValue, (loadPwr[i] as num).toDouble() * 1000));
+      } else {
+        load.add(FlSpot(xValue, 0));
       }
       double? batteryW;
       if (i < batPower.length && batPower[i] != null) {
@@ -896,6 +900,8 @@ class InverterService {
       }
       if (batteryW != null) {
         battery.add(FlSpot(xValue, batteryW));
+      } else {
+        battery.add(FlSpot(xValue, 0));
       }
 
       double? gridW;

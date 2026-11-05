@@ -379,6 +379,7 @@
   "connectionOnline": "Online",
   "connectionOffline": "Offline",
   "lastRealtimeUpdate": "Last update",
+  "dashboardAutoRefresh": "Data updates automatically every 60 seconds",
   "updatedAt": "Updated at {time}",
   "@updatedAt": {
     "placeholders": {
@@ -678,6 +679,13 @@
   "invSetOutputDelay": "Output delay",
   "invSetOutputDelayDesc": "Delay before the AC output turns on. Not described in the Easun manual: check the inverter documentation before changing it.",
   "socDayChartTitle": "Battery charge (SOC) during the day",
+  "batteryDurationForecast": "Battery duration forecast: until {time} on {date}",
+  "@batteryDurationForecast": {
+    "placeholders": {
+      "time": {},
+      "date": {}
+    }
+  },
   "flowLosses": "Losses",
   "flowLossesHint": "Power coming in (solar, AC input, battery) that does not reach the loads or the battery: inverter self-consumption and conversion losses.",
   "flowMismatch": "Reading mismatch",

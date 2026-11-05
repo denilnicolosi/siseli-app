@@ -21,7 +21,6 @@ import '../../utils/energy_totals.dart';
 import '../../utils/formatters.dart';
 
 part 'energy_flow_section.dart';
-part 'stats_section.dart';
 part 'energy_chart_section.dart';
 
 class DashboardTab extends StatelessWidget {
@@ -35,8 +34,6 @@ class DashboardTab extends StatelessWidget {
     final sections = <Widget>[
       RepaintBoundary(
           child: _EnergyFlowSection(provider: provider, data: data)),
-      RepaintBoundary(
-          child: _QuickPulseSection(provider: provider, data: data)),
       RepaintBoundary(child: _EnergyChartSection(provider: provider)),
     ];
 
@@ -72,6 +69,46 @@ class DashboardTab extends StatelessWidget {
             itemCount: sections.length,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DashboardPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _DashboardPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      borderRadius: 999,
+      enableBlur: false,
+      backgroundColor: theme.colorScheme.surfaceContainerHigh,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacingM,
+        vertical: AppTheme.spacingS,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: AppTheme.spacingS),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

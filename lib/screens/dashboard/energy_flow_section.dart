@@ -82,6 +82,13 @@ class _EnergyFlowSection extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          const SizedBox(height: AppTheme.spacingXS),
+          Text(
+            l10n.dashboardAutoRefresh,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: AppTheme.spacingM),
           RepaintBoundary(
             child: ExcludeSemantics(child: EnergyFlowDiagram(data: data)),

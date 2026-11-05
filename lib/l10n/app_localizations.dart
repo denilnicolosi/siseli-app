@@ -1270,6 +1270,12 @@ abstract class AppLocalizations {
   /// **'Last update'**
   String get lastRealtimeUpdate;
 
+  /// No description provided for @dashboardAutoRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Data updates automatically every 60 seconds'**
+  String get dashboardAutoRefresh;
+
   /// No description provided for @updatedAt.
   ///
   /// In en, this message translates to:
@@ -2613,6 +2619,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Battery charge (SOC) during the day'**
   String get socDayChartTitle;
+
+  /// No description provided for @batteryDurationForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery duration forecast: until {time} on {date}'**
+  String batteryDurationForecast(Object time, Object date);
 
   /// No description provided for @flowLosses.
   ///

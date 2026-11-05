@@ -22,6 +22,7 @@ import '../models/inverter_data.dart';
 
 class AppStateProvider extends ChangeNotifier {
   static const String _defaultAppVersionLabel = 'Version --';
+  static const Duration realtimeRefreshInterval = Duration(minutes: 1);
   static const String _lastSnapshotKey = 'last_inverter_snapshot';
   static const String _skippedUpdateVersionKey = 'skipped_update_version';
   static const String _startInTrayKey = 'start_in_tray';
@@ -568,7 +569,7 @@ class AppStateProvider extends ChangeNotifier {
       _initTray();
     }
     fetchData();
-    _dataTimer = Timer.periodic(const Duration(minutes: 1), (_) => fetchData());
+    _dataTimer = Timer.periodic(realtimeRefreshInterval, (_) => fetchData());
     _weatherTimer = Timer.periodic(
         const Duration(hours: 1), (_) => _updateWeatherForecast());
   }

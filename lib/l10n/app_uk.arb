@@ -366,6 +366,7 @@
   "connectionOnline": "Онлайн",
   "connectionOffline": "Офлайн",
   "lastRealtimeUpdate": "Останнє оновлення",
+  "dashboardAutoRefresh": "Дані автоматично оновлюються кожні 60 секунд",
   "updatedAt": "Оновлено о {time}",
   "@updatedAt": {
     "placeholders": {
@@ -445,6 +446,13 @@
   "safeCurrentApplied": "Безпечний струм застосовано: {target} A (зчитано: {read})",
   "safeCurrentFailed": "Безпечний струм не підтверджено. Ціль {target} A, зчитано: {read}",
   "socDayChartTitle": "Заряд батареї (SOC) протягом дня",
+  "batteryDurationForecast": "Прогноз тривалості роботи батареї: до {time} {date}",
+  "@batteryDurationForecast": {
+    "placeholders": {
+      "time": {},
+      "date": {}
+    }
+  },
   "flowLosses": "Втрати",
   "flowLossesHint": "Вхідна потужність (сонце, вхід AC, батарея), що не доходить до навантаження чи батареї: власне споживання інвертора та втрати перетворення.",
   "flowMismatch": "Розбіжність вимірів",

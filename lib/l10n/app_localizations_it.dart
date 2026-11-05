@@ -620,7 +620,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Dati di previsione temporaneamente non disponibili';
 
   @override
-  String get equipmentStatus => 'Stato apparecchiature';
+  String get equipmentStatus => 'Stato impianto';
 
   @override
   String get inverterLoad => 'Carico inverter';
@@ -665,6 +665,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lastRealtimeUpdate => 'Ultimo aggiornamento';
+
+  @override
+  String get dashboardAutoRefresh =>
+      'Dati aggiornati automaticamente ogni 60 secondi';
 
   @override
   String updatedAt(String time) {
@@ -1446,6 +1450,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get socDayChartTitle => 'Carica batteria (SOC) nella giornata';
+
+  @override
+  String batteryDurationForecast(Object time, Object date) {
+    return 'Previsione durata della batteria: fino alle ore $time del giorno $date';
+  }
 
   @override
   String get flowLosses => 'Perdite';

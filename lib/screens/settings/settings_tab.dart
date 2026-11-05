@@ -67,7 +67,6 @@ class SettingsTab extends StatelessWidget {
           enableBlur: enableGlassBlur,
         ),
         const SizedBox(height: 16),
-        _buildDangerZoneCard(context, l10n),
       ],
     );
   }
@@ -225,31 +224,6 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildDangerZoneCard(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    return AppSectionCard(
-      title: l10n.dangerZone,
-      subtitle: l10n.logoutConfirmMessage,
-      icon: Icons.warning_amber_rounded,
-      child: Column(
-        children: [
-          _buildSettingsTile(
-            context,
-            icon: Icons.logout_rounded,
-            iconColor: theme.colorScheme.error,
-            title: l10n.logout,
-            subtitle: l10n.logoutConfirmMessage,
-            trailing: Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.error,
-            ),
-            onTap: () => _confirmLogout(context),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSettingsTile(
     BuildContext context, {
     required IconData icon,
@@ -315,7 +289,6 @@ class SettingsTab extends StatelessWidget {
     final theme = Theme.of(context);
     final enableGlassBlur = !(Platform.isAndroid || Platform.isIOS);
     final info = provider.updateInfo;
-    final checkedAt = provider.lastUpdateCheckAt;
 
     if (provider.isCheckingForUpdates) {
       return AppGlassSurface(
@@ -341,32 +314,7 @@ class SettingsTab extends StatelessWidget {
     }
 
     if (info == null) {
-      if (checkedAt == null) return null;
-      return AppGlassSurface(
-        enableBlur: enableGlassBlur,
-        borderRadius: 14,
-        backgroundColor: theme.cardColor.withValues(alpha: 0.45),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              Icon(
-                Icons.check_circle_outline_rounded,
-                size: 16,
-                color: theme.colorScheme.secondary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.updatesLastChecked(
-                      UpdateService.formatPublishedAt(checkedAt)),
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return null;
     }
 
     final isSkipped = provider.skippedUpdateVersion != null &&
@@ -374,34 +322,7 @@ class SettingsTab extends StatelessWidget {
         provider.skippedUpdateVersion == info.latestVersion;
 
     if (!provider.hasPendingUpdate && !isSkipped) {
-      return checkedAt == null
-          ? null
-          : AppGlassSurface(
-              enableBlur: enableGlassBlur,
-              borderRadius: 14,
-              backgroundColor: theme.cardColor.withValues(alpha: 0.45),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 16,
-                      color: theme.colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.updatesLastChecked(
-                            UpdateService.formatPublishedAt(checkedAt)),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+      return null;
     }
 
     if (isSkipped) {
@@ -665,6 +586,25 @@ class SettingsTab extends StatelessWidget {
                     onPressed: () => _showEditProfileDialog(context),
                     icon: const Icon(Icons.edit_outlined, size: 18),
                     label: Text(l10n.editProfile),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmLogout(context),
+                    icon: Icon(
+                      Icons.logout_rounded,
+                      size: 18,
+                      color: theme.colorScheme.error,
+                    ),
+                    label: Text(
+                      l10n.logout,
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
                   ),
                 ),
               ],
@@ -992,22 +932,13 @@ class SettingsTab extends StatelessWidget {
       return l10n.updatesSubtitleDefault;
     }
     if (provider.hasPendingUpdate) {
-      return _withLastChecked(
-          l10n.updatesSubtitleAvailable(info.latestVersion), l10n);
+      return l10n.updatesSubtitleAvailable(info.latestVersion);
     }
     if (provider.skippedUpdateVersion != null &&
         info.hasUpdate &&
         info.latestVersion == provider.skippedUpdateVersion) {
-      return _withLastChecked(
-          l10n.updatesSubtitleSkipped(info.latestVersion), l10n);
+      return l10n.updatesSubtitleSkipped(info.latestVersion);
     }
-    return _withLastChecked(
-        l10n.updatesSubtitleUpToDate(info.currentVersion), l10n);
-  }
-
-  String _withLastChecked(String base, AppLocalizations l10n) {
-    final checkedAt = provider.lastUpdateCheckAt;
-    if (checkedAt == null) return base;
-    return '$base • ${l10n.updatesLastChecked(UpdateService.formatPublishedAt(checkedAt))}';
+    return l10n.updatesSubtitleUpToDate(info.currentVersion);
   }
 }

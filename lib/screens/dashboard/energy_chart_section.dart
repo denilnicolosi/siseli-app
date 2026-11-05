@@ -570,10 +570,71 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       !_showConsumption &&
       !_showGrid;
 
+  ({List<FlSpot> spots, DateTime depletionAt})? _buildSocForecast() {
+    final now = DateTime.now();
+    final selectedDay =
+        DateTime(_currentDate.year, _currentDate.month, _currentDate.day);
+    final today = DateTime(now.year, now.month, now.day);
+    if (selectedDay != today || _socData.length < 2) return null;
+
+    final lastSoc = _socData.last;
+    final soc = lastSoc.y;
+    final targetSoc = AppStateProvider.lowBatteryNotifySoc;
+    if (soc <= targetSoc) return null;
+
+    final recentSocPoints =
+        _socData.where((spot) => spot.x >= lastSoc.x - 6).toList();
+    if (recentSocPoints.length < 3) return null;
+
+    // Fit the net SOC trend over all recent readings. Averaging only the
+    // downward steps overweights telemetry noise and makes the estimate too
+    // pessimistic when the battery briefly rebounds between samples.
+    final meanX =
+        recentSocPoints.map((spot) => spot.x).reduce((a, b) => a + b) /
+            recentSocPoints.length;
+    final meanY =
+        recentSocPoints.map((spot) => spot.y).reduce((a, b) => a + b) /
+            recentSocPoints.length;
+    var covariance = 0.0;
+    var variance = 0.0;
+    for (final spot in recentSocPoints) {
+      final dx = spot.x - meanX;
+      covariance += dx * (spot.y - meanY);
+      variance += dx * dx;
+    }
+    if (variance <= 0) return null;
+    final socSlopePerHour = covariance / variance;
+    if (socSlopePerHour >= -0.1) return null;
+    final socDropPerHour = -socSlopePerHour;
+
+    final hoursToThreshold = (soc - targetSoc) / socDropPerHour;
+    final depletionAt = selectedDay.add(Duration(
+      minutes: ((lastSoc.x + hoursToThreshold) * 60).round(),
+    ));
+    final endX = (lastSoc.x + hoursToThreshold).clamp(lastSoc.x, 23.0);
+    if (endX <= lastSoc.x) return null;
+    final endSoc = soc - (endX - lastSoc.x) * socDropPerHour;
+
+    return (
+      spots: [
+        FlSpot(lastSoc.x, soc),
+        FlSpot(endX, endSoc),
+      ],
+      depletionAt: depletionAt,
+    );
+  }
+
   Widget buildSocChart(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final labelStyle = theme.textTheme.labelSmall
         ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final socForecast = _buildSocForecast();
+    final forecastTime = socForecast == null
+        ? null
+        : '${socForecast.depletionAt.hour.toString().padLeft(2, '0')}:${socForecast.depletionAt.minute.toString().padLeft(2, '0')}';
+    final forecastDate = socForecast == null
+        ? null
+        : '${socForecast.depletionAt.day.toString().padLeft(2, '0')}.${socForecast.depletionAt.month.toString().padLeft(2, '0')}.${socForecast.depletionAt.year}';
     return AppCard(
       borderRadius: context.expressive.cornerMedium,
       enableBlur: false,
@@ -698,10 +759,29 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                                 AppTheme.batteryColor.withValues(alpha: 0.15),
                           ),
                         ),
+                        if (socForecast != null)
+                          LineChartBarData(
+                            spots: socForecast.spots,
+                            color: AppTheme.batteryColor.withValues(alpha: 0.8),
+                            barWidth: 2,
+                            dashArray: [6, 4],
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(show: false),
+                          ),
                       ],
                     ),
                   ),
           ),
+          if (socForecast != null) ...[
+            const SizedBox(height: AppTheme.spacingXS),
+            Padding(
+              padding: const EdgeInsets.only(left: AppTheme.spacingS),
+              child: Text(
+                l10n.batteryDurationForecast(forecastTime!, forecastDate!),
+                style: labelStyle,
+              ),
+            ),
+          ],
         ],
       ),
     );
