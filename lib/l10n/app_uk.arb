@@ -460,5 +460,13 @@
   "batteryChargedTotal": "Заряд АКБ",
   "batteryDischargedTotal": "Розряд АКБ",
   "flowInverter": "Інвертор",
-  "flowPower": "Потужність"
+  "flowPower": "Потужність",
+  "wxClear": "Ясно",
+  "wxPartlyCloudy": "Мінлива хмарність",
+  "wxOvercast": "Хмарно",
+  "wxFog": "Туман",
+  "wxDrizzle": "Мряка",
+  "wxRain": "Дощ",
+  "wxSnow": "Сніг",
+  "wxThunderstorm": "Гроза"
 }

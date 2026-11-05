@@ -715,5 +715,13 @@
         "type": "String"
       }
     }
-  }
+  },
+  "wxClear": "Sunny",
+  "wxPartlyCloudy": "Partly cloudy",
+  "wxOvercast": "Cloudy",
+  "wxFog": "Fog",
+  "wxDrizzle": "Drizzle",
+  "wxRain": "Rain",
+  "wxSnow": "Snow",
+  "wxThunderstorm": "Thunderstorm"
 }

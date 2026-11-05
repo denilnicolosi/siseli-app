@@ -1521,4 +1521,28 @@ class AppLocalizationsIt extends AppLocalizations {
   String chartPeak(String value, String time) {
     return 'Picco $value · $time';
   }
+
+  @override
+  String get wxClear => 'Sereno';
+
+  @override
+  String get wxPartlyCloudy => 'Poco nuvoloso';
+
+  @override
+  String get wxOvercast => 'Nuvoloso';
+
+  @override
+  String get wxFog => 'Nebbia';
+
+  @override
+  String get wxDrizzle => 'Pioviggine';
+
+  @override
+  String get wxRain => 'Pioggia';
+
+  @override
+  String get wxSnow => 'Neve';
+
+  @override
+  String get wxThunderstorm => 'Temporale';
 }

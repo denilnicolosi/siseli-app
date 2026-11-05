@@ -2745,6 +2745,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Peak {value} · {time}'**
   String chartPeak(String value, String time);
+
+  /// No description provided for @wxClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunny'**
+  String get wxClear;
+
+  /// No description provided for @wxPartlyCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Partly cloudy'**
+  String get wxPartlyCloudy;
+
+  /// No description provided for @wxOvercast.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloudy'**
+  String get wxOvercast;
+
+  /// No description provided for @wxFog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fog'**
+  String get wxFog;
+
+  /// No description provided for @wxDrizzle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drizzle'**
+  String get wxDrizzle;
+
+  /// No description provided for @wxRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get wxRain;
+
+  /// No description provided for @wxSnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow'**
+  String get wxSnow;
+
+  /// No description provided for @wxThunderstorm.
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorm'**
+  String get wxThunderstorm;
 }
 
 class _AppLocalizationsDelegate

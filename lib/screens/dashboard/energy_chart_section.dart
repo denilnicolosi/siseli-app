@@ -864,11 +864,18 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            Formatters.formatEnergy(day.energyWh),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  Formatters.formatEnergy(day.energyWh),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              WeatherIcon(code: day.weatherCode),
+                            ],
                           ),
                           Text(
                             '${l10n.forecastPeak}: ${Formatters.formatPower(day.peakPowerW)}',

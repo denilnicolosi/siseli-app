@@ -15,6 +15,7 @@ import '../../services/weather_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_components.dart';
 import '../../widgets/energy_flow.dart';
+import '../../widgets/weather_icon.dart';
 import '../../utils/chart_log.dart';
 import '../../utils/energy_totals.dart';
 import '../../utils/formatters.dart';

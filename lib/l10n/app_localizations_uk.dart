@@ -1508,4 +1508,28 @@ class AppLocalizationsUk extends AppLocalizations {
   String chartPeak(String value, String time) {
     return 'Peak $value · $time';
   }
+
+  @override
+  String get wxClear => 'Ясно';
+
+  @override
+  String get wxPartlyCloudy => 'Мінлива хмарність';
+
+  @override
+  String get wxOvercast => 'Хмарно';
+
+  @override
+  String get wxFog => 'Туман';
+
+  @override
+  String get wxDrizzle => 'Мряка';
+
+  @override
+  String get wxRain => 'Дощ';
+
+  @override
+  String get wxSnow => 'Сніг';
+
+  @override
+  String get wxThunderstorm => 'Гроза';
 }

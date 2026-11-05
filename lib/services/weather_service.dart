@@ -51,10 +51,15 @@ class DailySolarForecast {
   final double energyWh;
   final double peakPowerW;
 
+  /// Open-Meteo daily WMO weather code (0 clear … 99 thunderstorm), null
+  /// when the payload has none.
+  final int? weatherCode;
+
   const DailySolarForecast({
     required this.date,
     required this.energyWh,
     required this.peakPowerW,
+    this.weatherCode,
   });
 }
 
@@ -133,6 +138,7 @@ class WeatherService {
     // БЕЗПЕКА: Dio автоматично перевіряє SSL сертифікати
     // Open-Meteo використовує legitim Let's Encrypt сертифікати
   }
+
   /// БЕЗПЕКА: Rate limiting для запобігання DoS атакам
   Future<void> _applyRateLimit() async {
     final now = DateTime.now();
@@ -168,8 +174,9 @@ class WeatherService {
     final prefs = await SharedPreferences.getInstance();
     // Location is part of the key so a changed site never reuses old weather.
     final loc = '${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}';
-    final cacheDataKey = 'openmeteo_cache_data_v3_${forecastDays}_$loc';
-    final cacheTimeKey = 'openmeteo_cache_timestamp_v3_${forecastDays}_$loc';
+    // v4: payload also carries daily weather_code.
+    final cacheDataKey = 'openmeteo_cache_data_v4_${forecastDays}_$loc';
+    final cacheTimeKey = 'openmeteo_cache_timestamp_v4_${forecastDays}_$loc';
 
     final cachedData = prefs.getString(cacheDataKey);
     final cacheTimestampStr = prefs.getString(cacheTimeKey);
@@ -185,6 +192,7 @@ class WeatherService {
     final url = 'https://api.open-meteo.com/v1/forecast'
         '?latitude=$lat&longitude=$lon'
         '&hourly=shortwave_radiation'
+        '&daily=weather_code'
         '&timezone=auto'
         '&past_days=14'
         '&forecast_days=$forecastDays';
@@ -558,6 +566,21 @@ class WeatherService {
       daily.putIfAbsent(day, () => <double>[]).add(predicted);
     }
 
+    // Daily weather code by local date ("2026-11-06" -> 61).
+    final codeByDay = <DateTime, int>{};
+    final dailyPayload = payload['daily'];
+    if (dailyPayload is Map) {
+      final days = (dailyPayload['time'] as List?) ?? const [];
+      final codes = (dailyPayload['weather_code'] as List?) ?? const [];
+      for (var i = 0; i < days.length && i < codes.length; i++) {
+        final d = DateTime.tryParse(days[i].toString());
+        final c = codes[i];
+        if (d != null && c is num) {
+          codeByDay[DateTime(d.year, d.month, d.day)] = c.toInt();
+        }
+      }
+    }
+
     final result = daily.entries.map((entry) {
       final values = entry.value;
       final energyWh =
@@ -569,6 +592,7 @@ class WeatherService {
         date: entry.key,
         energyWh: energyWh,
         peakPowerW: peakPowerW,
+        weatherCode: codeByDay[entry.key],
       );
     }).toList()
       ..sort((a, b) => a.date.compareTo(b.date));

@@ -446,5 +446,13 @@
   "rdValNoLoad": "Nessun carico",
   "inverterSelfUseLabel": "Autoconsumo inverter",
   "inverterSelfUseHint": "Potenza che l'inverter usa per sé. Il cloud invia la corrente della batteria in ampere interi: sotto i 3 A la potenza della batteria è stimata come solare − consumo − questo valore.",
-  "chartPeak": "Picco {value} · {time}"
+  "chartPeak": "Picco {value} · {time}",
+  "wxClear": "Sereno",
+  "wxPartlyCloudy": "Poco nuvoloso",
+  "wxOvercast": "Nuvoloso",
+  "wxFog": "Nebbia",
+  "wxDrizzle": "Pioviggine",
+  "wxRain": "Pioggia",
+  "wxSnow": "Neve",
+  "wxThunderstorm": "Temporale"
 }
