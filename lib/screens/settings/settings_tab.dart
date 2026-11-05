@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/inverter_data.dart';
 import '../../providers/app_provider.dart';
 import '../../services/location_service.dart';
 import '../../services/log_service.dart';

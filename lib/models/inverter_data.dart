@@ -121,6 +121,40 @@ class InverterData {
   /// PV readings under 5 W are MPPT noise at dusk/night: show them as 0.
   static double pvFloor(double watts) => watts < 5.0 ? 0.0 : watts;
 
+  /// Inverter self-consumption used by [batteryPowerW]. Set from Settings.
+  /// Easun SMH III 6.2 kW manual: 50 W at no load. Measured 2026-11-05:
+  /// night SOC −1.84 %/h × 100 Ah × 51.2 V = 94 W minus 36 W load = 58 W,
+  /// so 60 W (no-load draw plus conversion losses at a small load).
+  /// ponytail: one fixed figure for the whole day; recalibrate with the
+  /// same formula if the estimate drifts.
+  static double selfConsumptionW = 60.0;
+
+  /// Battery power in W, + = charging.
+  ///
+  /// The cloud reports whole amps, rounded down: a night draw of ~1.5 A
+  /// reads 0-2 A, i.e. 0-106 W, and charging under 3 A reads 0. In that
+  /// range, with nothing on the AC input, the energy balance
+  /// PV − load − self-consumption (both measured to 1 W) is closer to the
+  /// truth than volts × amps.
+  static double batteryPowerW({
+    required double voltage,
+    required double chargeA,
+    required double dischargeA,
+    required double pvW,
+    required double loadW,
+    bool acInputLive = false,
+    double? soc,
+  }) {
+    if (acInputLive || chargeA >= 3 || dischargeA >= 3) {
+      return chargeA > 0 ? chargeA * voltage : -dischargeA * voltage;
+    }
+    final estimate = pvW - loadW - selfConsumptionW;
+    // Full battery: the charger is idle and the leftover solar is the
+    // inverter's own (daytime) consumption, not charge.
+    if (soc != null && soc >= 99 && estimate > 0) return 0;
+    return estimate;
+  }
+
   static double _parseDouble(dynamic fieldObject, {bool isKw = false}) {
     if (fieldObject == null) return 0.0;
     var val = 0.0;
@@ -203,9 +237,15 @@ class InverterData {
     // Розрахунок реальної потужності батареї
     var batCharge = _parseDouble(fields['batteryChargingCurrent']);
     var batDischarge = _parseDouble(fields['batteryDischargeCurrent']);
-    var batPower = (batCharge > 0)
-        ? batCharge * batVolt
-        : (batDischarge > 0 ? -batDischarge * batVolt : 0.0);
+    var batPower = batteryPowerW(
+      voltage: batVolt,
+      chargeA: batCharge,
+      dischargeA: batDischarge,
+      pvW: pvFloor(pv),
+      loadW: load,
+      acInputLive: gridVolt >= 90,
+      soc: reportedSoc,
+    );
 
     // КРИТИЧНО: API часто рапортує batteryCapacity=100% коли немає BMS-кабелю,
     // навіть якщо акумулятор фактично розряджений. Завжди валідуємо за напругою.

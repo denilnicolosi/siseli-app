@@ -1494,4 +1494,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rdValNoLoad => 'No load';
+
+  @override
+  String get inverterSelfUseLabel => 'Inverter self-consumption';
+
+  @override
+  String get inverterSelfUseHint =>
+      'Power the inverter uses for itself. The cloud sends battery current in whole amps, so below 3 A the battery power is estimated as solar − consumption − this value.';
 }

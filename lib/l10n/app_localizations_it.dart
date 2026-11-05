@@ -1509,4 +1509,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rdValNoLoad => 'Nessun carico';
+
+  @override
+  String get inverterSelfUseLabel => 'Autoconsumo inverter';
+
+  @override
+  String get inverterSelfUseHint =>
+      'Potenza che l\'inverter usa per sé. Il cloud invia la corrente della batteria in ampere interi: sotto i 3 A la potenza della batteria è stimata come solare − consumo − questo valore.';
 }

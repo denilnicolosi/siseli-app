@@ -702,5 +702,7 @@
   "rdValShutdownMode": "Shut down",
   "rdValIdle": "Idle",
   "rdValOverload": "Overload",
-  "rdValNoLoad": "No load"
+  "rdValNoLoad": "No load",
+  "inverterSelfUseLabel": "Inverter self-consumption",
+  "inverterSelfUseHint": "Power the inverter uses for itself. The cloud sends battery current in whole amps, so below 3 A the battery power is estimated as solar − consumption − this value."
 }

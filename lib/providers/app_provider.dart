@@ -45,7 +45,7 @@ class AppStateProvider extends ChangeNotifier {
   Timer? _dataTimer;
   Timer? _weatherTimer;
 
-  double batteryCapacityAh = 230.0;
+  double batteryCapacityAh = 100.0;
   double pvTotalCapacityW = 3000.0;
   double inverterMaxPowerW = 5000.0;
   double acInputBreakerAmps = 20.0;
@@ -232,9 +232,11 @@ class AppStateProvider extends ChangeNotifier {
     final isDark = prefs.getBool('is_dark_theme') ?? true;
     themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
 
-    batteryCapacityAh = prefs.getDouble('battery_capacity_ah') ?? 230.0;
+    batteryCapacityAh = prefs.getDouble('battery_capacity_ah') ?? 100.0;
     pvTotalCapacityW = prefs.getDouble('pv_total_capacity_w') ?? 3000.0;
     inverterMaxPowerW = prefs.getDouble('inverter_max_power_w') ?? 5000.0;
+    InverterData.selfConsumptionW =
+        prefs.getDouble('inverter_self_consumption_w') ?? 60.0;
     acInputBreakerAmps = prefs.getDouble('ac_input_breaker_amps') ?? 20.0;
     nominalGridVoltage = prefs.getDouble('nominal_grid_voltage') ?? 230.0;
     houseLoadReserveW = prefs.getDouble('house_load_reserve_w') ?? 600.0;
@@ -406,7 +408,8 @@ class AppStateProvider extends ChangeNotifier {
       double? breakerAmps,
       double? gridVoltage,
       double? loadReserveW,
-      bool? autoReserveEnabled}) async {
+      bool? autoReserveEnabled,
+      double? selfConsumptionW}) async {
     final prefs = await SharedPreferences.getInstance();
     batteryCapacityAh = battery;
     pvTotalCapacityW = pv;
@@ -422,6 +425,12 @@ class AppStateProvider extends ChangeNotifier {
     }
     if (autoReserveEnabled != null) {
       autoHouseLoadReserveEnabled = autoReserveEnabled;
+    }
+    if (selfConsumptionW != null) {
+      InverterData.selfConsumptionW =
+          selfConsumptionW.clamp(0.0, 300.0).toDouble();
+      await prefs.setDouble(
+          'inverter_self_consumption_w', InverterData.selfConsumptionW);
     }
     await prefs.setDouble('battery_capacity_ah', battery);
     await prefs.setDouble('pv_total_capacity_w', pv);

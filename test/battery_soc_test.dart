@@ -41,4 +41,46 @@ void main() {
       expect(data.batterySoc, 97);
     });
   });
+
+  group('battery power', () {
+    double power(double chA, double disA,
+            {double pv = 0, double load = 36, bool ac = false}) =>
+        InverterData.batteryPowerW(
+          voltage: 53.1,
+          chargeA: chA,
+          dischargeA: disA,
+          pvW: pv,
+          loadW: load,
+          acInputLive: ac,
+        );
+
+    setUp(() => InverterData.selfConsumptionW = 50); // fixed for the numbers below
+
+    test('night draw under 3 A comes from the energy balance', () {
+      // Cloud reads 0 or 1 A for a real ~1.6 A draw.
+      expect(power(0, 0), -86);
+      expect(power(0, 1), -86);
+    });
+
+    test('3 A and more trusts volts x amps', () {
+      expect(power(6, 0, pv: 900), closeTo(318.6, 0.01));
+      expect(power(0, 4, load: 300), closeTo(-212.4, 0.01));
+    });
+
+    test('full battery: leftover solar is not counted as charge', () {
+      expect(
+          InverterData.batteryPowerW(
+              voltage: 54,
+              chargeA: 0,
+              dischargeA: 0,
+              pvW: 180,
+              loadW: 30,
+              soc: 100),
+          0);
+    });
+
+    test('with AC input live the balance is not used', () {
+      expect(power(0, 0, load: 400, ac: true), 0);
+    });
+  });
 }

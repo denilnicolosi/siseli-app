@@ -87,6 +87,8 @@ class HardwareSettingsSection extends StatelessWidget {
         text: provider.pvTotalCapacityW.toStringAsFixed(0));
     final inverterCtrl = TextEditingController(
         text: provider.inverterMaxPowerW.toStringAsFixed(0));
+    final selfUseCtrl = TextEditingController(
+        text: InverterData.selfConsumptionW.toStringAsFixed(0));
     final latitudeCtrl =
         TextEditingController(text: provider.siteLatitude.toStringAsFixed(4));
     final longitudeCtrl =
@@ -211,6 +213,16 @@ class HardwareSettingsSection extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildTextField(context, inverterCtrl,
                       l10n.inverterPowerLabel, 'W', Icons.bolt_rounded),
+                  const SizedBox(height: 16),
+                  _buildTextField(context, selfUseCtrl,
+                      l10n.inverterSelfUseLabel, 'W', Icons.power_rounded),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.inverterSelfUseHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<double>(
                     initialValue: selectedBreakerA,
@@ -666,6 +678,7 @@ class HardwareSettingsSection extends StatelessWidget {
                           gridVoltage: gridVoltage,
                           loadReserveW: houseReserveW,
                           autoReserveEnabled: autoReserveEnabled,
+                          selfConsumptionW: double.tryParse(selfUseCtrl.text),
                         );
                         provider.saveGeoSettings(
                           latitude: lat,

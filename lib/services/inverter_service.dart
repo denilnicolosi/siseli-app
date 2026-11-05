@@ -866,6 +866,10 @@ class InverterService {
       final dtStr = timeSeries[i].toString();
       final dt = DateTime.tryParse(dtStr)?.toLocal();
       if (dt == null) continue;
+      bool has(List<dynamic> l) => i < l.length && l[i] != null;
+      // About 1 record in 10 is empty (every field null): skip it instead
+      // of plotting a fake drop to 0.
+      if (!has(batVoltage) && !has(loadPwr) && !has(genPower)) continue;
 
       var xValue = dt.hour + (dt.minute / 60.0);
 
@@ -881,6 +885,11 @@ class InverterService {
       } else {
         load.add(FlSpot(xValue, 0));
       }
+      final pvNow = has(genPower)
+          ? InverterData.pvFloor((genPower[i] as num).toDouble() * 1000)
+          : 0.0;
+      final loadNow =
+          has(loadPwr) ? (loadPwr[i] as num).toDouble() * 1000 : 0.0;
       double? batteryW;
       if (i < batPower.length && batPower[i] != null) {
         batteryW = (batPower[i] as num).toDouble() * 1000;
@@ -893,11 +902,17 @@ class InverterService {
             i < batDischargeCurrent.length && batDischargeCurrent[i] != null
                 ? (batDischargeCurrent[i] as num).toDouble()
                 : 0.0;
-        if (ch > 0) {
-          batteryW = v * ch;
-        } else if (dis > 0) {
-          batteryW = -(v * dis);
-        }
+        batteryW = InverterData.batteryPowerW(
+          voltage: v,
+          chargeA: ch,
+          dischargeA: dis,
+          pvW: pvNow,
+          loadW: loadNow,
+          acInputLive: _acInputLive(acVoltage, i),
+          soc: i < batSoc.length && batSoc[i] != null
+              ? (batSoc[i] as num).toDouble()
+              : null,
+        );
       }
       if (batteryW != null) {
         battery.add(FlSpot(xValue, batteryW));
@@ -1149,6 +1164,7 @@ class InverterService {
     final batDischargeCurrent = pick(['batteryDischargeCurrent']);
     final batVoltage = pick(['batteryVoltage']);
     final acVoltage = pick(['acInputVoltage']);
+    final batSoc = pick(['batteryCapacity']);
 
     var pvWh = 0.0;
     var loadWh = 0.0;
@@ -1162,6 +1178,12 @@ class InverterService {
     for (var i = 0; i < timeSeries.length; i++) {
       final dt = DateTime.tryParse(timeSeries[i].toString())?.toLocal();
       if (dt == null) continue;
+      // Empty record (every field null): skip it, or it would count as 0 W
+      // and shorten the next sample's interval.
+      if (!(i < batVoltage.length && batVoltage[i] != null) &&
+          !(i < loadPower.length && loadPower[i] != null)) {
+        continue;
+      }
 
       final minutesFromPrevious = previousDt == null
           ? 5.0
@@ -1193,11 +1215,17 @@ class InverterService {
             i < batDischargeCurrent.length && batDischargeCurrent[i] != null
                 ? (batDischargeCurrent[i] as num).toDouble()
                 : 0.0;
-        if (ch > 0) {
-          batteryW = v * ch;
-        } else if (dis > 0) {
-          batteryW = -(v * dis);
-        }
+        batteryW = InverterData.batteryPowerW(
+          voltage: v,
+          chargeA: ch,
+          dischargeA: dis,
+          pvW: pvW,
+          loadW: loadW,
+          acInputLive: _acInputLive(acVoltage, i),
+          soc: i < batSoc.length && batSoc[i] != null
+              ? (batSoc[i] as num).toDouble()
+              : null,
+        );
       }
 
       var gridW = 0.0;
@@ -1288,6 +1316,7 @@ class InverterService {
         'batteryDischargeCurrent',
         'batteryVoltage',
         'acInputVoltage',
+        'batteryCapacity', // SOC %, caps the battery estimate when full
       ],
     };
 
@@ -1368,6 +1397,7 @@ class InverterService {
     final batChargeCurrent = pick(['batteryChargingCurrent']); // A
     final batDischargeCurrent = pick(['batteryDischargeCurrent']); // A
     final batVoltage = pick(['batteryVoltage']); // V
+    final batSoc = pick(['batteryCapacity']); // %
     final acVoltage = pick(['acInputVoltage']); // V
 
     final pvWhByDay = List<double>.filled(days, 0.0);
@@ -1382,6 +1412,12 @@ class InverterService {
     for (var i = 0; i < timeSeries.length; i++) {
       final dt = DateTime.tryParse(timeSeries[i].toString())?.toLocal();
       if (dt == null) continue;
+      // Empty record (every field null): skip it, or it would count as 0 W
+      // and shorten the next sample's interval.
+      if (!(i < batVoltage.length && batVoltage[i] != null) &&
+          !(i < loadPower.length && loadPower[i] != null)) {
+        continue;
+      }
 
       // Integrate power using real telemetry cadence; clamp large gaps.
       final minutesFromPrevious = previousDt == null
@@ -1417,11 +1453,17 @@ class InverterService {
             i < batDischargeCurrent.length && batDischargeCurrent[i] != null
                 ? (batDischargeCurrent[i] as num).toDouble()
                 : 0.0;
-        if (ch > 0) {
-          batteryW = v * ch;
-        } else if (dis > 0) {
-          batteryW = -(v * dis);
-        }
+        batteryW = InverterData.batteryPowerW(
+          voltage: v,
+          chargeA: ch,
+          dischargeA: dis,
+          pvW: pvW,
+          loadW: loadW,
+          acInputLive: _acInputLive(acVoltage, i),
+          soc: i < batSoc.length && batSoc[i] != null
+              ? (batSoc[i] as num).toDouble()
+              : null,
+        );
       }
 
       double gridW;

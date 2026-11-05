@@ -31,7 +31,8 @@ class _LocationTestProvider extends AppStateProvider {
       double? breakerAmps,
       double? gridVoltage,
       double? loadReserveW,
-      bool? autoReserveEnabled}) async {}
+      bool? autoReserveEnabled,
+      double? selfConsumptionW}) async {}
 
   @override
   Future<void> saveGeoSettings({

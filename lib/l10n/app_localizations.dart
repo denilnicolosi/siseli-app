@@ -2727,6 +2727,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No load'**
   String get rdValNoLoad;
+
+  /// No description provided for @inverterSelfUseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inverter self-consumption'**
+  String get inverterSelfUseLabel;
+
+  /// No description provided for @inverterSelfUseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Power the inverter uses for itself. The cloud sends battery current in whole amps, so below 3 A the battery power is estimated as solar − consumption − this value.'**
+  String get inverterSelfUseHint;
 }
 
 class _AppLocalizationsDelegate
