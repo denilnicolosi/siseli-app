@@ -358,6 +358,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося встановити. Запустіть інсталятор вручну.';
 
   @override
+  String get updatesInstallPermissionNeeded =>
+      'Дозвольте «Встановлення невідомих застосунків» для Smart Inverter у відкритих налаштуваннях, потім поверніться й натисніть «Встановити».';
+
+  @override
   String get updatesDialogDownloadFailed =>
       'Не вдалося завантажити. Перевірте інтернет або файли релізу.';
 

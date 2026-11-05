@@ -934,11 +934,8 @@ class SettingsTab extends StatelessWidget {
 
       LogService.log(
           'update.ui install confirmed: version=${info.latestVersion}, path=$path');
-      final success = await UpdateService.installUpdate(
-        path,
-        fallbackUrl: info.downloadUrl,
-      );
-      if (success) {
+      final result = await UpdateService.installUpdate(path);
+      if (result == UpdateInstallResult.started) {
         if (Platform.isAndroid) {
           // Android: system installer dialog overlays the app - stay open.
           LogService.log(
@@ -952,24 +949,22 @@ class SettingsTab extends StatelessWidget {
           exit(0);
         }
       } else {
-        LogService.log('update.ui install failed for path=$path');
-        final failMessage = Platform.isAndroid
-            ? '${l10n.updatesDialogInstallFailed}\nAPK: $path'
-            : l10n.updatesDialogInstallFailed;
+        LogService.log('update.ui install not started ($result) for path=$path');
+        final failMessage = result == UpdateInstallResult.needsPermission
+            ? l10n.updatesInstallPermissionNeeded
+            : Platform.isAndroid
+                ? '${l10n.updatesDialogInstallFailed}\nAPK: $path'
+                : l10n.updatesDialogInstallFailed;
         scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(failMessage),
+            duration: const Duration(seconds: 15),
             action: Platform.isAndroid
                 ? SnackBarAction(
                     label: l10n.updatesDialogInstall,
-                    onPressed: () {
-                      unawaited(
-                        UpdateService.installUpdate(
-                          path,
-                          fallbackUrl: info.downloadUrl,
-                        ),
-                      );
-                    },
+                    // Retry from the already-downloaded APK, no re-download.
+                    onPressed: () =>
+                        unawaited(UpdateService.installUpdate(path)),
                   )
                 : null,
           ),

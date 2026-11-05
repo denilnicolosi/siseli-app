@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'log_service.dart';
+
+enum UpdateInstallResult { started, needsPermission, failed }
 
 class UpdateInfo {
   final bool hasUpdate;
@@ -398,14 +400,23 @@ class UpdateService {
     return '${tempDir.path}${Platform.pathSeparator}$fileName';
   }
 
-  static Future<bool> installUpdate(String path, {String? fallbackUrl}) async {
+  static const _installChannel = MethodChannel('smart_inverter/install');
+
+  /// Launches the downloaded installer.
+  ///
+  /// Android: hands the APK to the system package installer. If the user has
+  /// not allowed "Install unknown apps" for this app, opens that setting and
+  /// returns [UpdateInstallResult.needsPermission]; the caller should ask the
+  /// user to tap Install again. No browser fallback: it re-downloaded the same
+  /// APK and hit the same permission/signature checks.
+  static Future<UpdateInstallResult> installUpdate(String path) async {
     try {
       LogService.log('🚀 update.install start: path=$path');
 
       final file = File(path);
       if (!await file.exists()) {
         LogService.log('❌ update.install failed: file does not exist');
-        return false;
+        return UpdateInstallResult.failed;
       }
 
       // Android: open APK via system package installer
@@ -414,30 +425,21 @@ class UpdateService {
           path,
           type: 'application/vnd.android.package-archive',
         );
-        final ok = result.type == ResultType.done;
-        if (ok) {
+        if (result.type == ResultType.done) {
           LogService.log('✅ update.install Android APK opened: $path');
-          return true;
+          return UpdateInstallResult.started;
         }
 
         LogService.log('⚠️ update.install Android failed: ${result.message}');
-
-        if (fallbackUrl != null && fallbackUrl.isNotEmpty) {
-          final uri = Uri.tryParse(fallbackUrl);
-          if (uri != null) {
-            final launched = await launchUrl(
-              uri,
-              mode: LaunchMode.externalApplication,
-            );
-            if (launched) {
-              LogService.log(
-                  'ℹ️ update.install fallback opened external URL: $fallbackUrl');
-              return true;
-            }
-          }
+        if (result.type == ResultType.permissionDenied) {
+          final opened = await _installChannel
+                  .invokeMethod<bool>('openInstallPermissionSettings') ??
+              false;
+          LogService.log(
+              'ℹ️ update.install opened install-permission settings: $opened');
+          return UpdateInstallResult.needsPermission;
         }
-
-        return false;
+        return UpdateInstallResult.failed;
       }
 
       final lower = path.toLowerCase();
@@ -455,16 +457,16 @@ class UpdateService {
           LogService.log(
               '✅ update.install msi launched successfully: exit=${result.exitCode}');
         }
-        return ok;
+        return ok ? UpdateInstallResult.started : UpdateInstallResult.failed;
       }
 
       // Inno/EXE/MSIX
       await Process.start(path, [], runInShell: false);
       LogService.log('✅ update.install process started: $path');
-      return true;
+      return UpdateInstallResult.started;
     } catch (e) {
       LogService.log('❌ update.install exception', error: e);
-      return false;
+      return UpdateInstallResult.failed;
     }
   }
 }

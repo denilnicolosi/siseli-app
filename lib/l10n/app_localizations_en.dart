@@ -359,6 +359,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Installation failed. Please run installer manually.';
 
   @override
+  String get updatesInstallPermissionNeeded =>
+      'Allow \"Install unknown apps\" for Smart Inverter in the settings that just opened, then come back and tap Install.';
+
+  @override
   String get updatesDialogDownloadFailed =>
       'Download failed. Check internet or release assets.';
 

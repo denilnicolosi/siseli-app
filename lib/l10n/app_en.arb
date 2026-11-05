@@ -200,6 +200,7 @@
   },
   "updatesDialogInstall": "Install",
   "updatesDialogInstallFailed": "Installation failed. Please run installer manually.",
+  "updatesInstallPermissionNeeded": "Allow \"Install unknown apps\" for Smart Inverter in the settings that just opened, then come back and tap Install.",
   "updatesDialogDownloadFailed": "Download failed. Check internet or release assets.",
   "updatesDialogClose": "Close",
   "inverterSettings": "Inverter settings",

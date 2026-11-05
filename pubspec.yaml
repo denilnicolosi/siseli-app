@@ -26,7 +26,6 @@ dependencies:
   fl_chart: 0.70.2
   window_manager: ^0.5.1
   package_info_plus: ^9.0.1
-  url_launcher: ^6.3.2
   path_provider: ^2.1.5
   flutter_secure_storage: ^10.0.0
   open_file: ^3.3.2

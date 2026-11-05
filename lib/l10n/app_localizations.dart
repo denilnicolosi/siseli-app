@@ -718,6 +718,12 @@ abstract class AppLocalizations {
   /// **'Installation failed. Please run installer manually.'**
   String get updatesDialogInstallFailed;
 
+  /// No description provided for @updatesInstallPermissionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow \"Install unknown apps\" for Smart Inverter in the settings that just opened, then come back and tap Install.'**
+  String get updatesInstallPermissionNeeded;
+
   /// No description provided for @updatesDialogDownloadFailed.
   ///
   /// In en, this message translates to:

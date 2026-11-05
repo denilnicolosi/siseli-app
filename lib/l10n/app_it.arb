@@ -103,6 +103,7 @@
   "updatesDialogInstallPrompt": "Aggiornamento scaricato ({version}). Installare ora? L'app verrà chiusa durante l'installazione.",
   "updatesDialogInstall": "Installa",
   "updatesDialogInstallFailed": "Installazione non riuscita. Avvia l'installer manualmente.",
+  "updatesInstallPermissionNeeded": "Consenti \"Installa app sconosciute\" per Smart Inverter nelle impostazioni appena aperte, poi torna qui e tocca Installa.",
   "updatesDialogDownloadFailed": "Download non riuscito. Controlla la connessione o gli asset della release.",
   "updatesDialogClose": "Chiudi",
   "inverterSettings": "Impostazioni inverter",

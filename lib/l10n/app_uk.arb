@@ -200,6 +200,7 @@
   },
   "updatesDialogInstall": "Встановити",
   "updatesDialogInstallFailed": "Не вдалося встановити. Запустіть інсталятор вручну.",
+  "updatesInstallPermissionNeeded": "Дозвольте «Встановлення невідомих застосунків» для Smart Inverter у відкритих налаштуваннях, потім поверніться й натисніть «Встановити».",
   "updatesDialogDownloadFailed": "Не вдалося завантажити. Перевірте інтернет або файли релізу.",
   "updatesDialogClose": "Закрити",
   "inverterSettings": "Налаштування інвертора",
