@@ -21,10 +21,16 @@ class HardwareSettingsSection extends StatelessWidget {
     _GeoPreset('custom', 'Custom (manual)', 0, 0, 'UTC'),
   ];
 
+  /// Tolerance used to decide whether stored coordinates belong to a preset.
+  /// Presets save their exact coordinates, so anything else (manual or
+  /// GPS-detected coordinates) must be shown as "custom" instead of being
+  /// silently snapped back to a nearby preset city on the next save.
+  static const double _presetMatchEpsilon = 1e-4;
+
   static _GeoPreset _matchPreset(double lat, double lon) {
     for (final p in _geoPresets.where((e) => e.id != 'custom')) {
-      final latOk = (p.latitude - lat).abs() < 0.2;
-      final lonOk = (p.longitude - lon).abs() < 0.2;
+      final latOk = (p.latitude - lat).abs() <= _presetMatchEpsilon;
+      final lonOk = (p.longitude - lon).abs() <= _presetMatchEpsilon;
       if (latOk && lonOk) return p;
     }
     return _geoPresets.last;
@@ -96,6 +102,12 @@ class HardwareSettingsSection extends StatelessWidget {
         _matchPreset(provider.siteLatitude, provider.siteLongitude);
     var selectedBreakerA = _matchBreakerPreset(provider.acInputBreakerAmps);
     var autoReserveEnabled = provider.autoHouseLoadReserveEnabled;
+    var isDetectingLocation = false;
+    LocationFailure? locationFailure;
+    String? locationDetectedMessage;
+    final supportsLocationDetection =
+        defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS;
 
     showDialog(
       context: context,
@@ -442,6 +454,10 @@ class HardwareSettingsSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
+                    // Re-created when the preset changes programmatically
+                    // (e.g. GPS detection switches to "custom"), because
+                    // initialValue is only read on first build.
+                    key: ValueKey<String>('geo-preset-${selectedPreset.id}'),
                     isExpanded: true,
                     initialValue: selectedPreset.id,
                     decoration: InputDecoration(
@@ -461,7 +477,13 @@ class HardwareSettingsSection extends StatelessWidget {
                     onChanged: (id) {
                       if (id == null) return;
                       final preset = _geoPresets.firstWhere((p) => p.id == id);
-                      setStateDialog(() => selectedPreset = preset);
+                      setStateDialog(() {
+                        selectedPreset = preset;
+                        // The previous "position detected" hint no longer
+                        // describes what will be saved.
+                        locationDetectedMessage = null;
+                        locationFailure = null;
+                      });
                       if (preset.id != 'custom') {
                         latitudeCtrl.text = preset.latitude.toStringAsFixed(4);
                         longitudeCtrl.text =
@@ -470,6 +492,111 @@ class HardwareSettingsSection extends StatelessWidget {
                       }
                     },
                   ),
+                  if (supportsLocationDetection) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: isDetectingLocation
+                            ? null
+                            : () async {
+                                setStateDialog(() {
+                                  isDetectingLocation = true;
+                                  locationFailure = null;
+                                  locationDetectedMessage = null;
+                                });
+                                try {
+                                  final location =
+                                      await provider.detectSiteLocation();
+                                  if (!context.mounted) return;
+                                  setStateDialog(() {
+                                    selectedPreset = _geoPresets.last;
+                                    latitudeCtrl.text =
+                                        location.latitude.toStringAsFixed(4);
+                                    longitudeCtrl.text =
+                                        location.longitude.toStringAsFixed(4);
+                                    timeZoneCtrl.text = location.timeZone;
+                                    locationDetectedMessage =
+                                        l10n.locationDetected(
+                                      location.latitude.toStringAsFixed(4),
+                                      location.longitude.toStringAsFixed(4),
+                                      location.timeZone,
+                                    );
+                                  });
+                                } on LocationException catch (error) {
+                                  if (!context.mounted) return;
+                                  setStateDialog(
+                                      () => locationFailure = error.failure);
+                                } catch (error, stack) {
+                                  LogService.log('❌ location detection failed',
+                                      error: error, stack: stack);
+                                  if (!context.mounted) return;
+                                  setStateDialog(() => locationFailure =
+                                      LocationFailure.unavailable);
+                                } finally {
+                                  if (context.mounted) {
+                                    setStateDialog(
+                                        () => isDetectingLocation = false);
+                                  }
+                                }
+                              },
+                        icon: isDetectingLocation
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.my_location_rounded),
+                        label: Text(isDetectingLocation
+                            ? l10n.locationDetecting
+                            : l10n.useMyLocation),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        l10n.locationHelp,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ),
+                    if (locationFailure != null) ...[
+                      const SizedBox(height: 8),
+                      _buildLocationError(
+                          context, l10n, provider, locationFailure!),
+                    ] else if (locationDetectedMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              locationDetectedMessage!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                   if (selectedPreset.id == 'custom') ...[
                     const SizedBox(height: 16),
                     _buildTextField(context, latitudeCtrl, l10n.latitudeLabel,
@@ -493,67 +620,143 @@ class HardwareSettingsSection extends StatelessWidget {
                 child: Text(l10n.cancel),
               ),
               FilledButton(
-                onPressed: () {
-                  final bat = double.tryParse(batteryCtrl.text) ??
-                      provider.batteryCapacityAh;
-                  final pv =
-                      double.tryParse(pvCtrl.text) ?? provider.pvTotalCapacityW;
-                  final inv = double.tryParse(inverterCtrl.text) ??
-                      provider.inverterMaxPowerW;
-                  final gridVoltage = double.tryParse(gridVoltageCtrl.text) ??
-                      provider.nominalGridVoltage;
-                  final houseReserveW = double.tryParse(reserveLoadCtrl.text) ??
-                      provider.houseLoadReserveW;
-                  final installYear = int.tryParse(installYearCtrl.text) ??
-                      provider.batteryInstallDate.year;
-                  final installDate = DateTime(
-                      installYear.clamp(2000, DateTime.now().year), 1, 1);
+                onPressed: isDetectingLocation
+                    ? null
+                    : () {
+                        final bat = double.tryParse(batteryCtrl.text) ??
+                            provider.batteryCapacityAh;
+                        final pv = double.tryParse(pvCtrl.text) ??
+                            provider.pvTotalCapacityW;
+                        final inv = double.tryParse(inverterCtrl.text) ??
+                            provider.inverterMaxPowerW;
+                        final gridVoltage =
+                            double.tryParse(gridVoltageCtrl.text) ??
+                                provider.nominalGridVoltage;
+                        final houseReserveW =
+                            double.tryParse(reserveLoadCtrl.text) ??
+                                provider.houseLoadReserveW;
+                        final installYear =
+                            int.tryParse(installYearCtrl.text) ??
+                                provider.batteryInstallDate.year;
+                        final installDate = DateTime(
+                            installYear.clamp(2000, DateTime.now().year), 1, 1);
 
-                  final rawLat = selectedPreset.id == 'custom'
-                      ? (double.tryParse(latitudeCtrl.text) ??
-                          provider.siteLatitude)
-                      : selectedPreset.latitude;
-                  final rawLon = selectedPreset.id == 'custom'
-                      ? (double.tryParse(longitudeCtrl.text) ??
-                          provider.siteLongitude)
-                      : selectedPreset.longitude;
-                  final lat = _sanitizeLatitude(rawLat, provider.siteLatitude);
-                  final lon =
-                      _sanitizeLongitude(rawLon, provider.siteLongitude);
-                  final tz = timeZoneCtrl.text.trim().isEmpty
-                      ? provider.siteTimeZone
-                      : timeZoneCtrl.text.trim();
+                        final rawLat = selectedPreset.id == 'custom'
+                            ? (double.tryParse(latitudeCtrl.text) ??
+                                provider.siteLatitude)
+                            : selectedPreset.latitude;
+                        final rawLon = selectedPreset.id == 'custom'
+                            ? (double.tryParse(longitudeCtrl.text) ??
+                                provider.siteLongitude)
+                            : selectedPreset.longitude;
+                        final lat =
+                            _sanitizeLatitude(rawLat, provider.siteLatitude);
+                        final lon =
+                            _sanitizeLongitude(rawLon, provider.siteLongitude);
+                        final tz = timeZoneCtrl.text.trim().isEmpty
+                            ? provider.siteTimeZone
+                            : timeZoneCtrl.text.trim();
 
-                  provider.saveHardwareSettings(
-                    bat,
-                    pv,
-                    inv,
-                    installDate: installDate,
-                    breakerAmps: selectedBreakerA,
-                    gridVoltage: gridVoltage,
-                    loadReserveW: houseReserveW,
-                    autoReserveEnabled: autoReserveEnabled,
-                  );
-                  provider.saveGeoSettings(
-                    latitude: lat,
-                    longitude: lon,
-                    timeZone: tz,
-                  );
-                  Navigator.pop(context);
+                        provider.saveHardwareSettings(
+                          bat,
+                          pv,
+                          inv,
+                          installDate: installDate,
+                          breakerAmps: selectedBreakerA,
+                          gridVoltage: gridVoltage,
+                          loadReserveW: houseReserveW,
+                          autoReserveEnabled: autoReserveEnabled,
+                        );
+                        provider.saveGeoSettings(
+                          latitude: lat,
+                          longitude: lon,
+                          timeZone: tz,
+                        );
+                        Navigator.pop(context);
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.hardwareSettingsSaved),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.hardwareSettingsSaved),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
                 child: Text(l10n.save,
                     style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// Builds inline feedback for a failed location detection. Shown inside the
+  /// dialog (a SnackBar would sit behind the modal barrier) and, when the user
+  /// can fix the cause from the system UI, offers a shortcut to the right
+  /// settings page.
+  Widget _buildLocationError(
+    BuildContext context,
+    AppLocalizations l10n,
+    AppStateProvider provider,
+    LocationFailure failure,
+  ) {
+    final theme = Theme.of(context);
+    final message = switch (failure) {
+      LocationFailure.serviceDisabled => l10n.locationServicesDisabled,
+      LocationFailure.permissionDenied => l10n.locationPermissionDenied,
+      LocationFailure.permissionDeniedForever =>
+        l10n.locationPermissionDeniedForever,
+      LocationFailure.timeout => l10n.locationTimeout,
+      LocationFailure.unavailable => l10n.locationUnavailable,
+    };
+    final openSettings = switch (failure) {
+      LocationFailure.serviceDisabled => provider.openLocationSystemSettings,
+      LocationFailure.permissionDenied ||
+      LocationFailure.permissionDeniedForever =>
+        provider.openLocationPermissionSettings,
+      LocationFailure.timeout || LocationFailure.unavailable => null,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline_rounded,
+                  size: 18, color: theme.colorScheme.error),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (openSettings != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => unawaited(
+                  openSettings().catchError((Object error, StackTrace stack) {
+                    LogService.log('❌ opening location settings failed',
+                        error: error, stack: stack);
+                    return false;
+                  }),
+                ),
+                child: Text(l10n.openSettings),
+              ),
+            ),
+        ],
       ),
     );
   }

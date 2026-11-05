@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/app_provider.dart';
+import '../../services/location_service.dart';
 import '../../services/log_service.dart';
 import '../../services/update_service.dart';
 import '../../theme/app_theme.dart';
@@ -949,7 +951,8 @@ class SettingsTab extends StatelessWidget {
           exit(0);
         }
       } else {
-        LogService.log('update.ui install not started ($result) for path=$path');
+        LogService.log(
+            'update.ui install not started ($result) for path=$path');
         final failMessage = result == UpdateInstallResult.needsPermission
             ? l10n.updatesInstallPermissionNeeded
             : Platform.isAndroid
@@ -1008,4 +1011,3 @@ class SettingsTab extends StatelessWidget {
     return '$base • ${l10n.updatesLastChecked(UpdateService.formatPublishedAt(checkedAt))}';
   }
 }
-

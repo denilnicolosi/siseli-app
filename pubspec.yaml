@@ -30,6 +30,11 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   open_file: ^3.3.2
   local_notifier: ^0.1.6
+  # Site position + timezone detection ("use my location" in Settings).
+  # 14.0.2 is the newest release whose Linux companion still accepts
+  # package_info_plus 9.x (newer ones require package_info_plus 10.x).
+  geolocator: 14.0.2
+  flutter_timezone: ^5.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -38,6 +43,10 @@ dev_dependencies:
   msix: ^3.16.7
 dependency_overrides:
   path_provider_android: 2.2.15
+  # geolocator_android needs uuid >= 4 while system_tray declares ^3.0.6.
+  # system_tray only calls `const Uuid().v1()`, which is unchanged in uuid 4,
+  # so the newer uuid is safe for both.
+  uuid: ^4.5.2
 flutter_launcher_icons:
   android: true
   ios: false

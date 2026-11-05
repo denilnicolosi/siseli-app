@@ -958,6 +958,66 @@ abstract class AppLocalizations {
   /// **'Geo: {latitude}, {longitude} ({timeZone})'**
   String geoSummary(String latitude, String longitude, String timeZone);
 
+  /// No description provided for @useMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my location'**
+  String get useMyLocation;
+
+  /// No description provided for @locationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Fills the site coordinates used by the solar forecast, plus the site timezone.'**
+  String get locationHelp;
+
+  /// No description provided for @locationDetecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Detecting location…'**
+  String get locationDetecting;
+
+  /// No description provided for @locationDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Position detected: {latitude}, {longitude} · {timeZone}. Tap Save to apply.'**
+  String locationDetected(String latitude, String longitude, String timeZone);
+
+  /// No description provided for @locationServicesDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are off. Turn on GPS/location in the system settings and try again.'**
+  String get locationServicesDisabled;
+
+  /// No description provided for @locationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission denied. Allow access to position for this app and try again.'**
+  String get locationPermissionDenied;
+
+  /// No description provided for @locationPermissionDeniedForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission is permanently denied. Enable it in the app settings.'**
+  String get locationPermissionDeniedForever;
+
+  /// No description provided for @locationTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS fix received yet. Try again near a window or with high-accuracy location enabled.'**
+  String get locationTimeout;
+
+  /// No description provided for @locationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the current position. Try again.'**
+  String get locationUnavailable;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get openSettings;
+
   /// No description provided for @hardwareSettingsSaved.
   ///
   /// In en, this message translates to:

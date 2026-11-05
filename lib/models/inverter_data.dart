@@ -37,11 +37,21 @@ class InverterData {
   /// за напругою — головне джерело правди. Параметр [batteryCurrent] —
   /// струм у А (>0 заряд, <0 розряд) використовується для компенсації
   /// просадки/підняття напруги під навантаженням (внутрішній опір ≈ 8 мОм/cell).
+  ///
+  /// [bmsConnected]: lithium battery talking to the inverter (battery type
+  /// LIB/LiFe/"LIC"). Then `batteryCapacity` comes from the BMS and is the
+  /// truth: LFP voltage is flat across most of the charge, so a voltage
+  /// estimate is wrong exactly where the battery spends its time (e.g. 53.1 V
+  /// at rest after float = 97% per BMS, 80% per the table below).
   static double getRealSoc(
     double reportedSoc,
     double voltage, {
     double batteryCurrent = 0.0,
+    bool bmsConnected = false,
   }) {
+    if (bmsConnected && reportedSoc > 0) {
+      return reportedSoc.clamp(0.0, 100.0);
+    }
     // Якщо напруга невалідна — лишаємо як є.
     if (voltage <= 10.0) return reportedSoc.clamp(0.0, 100.0);
 
@@ -94,6 +104,18 @@ class InverterData {
     // Якщо узгоджено в межах ±10% — довіряємо репорту (BMS точніший на плато).
     if (delta <= 10.0) return reported;
     return socFromVoltage;
+  }
+
+  /// Realtime `batteryType`: value 3 = LIB, 4 = LiFe (display "LIC"/"LIx"),
+  /// i.e. lithium on the inverter's BMS protocol (program 05). 0-2 are
+  /// AGM / Flooded / User-defined, which have no BMS link.
+  static bool isLithiumWithBms(dynamic batteryTypeField) {
+    if (batteryTypeField is! Map) return false;
+    final value = int.tryParse(batteryTypeField['value']?.toString() ?? '');
+    if (value != null) return value >= 3;
+    final display =
+        batteryTypeField['valueDisplay']?.toString().trim().toUpperCase() ?? '';
+    return display.startsWith('LI');
   }
 
   static double _parseDouble(dynamic fieldObject, {bool isKw = false}) {
@@ -190,6 +212,7 @@ class InverterData {
       reportedSoc,
       batVolt,
       batteryCurrent: batteryCurrent,
+      bmsConnected: isLithiumWithBms(fields['batteryType']),
     );
 
     // Логіка визначення потоку з мережі (Grid Power)

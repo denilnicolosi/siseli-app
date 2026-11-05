@@ -17,6 +17,7 @@ import '../services/notification_service.dart';
 import '../services/update_service.dart';
 import '../services/secure_storage_service.dart';
 import '../services/battery_tracker_service.dart';
+import '../services/location_service.dart';
 import '../models/inverter_data.dart';
 
 class AppStateProvider extends ChangeNotifier {
@@ -30,6 +31,7 @@ class AppStateProvider extends ChangeNotifier {
   final InverterService service = InverterService();
   final WeatherService weatherService = WeatherService();
   final DemandForecastService demandForecastService = DemandForecastService();
+  final LocationService locationService = LocationService();
   final SystemTray systemTray = SystemTray();
 
   bool get _supportsDesktopIntegrations =>
@@ -454,6 +456,22 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
     await _updateWeatherForecast();
   }
+
+  /// Detects the current device position and the timezone for it.
+  ///
+  /// The result is returned to the caller (the settings dialog) so the user
+  /// can review/confirm it; nothing is persisted until [saveGeoSettings] is
+  /// called on save. Throws [LocationException] on failure.
+  Future<SiteLocation> detectSiteLocation() =>
+      locationService.detectSiteLocation();
+
+  /// Opens the OS app settings so the user can grant location permission.
+  Future<bool> openLocationPermissionSettings() =>
+      locationService.openAppSettings();
+
+  /// Opens the OS location settings so the user can turn GPS on.
+  Future<bool> openLocationSystemSettings() =>
+      locationService.openLocationSettings();
 
   Future<void> _updateWeatherForecast() async {
     final dynamicForecastMap = await weatherService.fetchLocalForecast(

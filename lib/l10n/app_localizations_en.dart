@@ -487,6 +487,44 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get useMyLocation => 'Use my location';
+
+  @override
+  String get locationHelp =>
+      'Fills the site coordinates used by the solar forecast, plus the site timezone.';
+
+  @override
+  String get locationDetecting => 'Detecting location…';
+
+  @override
+  String locationDetected(String latitude, String longitude, String timeZone) {
+    return 'Position detected: $latitude, $longitude · $timeZone. Tap Save to apply.';
+  }
+
+  @override
+  String get locationServicesDisabled =>
+      'Location services are off. Turn on GPS/location in the system settings and try again.';
+
+  @override
+  String get locationPermissionDenied =>
+      'Location permission denied. Allow access to position for this app and try again.';
+
+  @override
+  String get locationPermissionDeniedForever =>
+      'Location permission is permanently denied. Enable it in the app settings.';
+
+  @override
+  String get locationTimeout =>
+      'No GPS fix received yet. Try again near a window or with high-accuracy location enabled.';
+
+  @override
+  String get locationUnavailable =>
+      'Could not read the current position. Try again.';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
   String get hardwareSettingsSaved => 'Hardware settings saved!';
 
   @override

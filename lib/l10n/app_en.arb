@@ -274,6 +274,29 @@
       }
     }
   },
+  "useMyLocation": "Use my location",
+  "locationHelp": "Fills the site coordinates used by the solar forecast, plus the site timezone.",
+  "locationDetecting": "Detecting location…",
+  "locationDetected": "Position detected: {latitude}, {longitude} · {timeZone}. Tap Save to apply.",
+  "@locationDetected": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      },
+      "timeZone": {
+        "type": "String"
+      }
+    }
+  },
+  "locationServicesDisabled": "Location services are off. Turn on GPS/location in the system settings and try again.",
+  "locationPermissionDenied": "Location permission denied. Allow access to position for this app and try again.",
+  "locationPermissionDeniedForever": "Location permission is permanently denied. Enable it in the app settings.",
+  "locationTimeout": "No GPS fix received yet. Try again near a window or with high-accuracy location enabled.",
+  "locationUnavailable": "Could not read the current position. Try again.",
+  "openSettings": "Open settings",
   "hardwareSettingsSaved": "Hardware settings saved!",
   "hardwareSummary": "Battery: {battery} Ah • PV: {pv} W\nInverter: {inverter} W",
   "@hardwareSummary": {

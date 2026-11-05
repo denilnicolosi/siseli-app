@@ -488,6 +488,44 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get useMyLocation => 'Використати мою позицію';
+
+  @override
+  String get locationHelp =>
+      'Заповнює координати для прогнозу сонця та часовий пояс об\'єкта.';
+
+  @override
+  String get locationDetecting => 'Визначення позиції…';
+
+  @override
+  String locationDetected(String latitude, String longitude, String timeZone) {
+    return 'Позицію визначено: $latitude, $longitude · $timeZone. Натисніть «Зберегти», щоб застосувати.';
+  }
+
+  @override
+  String get locationServicesDisabled =>
+      'Служби локації вимкнено. Увімкніть GPS у налаштуваннях системи й повторіть.';
+
+  @override
+  String get locationPermissionDenied =>
+      'Доступ до локації відхилено. Дозвольте доступ для застосунку й повторіть.';
+
+  @override
+  String get locationPermissionDeniedForever =>
+      'Доступ до локації заблоковано назавжди. Увімкніть його в налаштуваннях застосунку.';
+
+  @override
+  String get locationTimeout =>
+      'GPS ще не визначив позицію. Повторіть біля вікна або з увімкненою високою точністю.';
+
+  @override
+  String get locationUnavailable =>
+      'Не вдалося отримати поточну позицію. Повторіть.';
+
+  @override
+  String get openSettings => 'Відкрити налаштування';
+
+  @override
   String get hardwareSettingsSaved => 'Параметри обладнання збережено!';
 
   @override

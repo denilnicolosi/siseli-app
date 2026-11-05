@@ -493,6 +493,44 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get useMyLocation => 'Usa la mia posizione';
+
+  @override
+  String get locationHelp =>
+      'Compila le coordinate usate dalla previsione solare e il fuso orario del sito.';
+
+  @override
+  String get locationDetecting => 'Rilevamento posizione…';
+
+  @override
+  String locationDetected(String latitude, String longitude, String timeZone) {
+    return 'Posizione rilevata: $latitude, $longitude · $timeZone. Premi Salva per applicare.';
+  }
+
+  @override
+  String get locationServicesDisabled =>
+      'Servizi di localizzazione disattivati. Attiva il GPS dalle impostazioni di sistema e riprova.';
+
+  @override
+  String get locationPermissionDenied =>
+      'Permesso di localizzazione negato. Consenti l\'accesso alla posizione per l\'app e riprova.';
+
+  @override
+  String get locationPermissionDeniedForever =>
+      'Permesso di localizzazione negato definitivamente. Abilitalo dalle impostazioni dell\'app.';
+
+  @override
+  String get locationTimeout =>
+      'Nessun fix GPS ricevuto. Riprova vicino a una finestra o con la precisione elevata attiva.';
+
+  @override
+  String get locationUnavailable =>
+      'Impossibile leggere la posizione attuale. Riprova.';
+
+  @override
+  String get openSettings => 'Apri impostazioni';
+
+  @override
   String get hardwareSettingsSaved => 'Impostazioni hardware salvate!';
 
   @override

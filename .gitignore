@@ -34,3 +34,6 @@ windows/Output/*.msix
 windows/Output/*.zip
 # Widget Preview related
 .widget_preview/
+
+# Local emulator/test evidence (screenshots, logs)
+artifacts/
