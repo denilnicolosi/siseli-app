@@ -1463,4 +1463,37 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get batteryDischargedTotal => 'Розряд АКБ';
+
+  @override
+  String get flowInverter => 'Інвертор';
+
+  @override
+  String get flowPower => 'Потужність';
+
+  @override
+  String get rdValPvNotConnected => 'Panels not connected';
+
+  @override
+  String get rdValPvLowVoltage => 'Not connected: voltage below the minimum';
+
+  @override
+  String get rdValPowerOnMode => 'Starting up';
+
+  @override
+  String get rdValPowerSavingMode => 'Power saving';
+
+  @override
+  String get rdValBypassMode => 'Bypass';
+
+  @override
+  String get rdValShutdownMode => 'Shut down';
+
+  @override
+  String get rdValIdle => 'Idle';
+
+  @override
+  String get rdValOverload => 'Overload';
+
+  @override
+  String get rdValNoLoad => 'No load';
 }

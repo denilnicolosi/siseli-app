@@ -1475,4 +1475,38 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get batteryDischargedTotal => 'Scarica batteria';
+
+  @override
+  String get flowInverter => 'Inverter';
+
+  @override
+  String get flowPower => 'Potenza';
+
+  @override
+  String get rdValPvNotConnected => 'Pannelli non collegati';
+
+  @override
+  String get rdValPvLowVoltage =>
+      'Non collegati: tensione sotto la soglia minima';
+
+  @override
+  String get rdValPowerOnMode => 'In accensione';
+
+  @override
+  String get rdValPowerSavingMode => 'Risparmio energetico';
+
+  @override
+  String get rdValBypassMode => 'Bypass';
+
+  @override
+  String get rdValShutdownMode => 'Spento';
+
+  @override
+  String get rdValIdle => 'A riposo';
+
+  @override
+  String get rdValOverload => 'Sovraccarico';
+
+  @override
+  String get rdValNoLoad => 'Nessun carico';
 }

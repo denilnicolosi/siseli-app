@@ -118,6 +118,9 @@ class InverterData {
     return display.startsWith('LI');
   }
 
+  /// PV readings under 5 W are MPPT noise at dusk/night: show them as 0.
+  static double pvFloor(double watts) => watts < 5.0 ? 0.0 : watts;
+
   static double _parseDouble(dynamic fieldObject, {bool isKw = false}) {
     if (fieldObject == null) return 0.0;
     var val = 0.0;
@@ -231,7 +234,7 @@ class InverterData {
     }
 
     return InverterData(
-      pvPower: pv,
+      pvPower: pvFloor(pv),
       gridPower: grid,
       batteryPower: batPower,
       loadPower: load,

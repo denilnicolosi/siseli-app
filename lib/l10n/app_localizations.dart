@@ -2661,6 +2661,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Battery discharged'**
   String get batteryDischargedTotal;
+
+  /// No description provided for @flowInverter.
+  ///
+  /// In en, this message translates to:
+  /// **'Inverter'**
+  String get flowInverter;
+
+  /// No description provided for @flowPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get flowPower;
+
+  /// No description provided for @rdValPvNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Panels not connected'**
+  String get rdValPvNotConnected;
+
+  /// No description provided for @rdValPvLowVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected: voltage below the minimum'**
+  String get rdValPvLowVoltage;
+
+  /// No description provided for @rdValPowerOnMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting up'**
+  String get rdValPowerOnMode;
+
+  /// No description provided for @rdValPowerSavingMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Power saving'**
+  String get rdValPowerSavingMode;
+
+  /// No description provided for @rdValBypassMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Bypass'**
+  String get rdValBypassMode;
+
+  /// No description provided for @rdValShutdownMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Shut down'**
+  String get rdValShutdownMode;
+
+  /// No description provided for @rdValIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get rdValIdle;
+
+  /// No description provided for @rdValOverload.
+  ///
+  /// In en, this message translates to:
+  /// **'Overload'**
+  String get rdValOverload;
+
+  /// No description provided for @rdValNoLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'No load'**
+  String get rdValNoLoad;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,7 @@
 // Realtime field keys as sent by solar.siseli.com for the Easun SMH III.
 // Texts (ARB `rd*` keys) follow the Easun iSolar SMH/SMG manual programs.
 import '../l10n/app_localizations.dart';
+import '../services/log_service.dart';
 
 /// Localized name + explanation for a realtime reading key, or null.
 ({String name, String description})? inverterReadingInfo(
@@ -238,9 +239,25 @@ import '../l10n/app_localizations.dart';
   };
 }
 
+/// API texts seen without a translation, logged once each so new ones can
+/// be added to [translateReadingValue].
+final _untranslatedValues = <String>{};
+
 /// Translates enum-like display values sent by the API ("off", "charge"
 /// …); anything unknown is returned unchanged.
 String translateReadingValue(AppLocalizations l10n, String value) {
+  final translated = _translateReadingValue(l10n, value);
+  // Codes (OSO, SBU, LIC, firmware "U1 15 40") are uppercase: only log
+  // values with lowercase words, i.e. English sentences.
+  if (identical(translated, value) &&
+      RegExp(r'[a-z]{3}').hasMatch(value) &&
+      _untranslatedValues.add(value)) {
+    LogService.log('⚠️ Untranslated API value: "$value"');
+  }
+  return translated;
+}
+
+String _translateReadingValue(AppLocalizations l10n, String value) {
   return switch (value.trim().toLowerCase()) {
     'on' => l10n.rdValOn,
     'off' => l10n.rdValOff,
@@ -259,6 +276,19 @@ String translateReadingValue(AppLocalizations l10n, String value) {
     'normal working state' => l10n.rdValNormal,
     'normal access in working mode' => l10n.rdValPvWorking,
     'photovoltaic access' => l10n.rdValPvConnected,
+    'photovoltaic not connected' => l10n.rdValPvNotConnected,
+    'not connected and voltage below low voltage point' =>
+      l10n.rdValPvLowVoltage,
+    'power on mode' => l10n.rdValPowerOnMode,
+    'power saving mode' => l10n.rdValPowerSavingMode,
+    'battery mode' => l10n.rdValInvertMode,
+    'bypass mode' => l10n.rdValBypassMode,
+    'shutdown mode' => l10n.rdValShutdownMode,
+    'standby' || 'idle' || 'static' => l10n.rdValIdle,
+    'fault' => l10n.rdValFaultMode,
+    'normal' => l10n.rdValNormal,
+    'overload' => l10n.rdValOverload,
+    'no load' => l10n.rdValNoLoad,
     _ => value,
   };
 }

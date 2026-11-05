@@ -691,5 +691,16 @@
   "flowMismatch": "Reading mismatch",
   "flowMismatchHint": "More power goes out than the readings show coming in: the values were sampled at slightly different moments.",
   "batteryChargedTotal": "Battery charged",
-  "batteryDischargedTotal": "Battery discharged"
+  "batteryDischargedTotal": "Battery discharged",
+  "flowInverter": "Inverter",
+  "flowPower": "Power",
+  "rdValPvNotConnected": "Panels not connected",
+  "rdValPvLowVoltage": "Not connected: voltage below the minimum",
+  "rdValPowerOnMode": "Starting up",
+  "rdValPowerSavingMode": "Power saving",
+  "rdValBypassMode": "Bypass",
+  "rdValShutdownMode": "Shut down",
+  "rdValIdle": "Idle",
+  "rdValOverload": "Overload",
+  "rdValNoLoad": "No load"
 }

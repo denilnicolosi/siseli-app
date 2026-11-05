@@ -873,7 +873,8 @@ class InverterService {
       // timestamp. Plot them as zero so the chart does not interpolate a
       // misleading straight line across the missing interval.
       if (i < genPower.length && genPower[i] != null) {
-        pv.add(FlSpot(xValue, (genPower[i] as num).toDouble() * 1000));
+        pv.add(FlSpot(xValue,
+            InverterData.pvFloor((genPower[i] as num).toDouble() * 1000)));
       }
       if (i < loadPwr.length && loadPwr[i] != null) {
         load.add(FlSpot(xValue, (loadPwr[i] as num).toDouble() * 1000));
@@ -909,7 +910,7 @@ class InverterService {
         gridW = (gridPwr[i] as num).toDouble() * 1000;
       } else {
         final pvW = (i < genPower.length && genPower[i] != null)
-            ? (genPower[i] as num).toDouble() * 1000
+            ? InverterData.pvFloor((genPower[i] as num).toDouble() * 1000)
             : 0.0;
         final loadW = (i < loadPwr.length && loadPwr[i] != null)
             ? (loadPwr[i] as num).toDouble() * 1000
@@ -1174,7 +1175,7 @@ class InverterService {
       previousDt = dt;
 
       final pvW = (i < genPower.length && genPower[i] != null)
-          ? (genPower[i] as num).toDouble() * 1000.0
+          ? InverterData.pvFloor((genPower[i] as num).toDouble() * 1000.0)
           : 0.0;
       final loadW = (i < loadPower.length && loadPower[i] != null)
           ? (loadPower[i] as num).toDouble() * 1000.0
@@ -1398,7 +1399,7 @@ class InverterService {
       if (dayIndex < 0 || dayIndex >= days) continue;
 
       final pvW = (i < genPower.length && genPower[i] != null)
-          ? (genPower[i] as num).toDouble() * 1000.0
+          ? InverterData.pvFloor((genPower[i] as num).toDouble() * 1000.0)
           : 0.0;
       final loadW = (i < loadPower.length && loadPower[i] != null)
           ? (loadPower[i] as num).toDouble() * 1000.0

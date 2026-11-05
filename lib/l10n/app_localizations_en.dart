@@ -1461,4 +1461,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryDischargedTotal => 'Battery discharged';
+
+  @override
+  String get flowInverter => 'Inverter';
+
+  @override
+  String get flowPower => 'Power';
+
+  @override
+  String get rdValPvNotConnected => 'Panels not connected';
+
+  @override
+  String get rdValPvLowVoltage => 'Not connected: voltage below the minimum';
+
+  @override
+  String get rdValPowerOnMode => 'Starting up';
+
+  @override
+  String get rdValPowerSavingMode => 'Power saving';
+
+  @override
+  String get rdValBypassMode => 'Bypass';
+
+  @override
+  String get rdValShutdownMode => 'Shut down';
+
+  @override
+  String get rdValIdle => 'Idle';
+
+  @override
+  String get rdValOverload => 'Overload';
+
+  @override
+  String get rdValNoLoad => 'No load';
 }

@@ -458,5 +458,7 @@
   "flowMismatch": "Розбіжність вимірів",
   "flowMismatchHint": "Вихідна потужність більша за вхідну за показами: значення зчитано в трохи різні моменти.",
   "batteryChargedTotal": "Заряд АКБ",
-  "batteryDischargedTotal": "Розряд АКБ"
+  "batteryDischargedTotal": "Розряд АКБ",
+  "flowInverter": "Інвертор",
+  "flowPower": "Потужність"
 }

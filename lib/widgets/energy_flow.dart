@@ -1,15 +1,14 @@
-import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/inverter_data.dart';
 import '../theme/app_theme.dart';
+import '../utils/inverter_reading_info.dart';
 
 /// True when BackdropFilter / ImageFilter.blur should be disabled.
 /// Disabled on mobile (low GPU bandwidth) and Windows (EGL_CONTEXT_LOST 12302).
@@ -18,15 +17,8 @@ bool get _isMobilePlatform =>
 
 class EnergyFlowDiagram extends StatefulWidget {
   final InverterData data;
-  final bool showInteractiveToolbar;
-  final bool autofocusShortcuts;
 
-  const EnergyFlowDiagram({
-    super.key,
-    required this.data,
-    this.showInteractiveToolbar = false,
-    this.autofocusShortcuts = false,
-  });
+  const EnergyFlowDiagram({super.key, required this.data});
 
   @override
   State<EnergyFlowDiagram> createState() => _EnergyFlowDiagramState();
@@ -119,45 +111,49 @@ enum _InteractiveFlowLink {
   solarToGrid,
 }
 
+/// Diagram node the user can tap to see its readings.
+enum _FlowNode { solar, acInput, battery, load, inverter }
+
+/// Node a realtime API field belongs to, from its key. Whatever is not
+/// matched (priorities, ratings, temperature, firmware, states) is shown
+/// under the inverter, so every reading appears exactly once.
+_FlowNode _nodeForKey(String key) {
+  final k = key.toLowerCase();
+  if (k.contains('priority')) return _FlowNode.inverter;
+  if (k.contains('pv') ||
+      k.contains('photovoltaic') ||
+      k == 'generationpower') {
+    return _FlowNode.solar;
+  }
+  if (k.contains('bat') || k.contains('charg') || k.contains('balancing')) {
+    return _FlowNode.battery;
+  }
+  if (k.contains('acinput') ||
+      k.contains('grid') ||
+      k.contains('mains') ||
+      k.contains('utility') ||
+      k.contains('feedin')) {
+    return _FlowNode.acInput;
+  }
+  if (k.contains('output') || k.contains('load')) return _FlowNode.load;
+  return _FlowNode.inverter;
+}
+
 class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   _InteractiveFlowLink? _selectedLink;
-  late final FocusNode _focusNode;
-  Timer? _demoTimer;
-  bool _isAutoDemoEnabled = false;
-  int _demoIndex = 0;
-  bool _isSelectionPinned = false;
-
-  static const List<_InteractiveFlowLink> _demoOrder = [
-    _InteractiveFlowLink.solarToLoad,
-    _InteractiveFlowLink.solarToBattery,
-    _InteractiveFlowLink.batteryToLoad,
-    _InteractiveFlowLink.gridToLoad,
-    _InteractiveFlowLink.gridToBattery,
-    _InteractiveFlowLink.solarToGrid,
-  ];
 
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode(debugLabel: 'energy-flow-shortcuts');
     _controller =
         AnimationController(vsync: this, duration: const Duration(seconds: 8))
           ..repeat();
-    if (widget.autofocusShortcuts) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _focusNode.requestFocus();
-        }
-      });
-    }
   }
 
   @override
   void dispose() {
-    _demoTimer?.cancel();
-    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -181,196 +177,87 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
     final selectedLink =
         _isLinkVisible(snapshot, _selectedLink) ? _selectedLink : null;
 
-    return Shortcuts(
-      shortcuts: <ShortcutActivator, Intent>{
-        SingleActivator(LogicalKeyboardKey.arrowRight): const _NextFlowIntent(),
-        SingleActivator(LogicalKeyboardKey.arrowLeft): const _PrevFlowIntent(),
-        SingleActivator(LogicalKeyboardKey.escape): const _ClearFlowIntent(),
-        SingleActivator(LogicalKeyboardKey.space): const _ToggleDemoIntent(),
-      },
-      child: Actions(
-        actions: <Type, Action<Intent>>{
-          _NextFlowIntent: CallbackAction<_NextFlowIntent>(
-            onInvoke: (_) {
-              _cycleSelection(snapshot, 1);
-              return null;
-            },
-          ),
-          _PrevFlowIntent: CallbackAction<_PrevFlowIntent>(
-            onInvoke: (_) {
-              _cycleSelection(snapshot, -1);
-              return null;
-            },
-          ),
-          _ClearFlowIntent: CallbackAction<_ClearFlowIntent>(
-            onInvoke: (_) {
-              _disableDemo();
-              setState(() => _selectedLink = null);
-              return null;
-            },
-          ),
-          _ToggleDemoIntent: CallbackAction<_ToggleDemoIntent>(
-            onInvoke: (_) {
-              _toggleDemo(snapshot);
-              return null;
-            },
-          ),
-        },
-        child: Focus(
-          autofocus: widget.autofocusShortcuts,
-          focusNode: _focusNode,
-          child: Column(
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(26),
+          child: Stack(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(26),
-                child: Stack(
-                  children: [
-                    Container(
-                      height: compact ? 252 : 280,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            base.withValues(alpha: 0.94),
-                            Theme.of(context)
-                                .cardColor
-                                .withValues(alpha: isDark ? 0.78 : 0.92),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(26),
-                        boxShadow: enableBlur
-                            ? [
-                                BoxShadow(
-                                  color: (isDark
-                                          ? Colors.black
-                                          : Colors.blueGrey)
-                                      .withValues(alpha: isDark ? 0.35 : 0.1),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : null,
-                      ),
-                    ),
-                    if (enableBlur && !compact)
-                      Positioned.fill(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                          child: const SizedBox.expand(),
-                        ),
-                      ),
-                    Positioned.fill(
-                      child: RepaintBoundary(
-                        child: AnimatedBuilder(
-                          animation: animation,
-                          child: _buildNodes(
-                            context,
-                            snapshot,
-                            batterySoc,
-                            selectedLink,
-                            compact: compact,
-                            enableBlur: enableBlur,
+              Container(
+                height: compact ? 252 : 280,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      base.withValues(alpha: 0.94),
+                      Theme.of(context)
+                          .cardColor
+                          .withValues(alpha: isDark ? 0.78 : 0.92),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(26),
+                  boxShadow: enableBlur
+                      ? [
+                          BoxShadow(
+                            color: (isDark ? Colors.black : Colors.blueGrey)
+                                .withValues(alpha: isDark ? 0.35 : 0.1),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
                           ),
-                          builder: (context, child) {
-                            return CustomPaint(
-                              painter: _FlowPainter(
-                                animationValue: animation.value,
-                                pvPower: snapshot.pvPowerW,
-                                gridImportPower: snapshot.gridImportW,
-                                gridExportPower: snapshot.gridExportW,
-                                batteryChargePower: snapshot.batteryChargeW,
-                                batteryDischargePower:
-                                    snapshot.batteryDischargeW,
-                                loadPower: snapshot.loadPowerW,
-                                selectedLink: selectedLink,
-                                isDark: isDark,
-                                // Reduce extra blur strokes on mobile but keep particles.
-                                reduceEffects: !enableBlur,
-                              ),
-                              child: child,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                        ]
+                      : null,
                 ),
               ),
-              const SizedBox(height: 10),
-              _FlowLegendBar(
-                snapshot: snapshot,
-                selectedLink: selectedLink,
-                onSelectLink: (link) {
-                  if (_isSelectionPinned) return;
-                  _disableDemo();
-                  setState(() {
-                    _selectedLink = _selectedLink == link ? null : link;
-                    if (_selectedLink == null) {
-                      _isSelectionPinned = false;
-                    }
-                  });
-                },
+              if (enableBlur && !compact)
+                Positioned.fill(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              Positioned.fill(
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: animation,
+                    child: _buildNodes(
+                      context,
+                      snapshot,
+                      batterySoc,
+                      selectedLink,
+                      compact: compact,
+                      enableBlur: enableBlur,
+                    ),
+                    builder: (context, child) {
+                      return CustomPaint(
+                        painter: _FlowPainter(
+                          animationValue: animation.value,
+                          pvPower: snapshot.pvPowerW,
+                          gridImportPower: snapshot.gridImportW,
+                          gridExportPower: snapshot.gridExportW,
+                          batteryChargePower: snapshot.batteryChargeW,
+                          batteryDischargePower: snapshot.batteryDischargeW,
+                          loadPower: snapshot.loadPowerW,
+                          selectedLink: selectedLink,
+                          isDark: isDark,
+                          // Reduce extra blur strokes on mobile but keep particles.
+                          reduceEffects: !enableBlur,
+                        ),
+                        child: child,
+                      );
+                    },
+                  ),
+                ),
               ),
-              if (widget.showInteractiveToolbar) ...[
-                const SizedBox(height: 10),
-                _buildInteractiveToolbar(context, snapshot),
-              ],
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInteractiveToolbar(
-      BuildContext context, _FlowSnapshot snapshot) {
-    final theme = Theme.of(context);
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        FilledButton.tonalIcon(
-          onPressed: () => _toggleDemo(snapshot),
-          icon: Icon(_isAutoDemoEnabled
-              ? Icons.pause_circle_outline_rounded
-              : Icons.play_circle_outline_rounded),
-          label: Text(_isAutoDemoEnabled ? 'Auto demo: ON' : 'Auto demo: OFF'),
-        ),
-        OutlinedButton.icon(
-          onPressed: () => _cycleSelection(snapshot, 1),
-          icon: const Icon(Icons.chevron_right_rounded),
-          label: const Text('Next flow'),
-        ),
-        OutlinedButton.icon(
-          onPressed: () {
-            if (_selectedLink == null) return;
-            _disableDemo();
-            setState(() {
-              _isSelectionPinned = !_isSelectionPinned;
-            });
-          },
-          icon: Icon(_isSelectionPinned
-              ? Icons.push_pin_rounded
-              : Icons.push_pin_outlined),
-          label: Text(_isSelectionPinned ? 'Pinned' : 'Pin selection'),
-        ),
-        OutlinedButton.icon(
-          onPressed: () {
-            _disableDemo();
-            setState(() {
-              _selectedLink = null;
-              _isSelectionPinned = false;
-            });
-          },
-          icon: const Icon(Icons.clear_rounded),
-          label: const Text('Reset'),
-        ),
-        Text(
-          'Shortcuts: <-  ->  Space  Esc',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        const SizedBox(height: 10),
+        _FlowLegendBar(
+          snapshot: snapshot,
+          selectedLink: selectedLink,
+          onSelectLink: (link) => setState(
+            () => _selectedLink = _selectedLink == link ? null : link,
           ),
         ),
       ],
@@ -395,11 +282,7 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
               selected: selectedLink == _InteractiveFlowLink.solarToLoad ||
                   selectedLink == _InteractiveFlowLink.solarToBattery ||
                   selectedLink == _InteractiveFlowLink.solarToGrid,
-              onTap: () => _selectFirstVisible(snapshot, const [
-                _InteractiveFlowLink.solarToLoad,
-                _InteractiveFlowLink.solarToBattery,
-                _InteractiveFlowLink.solarToGrid,
-              ]),
+              onTap: () => _showNodeDetails(_FlowNode.solar, snapshot),
               compact: compact,
               enableBlur: enableBlur,
             ),
@@ -414,11 +297,7 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
               selected: selectedLink == _InteractiveFlowLink.gridToLoad ||
                   selectedLink == _InteractiveFlowLink.gridToBattery ||
                   selectedLink == _InteractiveFlowLink.solarToGrid,
-              onTap: () => _selectFirstVisible(snapshot, const [
-                _InteractiveFlowLink.gridToLoad,
-                _InteractiveFlowLink.gridToBattery,
-                _InteractiveFlowLink.solarToGrid,
-              ]),
+              onTap: () => _showNodeDetails(_FlowNode.acInput, snapshot),
               compact: compact,
               enableBlur: enableBlur,
             ),
@@ -433,11 +312,7 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
               selected: selectedLink == _InteractiveFlowLink.solarToBattery ||
                   selectedLink == _InteractiveFlowLink.gridToBattery ||
                   selectedLink == _InteractiveFlowLink.batteryToLoad,
-              onTap: () => _selectFirstVisible(snapshot, const [
-                _InteractiveFlowLink.batteryToLoad,
-                _InteractiveFlowLink.solarToBattery,
-                _InteractiveFlowLink.gridToBattery,
-              ]),
+              onTap: () => _showNodeDetails(_FlowNode.battery, snapshot),
               compact: compact,
               enableBlur: enableBlur,
             ),
@@ -447,26 +322,184 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
             child: _NodeWidget(
               icon: Icons.home_rounded,
               color: AppTheme.loadColor,
-              title: l10n.load,
+              title: l10n.consumption,
               value: '${snapshot.loadPowerW.toStringAsFixed(0)} W',
               selected: selectedLink == _InteractiveFlowLink.solarToLoad ||
                   selectedLink == _InteractiveFlowLink.batteryToLoad ||
                   selectedLink == _InteractiveFlowLink.gridToLoad,
-              onTap: () => _selectFirstVisible(snapshot, const [
-                _InteractiveFlowLink.solarToLoad,
-                _InteractiveFlowLink.batteryToLoad,
-                _InteractiveFlowLink.gridToLoad,
-              ]),
+              onTap: () => _showNodeDetails(_FlowNode.load, snapshot),
               compact: compact,
               enableBlur: enableBlur,
             ),
           ),
           Align(
             alignment: Alignment.center,
-            child: _CoreHub(animation: _controller, compact: compact),
+            child: _CoreHub(
+              animation: _controller,
+              compact: compact,
+              label: l10n.flowInverter,
+              onTap: () => _showNodeDetails(_FlowNode.inverter, snapshot),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  /// Popup with every realtime reading of [node]: the values the diagram
+  /// shows first, then the raw API fields grouped by [_nodeForKey].
+  void _showNodeDetails(_FlowNode node, _FlowSnapshot snapshot) {
+    final l10n = AppLocalizations.of(context)!;
+    final data = widget.data;
+    String w(double v) => '${v.toStringAsFixed(0)} W';
+
+    final (title, icon, color) = switch (node) {
+      _FlowNode.solar => (
+          l10n.solar,
+          Icons.solar_power_rounded,
+          AppTheme.pvColor
+        ),
+      _FlowNode.acInput => (
+          l10n.acInput,
+          Icons.electric_bolt_rounded,
+          AppTheme.gridColor
+        ),
+      _FlowNode.battery => (
+          l10n.battery,
+          Icons.battery_charging_full_rounded,
+          AppTheme.batteryColor
+        ),
+      _FlowNode.load => (
+          l10n.consumption,
+          Icons.home_rounded,
+          AppTheme.loadColor
+        ),
+      _FlowNode.inverter => (l10n.flowInverter, null, AppTheme.gridColor),
+    };
+
+    final summary = <(String, String)>[
+      ...switch (node) {
+        _FlowNode.solar => [(l10n.flowPower, w(snapshot.pvPowerW))],
+        _FlowNode.acInput => [(l10n.flowPower, _gridNodeLabel(snapshot))],
+        _FlowNode.battery => [
+            (l10n.rdBatteryCapacity, '${data.batterySoc.toStringAsFixed(0)} %'),
+            (l10n.flowPower, _batteryNodeLabel(snapshot)),
+          ],
+        _FlowNode.load => [(l10n.flowPower, w(snapshot.loadPowerW))],
+        _FlowNode.inverter => [
+            (
+              snapshot.balanceErrorW >= 0 ? l10n.flowLosses : l10n.flowMismatch,
+              w(snapshot.balanceErrorW.abs()),
+            ),
+          ],
+      },
+    ];
+    // Shown above with the app's own values (PV under 5 W = 0, BMS SOC).
+    const replacedBySummary = {
+      'pvInputPower',
+      'generationPower',
+      'batteryCapacity'
+    };
+
+    final readings = <({String name, String value, String? description})>[];
+    for (final entry in data.rawFields.entries) {
+      if (entry.key == 'fullConfigs' ||
+          replacedBySummary.contains(entry.key) ||
+          _nodeForKey(entry.key) != node) {
+        continue;
+      }
+      final field = entry.value;
+      var name = entry.key;
+      var value = '-';
+      var unit = '';
+      if (field is Map) {
+        name = field['nameDisplay']?.toString() ??
+            field['name']?.toString() ??
+            name;
+        value = field['valueDisplay']?.toString() ??
+            field['value']?.toString() ??
+            '-';
+        unit = field['unit']?.toString() ?? '';
+      } else if (field != null) {
+        value = field.toString();
+      }
+      final info = inverterReadingInfo(l10n, entry.key);
+      value = translateReadingValue(l10n, value);
+      readings.add((
+        name: info?.name ?? name,
+        value: (unit.isNotEmpty && unit != 'null') ? '$value $unit' : value,
+        description: info?.description,
+      ));
+    }
+    readings
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        Widget row(String name, String value,
+                {String? description, bool strong = false}) =>
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              title: Text(name, style: theme.textTheme.bodyMedium),
+              trailing: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 160),
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: strong ? color : theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+              onTap: description == null
+                  ? null
+                  : () => showDialog<void>(
+                        context: ctx,
+                        builder: (c) => AlertDialog(
+                          title:
+                              Text(name, style: const TextStyle(fontSize: 16)),
+                          content: Text(description),
+                        ),
+                      ),
+            );
+        return AlertDialog(
+          title: Row(
+            children: [
+              icon == null
+                  ? _InverterIcon(size: 24, color: color)
+                  : Icon(icon, color: color),
+              const SizedBox(width: 8),
+              Expanded(child: Text(title)),
+            ],
+          ),
+          content: SizedBox(
+            width: 380,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final (name, value) in summary)
+                  row(name, value, strong: true),
+                if (readings.isNotEmpty) const Divider(),
+                for (final r in readings)
+                  row(r.name, r.value, description: r.description),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(MaterialLocalizations.of(ctx).closeButtonLabel),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -503,98 +536,6 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
       _InteractiveFlowLink.solarToGrid => snapshot.solarToGridW > threshold,
     };
   }
-
-  void _selectFirstVisible(
-    _FlowSnapshot snapshot,
-    List<_InteractiveFlowLink> candidates,
-  ) {
-    if (_isSelectionPinned) return;
-    _disableDemo();
-    final target = candidates.firstWhere(
-      (link) => _isLinkVisible(snapshot, link),
-      orElse: () => candidates.first,
-    );
-    setState(() {
-      _selectedLink = _selectedLink == target ? null : target;
-    });
-  }
-
-  void _toggleDemo(_FlowSnapshot snapshot) {
-    if (_isSelectionPinned) return;
-    if (_isAutoDemoEnabled) {
-      _disableDemo();
-      return;
-    }
-    final visible = _visibleLinks(snapshot);
-    if (visible.isEmpty) return;
-    _demoTimer?.cancel();
-    setState(() {
-      _isAutoDemoEnabled = true;
-      _demoIndex = 0;
-      _selectedLink = visible.first;
-    });
-    _demoTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted) return;
-      final liveVisible = _visibleLinks(_FlowSnapshot.fromData(widget.data));
-      if (liveVisible.isEmpty) {
-        _disableDemo();
-        return;
-      }
-      _demoIndex = (_demoIndex + 1) % liveVisible.length;
-      setState(() {
-        _selectedLink = liveVisible[_demoIndex];
-      });
-    });
-  }
-
-  void _disableDemo() {
-    if (!_isAutoDemoEnabled && _demoTimer == null) return;
-    _demoTimer?.cancel();
-    _demoTimer = null;
-    if (mounted) {
-      setState(() {
-        _isAutoDemoEnabled = false;
-      });
-    }
-  }
-
-  List<_InteractiveFlowLink> _visibleLinks(_FlowSnapshot snapshot) {
-    return _demoOrder.where((l) => _isLinkVisible(snapshot, l)).toList();
-  }
-
-  void _cycleSelection(_FlowSnapshot snapshot, int direction) {
-    if (_isSelectionPinned) return;
-    _disableDemo();
-    final visible = _visibleLinks(snapshot);
-    if (visible.isEmpty) {
-      setState(() => _selectedLink = null);
-      return;
-    }
-    final currentIndex =
-        _selectedLink == null ? -1 : visible.indexOf(_selectedLink!);
-    final nextIndex = currentIndex < 0
-        ? 0
-        : (currentIndex + direction + visible.length) % visible.length;
-    setState(() {
-      _selectedLink = visible[nextIndex];
-    });
-  }
-}
-
-class _NextFlowIntent extends Intent {
-  const _NextFlowIntent();
-}
-
-class _PrevFlowIntent extends Intent {
-  const _PrevFlowIntent();
-}
-
-class _ClearFlowIntent extends Intent {
-  const _ClearFlowIntent();
-}
-
-class _ToggleDemoIntent extends Intent {
-  const _ToggleDemoIntent();
 }
 
 class _FlowLegendBar extends StatelessWidget {
@@ -624,7 +565,7 @@ class _FlowLegendBar extends StatelessWidget {
       (
         icon: Icons.solar_power_rounded,
         color: AppTheme.pvColor,
-        text: '${l10n.solar} -> ${l10n.load}',
+        text: '${l10n.solar} -> ${l10n.consumption}',
         power: snapshot.solarToLoadW,
         link: _InteractiveFlowLink.solarToLoad,
       ),
@@ -638,14 +579,14 @@ class _FlowLegendBar extends StatelessWidget {
       (
         icon: Icons.home_rounded,
         color: AppTheme.loadColor,
-        text: '${l10n.battery} -> ${l10n.load}',
+        text: '${l10n.battery} -> ${l10n.consumption}',
         power: snapshot.batteryToLoadW,
         link: _InteractiveFlowLink.batteryToLoad,
       ),
       (
         icon: Icons.electric_bolt_rounded,
         color: AppTheme.gridColor,
-        text: '${l10n.acInput} -> ${l10n.load}',
+        text: '${l10n.acInput} -> ${l10n.consumption}',
         power: snapshot.gridToLoadW,
         link: _InteractiveFlowLink.gridToLoad,
       ),
@@ -761,44 +702,66 @@ class _FlowLegendChip extends StatelessWidget {
 class _CoreHub extends StatelessWidget {
   final AnimationController animation;
   final bool compact;
+  final String label;
+  final VoidCallback onTap;
 
-  const _CoreHub({required this.animation, required this.compact});
+  const _CoreHub({
+    required this.animation,
+    required this.compact,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white70 : const Color(0xFF1A2A42);
+    final size = compact ? 70.0 : 82.0;
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
         final t = (math.sin(animation.value * math.pi * 2) + 1) / 2;
-        return Container(
-          width: compact ? 64 : 78,
-          height: compact ? 64 : 78,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                Colors.white.withValues(alpha: isDark ? 0.18 : 0.72),
-                Theme.of(context)
-                    .cardColor
-                    .withValues(alpha: isDark ? 0.74 : 0.96),
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  Colors.white.withValues(alpha: isDark ? 0.18 : 0.72),
+                  Theme.of(context)
+                      .cardColor
+                      .withValues(alpha: isDark ? 0.97 : 1.0),
+                ],
+              ),
+              border: Border.all(
+                color: AppTheme.gridColor.withValues(alpha: 0.36 + t * 0.4),
+                width: 1.4,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.gridColor.withValues(alpha: 0.18 + t * 0.18),
+                  blurRadius: isDark ? 24 : 14,
+                  spreadRadius: 2,
+                ),
               ],
             ),
-            border: Border.all(
-              color: AppTheme.gridColor.withValues(alpha: 0.36 + t * 0.4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _InverterIcon(size: compact ? 26 : 32, color: fg),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: compact ? 9 : 10,
+                    fontWeight: FontWeight.w700,
+                    color: fg,
+                  ),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.gridColor.withValues(alpha: 0.18 + t * 0.18),
-                blurRadius: isDark ? 24 : 14,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.hub_rounded,
-            size: compact ? 28 : 34,
-            color: isDark ? Colors.white70 : const Color(0xFF1A2A42),
           ),
         );
       },
@@ -1040,7 +1003,10 @@ class _FlowPainter extends CustomPainter {
         AppTheme.batteryColor,
         _scaledIntensity(_intensity(batteryChargePower), selected),
       );
-    } else if (batteryDischargePower > 25.0) {
+    } else if (batteryDischargePower > 25.0 ||
+        (pvPower <= 0 && gridImportPower <= 25.0)) {
+      // No solar and no AC input: the battery is the only source powering
+      // the inverter, even when its current reads ~0 A.
       final selected = selectedLink == null ||
           selectedLink == _InteractiveFlowLink.batteryToLoad;
       _drawEnergy(
@@ -1098,36 +1064,56 @@ class _FlowPainter extends CustomPainter {
           : MaskFilter.blur(BlurStyle.normal, isDark ? 6 : 3);
 
     canvas.drawPath(segment, glow);
+    // Thin solid core so the active path stands out from the idle ones.
+    canvas.drawPath(
+      segment,
+      Paint()
+        ..color = color.withValues(alpha: 0.25 + intensity * 0.4)
+        ..strokeWidth = 2.2
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
     // Always draw particles; on mobile reduceEffects only limits blur/stroke.
     _drawParticles(canvas, metric, color, intensity);
   }
 
+  /// Moving chevrons (">") pointing along the path: the flow direction.
   void _drawParticles(
     Canvas canvas,
     PathMetric metric,
     Color color,
     double intensity,
   ) {
-    final particleCount = 2 + (intensity * 3).round();
+    final count = 3 + (intensity * 3).round();
     final speed = 0.55 + intensity * 1.1;
+    final s = 5.0 + intensity * 3.0;
+    final alpha = (0.45 + intensity * 0.8).clamp(0.2, 1.0);
 
-    final particlePaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4 + intensity * 3);
+    final glow = Paint()
+      ..color = color.withValues(alpha: alpha * 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    final stroke = Paint()
+      ..color = color.withValues(alpha: alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.8
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final chevron = Path()
+      ..moveTo(-s * 0.7, -s)
+      ..lineTo(0, 0)
+      ..lineTo(-s * 0.7, s);
 
-    for (var i = 0; i < particleCount; i++) {
-      final progress =
-          ((animationValue * speed) + (i * (1.0 / particleCount))) % 1.0;
+    for (var i = 0; i < count; i++) {
+      final progress = ((animationValue * speed) + i / count) % 1.0;
       final tangent = metric.getTangentForOffset(metric.length * progress);
       if (tangent == null) continue;
-
-      final pulse = 0.7 + 0.3 * math.sin((animationValue + i) * math.pi * 2);
-      canvas.drawCircle(
-        tangent.position,
-        2.6 + intensity * 2.4 * pulse,
-        particlePaint,
-      );
+      canvas
+        ..save()
+        ..translate(tangent.position.dx, tangent.position.dy)
+        ..rotate(tangent.vector.direction)
+        ..drawCircle(Offset(-s * 0.35, 0), s, glow)
+        ..drawPath(chevron, stroke)
+        ..restore();
     }
   }
 
@@ -1144,4 +1130,65 @@ class _FlowPainter extends CustomPainter {
         oldDelegate.isDark != isDark ||
         oldDelegate.reduceEffects != reduceEffects;
   }
+}
+
+/// Electrical inverter symbol: a box split by a diagonal, DC (⎓) top-left,
+/// AC sine wave bottom-right.
+class _InverterIcon extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _InverterIcon({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+        size: Size.square(size),
+        painter: _InverterIconPainter(color),
+      );
+}
+
+class _InverterIconPainter extends CustomPainter {
+  final Color color;
+
+  _InverterIconPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final u = size.width;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = u * 0.075
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final box = Rect.fromLTWH(u * 0.06, u * 0.06, u * 0.88, u * 0.88);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(box, Radius.circular(u * 0.16)), paint);
+    canvas.drawLine(
+        Offset(box.left + u * 0.05, box.bottom - u * 0.05),
+        Offset(box.right - u * 0.05, box.top + u * 0.05),
+        paint..strokeWidth = u * 0.055);
+
+    // DC: solid line over a dashed line.
+    paint.strokeWidth = u * 0.07;
+    canvas.drawLine(Offset(u * 0.2, u * 0.3), Offset(u * 0.46, u * 0.3), paint);
+    for (final x in [0.2, 0.31, 0.42]) {
+      canvas.drawLine(
+          Offset(u * x, u * 0.41), Offset(u * (x + 0.04), u * 0.41), paint);
+    }
+
+    // AC: one sine period.
+    final wave = Path()..moveTo(u * 0.54, u * 0.7);
+    for (var i = 1; i <= 24; i++) {
+      final t = i / 24;
+      wave.lineTo(
+        u * (0.54 + 0.28 * t),
+        u * (0.7 - 0.08 * math.sin(t * 2 * math.pi)),
+      );
+    }
+    canvas.drawPath(wave, paint);
+  }
+
+  @override
+  bool shouldRepaint(_InverterIconPainter old) => old.color != color;
 }

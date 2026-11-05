@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -69,46 +68,6 @@ class DashboardTab extends StatelessWidget {
             itemCount: sections.length,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DashboardPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _DashboardPill({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return AppCard(
-      borderRadius: 999,
-      enableBlur: false,
-      backgroundColor: theme.colorScheme.surfaceContainerHigh,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacingM,
-        vertical: AppTheme.spacingS,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: AppTheme.spacingS),
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

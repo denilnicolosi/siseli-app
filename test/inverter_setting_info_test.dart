@@ -40,4 +40,25 @@ void main() {
     expect(translateReadingValue(it, 'OFF'), 'Spento');
     expect(translateReadingValue(it, 'SBU'), 'SBU');
   });
+
+  test('every English text the API sends for the SMH III is translated', () {
+    final it = lookupAppLocalizations(const Locale('it'));
+    // valueDisplay strings captured from solar.siseli.com realtime data.
+    const apiTexts = [
+      'discharge',
+      'off',
+      'OFF',
+      'ON',
+      'disable',
+      'Enable',
+      'Invert Mode',
+      'Not connected to mains power',
+      'Normal working state',
+      'Photovoltaic not connected',
+      'Not connected and voltage below low voltage point',
+    ];
+    for (final text in apiTexts) {
+      expect(translateReadingValue(it, text), isNot(text), reason: text);
+    }
+  });
 }

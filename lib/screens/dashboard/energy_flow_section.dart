@@ -6,16 +6,6 @@ class _EnergyFlowSection extends StatelessWidget {
 
   const _EnergyFlowSection({required this.provider, required this.data});
 
-  Future<void> _openEnergyFlowFullscreen(BuildContext context) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return _EnergyFlowFullscreenView(data: data);
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -69,10 +59,6 @@ class _EnergyFlowSection extends StatelessWidget {
                         ),
                 ),
               ),
-              IconButton.filledTonal(
-                onPressed: () => _openEnergyFlowFullscreen(context),
-                icon: const Icon(Icons.open_in_full_rounded, size: 18),
-              ),
             ],
           ),
           const SizedBox(height: AppTheme.spacingXS),
@@ -97,16 +83,6 @@ class _EnergyFlowSection extends StatelessWidget {
       ),
     );
   }
-}
-
-class _EnergyFlowFullscreenView extends StatefulWidget {
-  final InverterData data;
-
-  const _EnergyFlowFullscreenView({required this.data});
-
-  @override
-  State<_EnergyFlowFullscreenView> createState() =>
-      _EnergyFlowFullscreenViewState();
 }
 
 /// Fullscreen helpers shared by the energy-flow and chart fullscreen views.
@@ -168,104 +144,5 @@ mixin _FullscreenViewMixin<T extends StatefulWidget> on State<T> {
   void dispose() {
     unawaited(exitFullscreen());
     super.dispose();
-  }
-}
-
-class _EnergyFlowFullscreenViewState extends State<_EnergyFlowFullscreenView>
-    with _FullscreenViewMixin {
-  @override
-  void initState() {
-    super.initState();
-    unawaited(enterFullscreen());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final gridImport = math.max(widget.data.gridPower, 0.0);
-    final batteryDischarge = math.max(-widget.data.batteryPower, 0.0);
-    final solar = math.max(widget.data.pvPower, 0.0);
-
-    final dominant = [
-      (label: l10n.solar, value: solar, icon: Icons.solar_power_rounded),
-      (
-        label: l10n.acInput,
-        value: gridImport,
-        icon: Icons.electric_bolt_rounded
-      ),
-      (
-        label: l10n.battery,
-        value: batteryDischarge,
-        icon: Icons.battery_charging_full_rounded,
-      ),
-    ]..sort((a, b) => b.value.compareTo(a.value));
-
-    final mainSource = dominant.first;
-
-    // Leaving fullscreen on pop is handled by _FullscreenViewMixin.dispose.
-    return Dialog.fullscreen(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.equipmentStatus),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.close_rounded),
-              onPressed: closeFullscreen,
-            ),
-          ],
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacingL),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppCard(
-                  borderRadius: context.expressive.cornerMedium,
-                  enableBlur: false,
-                  backgroundColor: theme.colorScheme.surfaceContainerLow,
-                  padding: const EdgeInsets.all(AppTheme.spacingM),
-                  child: Wrap(
-                    spacing: AppTheme.spacingM,
-                    runSpacing: AppTheme.spacingS,
-                    children: [
-                      _DashboardPill(
-                        icon: mainSource.icon,
-                        label:
-                            '${l10n.mainSource}: ${mainSource.label} ${mainSource.value.toStringAsFixed(0)} W',
-                        color: theme.colorScheme.primary,
-                      ),
-                      _DashboardPill(
-                        icon: Icons.home_rounded,
-                        label:
-                            '${l10n.load}: ${widget.data.loadPower.toStringAsFixed(0)} W',
-                        color: AppTheme.loadColor,
-                      ),
-                      _DashboardPill(
-                        icon: Icons.battery_6_bar_rounded,
-                        label:
-                            '${l10n.battery}: ${widget.data.batterySoc.toStringAsFixed(0)}% (${widget.data.batteryPower.toStringAsFixed(0)} W)',
-                        color: AppTheme.batteryColor,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacingM),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: EnergyFlowDiagram(
-                      data: widget.data,
-                      showInteractiveToolbar: true,
-                      autofocusShortcuts: true,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
