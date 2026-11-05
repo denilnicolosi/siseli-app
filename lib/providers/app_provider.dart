@@ -822,7 +822,9 @@ class AppStateProvider extends ChangeNotifier {
       final raw = avgHourlyConsumptionStats[h] ?? 0.0;
       final v = raw.isFinite ? raw.clamp(0.0, 1e9).toDouble() : 0.0;
       total += v;
-      if (h >= 23 || h < 7) {
+      if (TariffForecastService.isNightTariffHour(h,
+          dayStartHour: tariffDayStartHour,
+          nightStartHour: tariffNightStartHour)) {
         night += v;
       } else {
         day += v;

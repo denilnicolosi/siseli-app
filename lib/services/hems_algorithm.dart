@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/inverter_data.dart';
 import '../providers/app_provider.dart';
 import 'log_service.dart';
+import 'tariff_forecast_service.dart';
 
 /// Output priorities used by the inverter API.
 class _Out {
@@ -950,7 +951,7 @@ class HemsAlgorithmService {
     if (await _batteryKeepalive(data)) return;
 
     final hour = DateTime.now().hour;
-    if (hour >= 23 || hour < 7) {
+    if (TariffForecastService.isNightTariffHour(hour)) {
       LogService.log(
           '🌙 NightArb: forcing night strategy (soc=${data.batterySoc.toStringAsFixed(1)}%, hour=$hour) '
           '-> output=${_Out.usb}, charger=${_Chg.snu}');

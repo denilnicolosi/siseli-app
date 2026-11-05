@@ -17,6 +17,7 @@ import '../services/weather_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_components.dart';
 import '../widgets/energy_flow.dart';
+import '../utils/chart_log.dart';
 import '../utils/formatters.dart';
 import '../utils/dashboard_diagnostics_export.dart';
 
@@ -3092,14 +3093,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
   }
 
   void logChartUiSummary(String prefix) {
-    String fmt(List<FlSpot> spots) {
-      if (spots.isEmpty) return 'count=0';
-      final minX = spots.map((e) => e.x).reduce((a, b) => a < b ? a : b);
-      final maxX = spots.map((e) => e.x).reduce((a, b) => a > b ? a : b);
-      final minY = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
-      final maxY = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
-      return 'count=${spots.length},x=${minX.toStringAsFixed(2)}..${maxX.toStringAsFixed(2)},y=${minY.toStringAsFixed(1)}..${maxY.toStringAsFixed(1)}';
-    }
+    const fmt = describeSpots;
 
     String quality(List<FlSpot> spots) {
       if (spots.isEmpty) return 'missing';

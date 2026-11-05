@@ -7,7 +7,9 @@ import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:fl_chart/fl_chart.dart';
 import '../models/inverter_data.dart';
+import '../utils/chart_log.dart';
 import 'log_service.dart' as app_log;
+import 'tariff_forecast_service.dart';
 
 class InverterService {
   final String _appId = 'rBrTRfAPXz';
@@ -724,26 +726,6 @@ class InverterService {
         .toList(growable: false);
   }
 
-  bool _isNightTariffHour(
-    DateTime dt, {
-    required int dayStartHour,
-    required int nightStartHour,
-  }) {
-    final dayStart = dayStartHour.clamp(0, 23);
-    final nightStart = nightStartHour.clamp(0, 23);
-    final hour = dt.hour;
-
-    if (dayStart == nightStart) {
-      return hour < 7 || hour >= 23;
-    }
-
-    if (dayStart < nightStart) {
-      return hour < dayStart || hour >= nightStart;
-    }
-
-    return hour >= nightStart && hour < dayStart;
-  }
-
   Future<
       ({
         double loadWh,
@@ -881,8 +863,8 @@ class InverterService {
           processedSamples++;
 
           final day = dt.day;
-          final isNight = _isNightTariffHour(
-            dt,
+          final isNight = TariffForecastService.isNightTariffHour(
+            dt.hour,
             dayStartHour: dayStartHour,
             nightStartHour: nightStartHour,
           );
@@ -1832,14 +1814,7 @@ class InverterService {
   }
 
   void _logChartSummary(String prefix, Map<String, List<FlSpot>> data) {
-    String fmt(List<FlSpot> spots) {
-      if (spots.isEmpty) return 'count=0';
-      final minX = spots.map((e) => e.x).reduce(min);
-      final maxX = spots.map((e) => e.x).reduce(max);
-      final minY = spots.map((e) => e.y).reduce(min);
-      final maxY = spots.map((e) => e.y).reduce(max);
-      return 'count=${spots.length},x=${minX.toStringAsFixed(2)}..${maxX.toStringAsFixed(2)},y=${minY.toStringAsFixed(1)}..${maxY.toStringAsFixed(1)}';
-    }
+    const fmt = describeSpots;
 
     String quality(List<FlSpot> spots) {
       if (spots.isEmpty) return 'missing';

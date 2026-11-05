@@ -26,14 +26,5 @@ class Formatters {
   }
 
   /// Compact label for chart Y-axis energy (no units).
-  static String formatAxisEnergy(double wh) {
-    if (wh == 0) return '0';
-    if (wh.abs() >= 1000) {
-      final k = wh / 1000;
-      return k == k.roundToDouble()
-          ? '${k.toInt()}k'
-          : '${k.toStringAsFixed(1)}k';
-    }
-    return wh.toStringAsFixed(0);
-  }
+  static String formatAxisEnergy(double wh) => formatAxisPower(wh);
 }

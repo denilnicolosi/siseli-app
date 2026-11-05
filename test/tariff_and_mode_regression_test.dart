@@ -1,6 +1,7 @@
 ﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:inverter_app/models/hems_optimization_profile.dart';
 import 'package:inverter_app/models/inverter_data.dart';
+import 'package:inverter_app/services/tariff_forecast_service.dart';
 void main() {
   group('TariffForecastData.getNextCheapWindow', () {
     test('returns a future cheap window relative to provided from timestamp', () {
@@ -51,6 +52,43 @@ void main() {
         '',
       );
       expect(data.currentModeStr, 'USB');
+    });
+  });
+  group('TariffForecastService.isNightTariffHour', () {
+    test('default 23–7 window wraps midnight', () {
+      final night = [for (var h = 0; h < 24; h++) h]
+          .where(TariffForecastService.isNightTariffHour)
+          .toList();
+      expect(night, [0, 1, 2, 3, 4, 5, 6, 23]);
+    });
+    test('custom window and inverted window', () {
+      expect(
+          TariffForecastService.isNightTariffHour(22,
+              dayStartHour: 6, nightStartHour: 22),
+          isTrue);
+      expect(
+          TariffForecastService.isNightTariffHour(6,
+              dayStartHour: 6, nightStartHour: 22),
+          isFalse);
+      // night 1→5 expressed with day start after night start
+      expect(
+          TariffForecastService.isNightTariffHour(3,
+              dayStartHour: 5, nightStartHour: 1),
+          isTrue);
+      expect(
+          TariffForecastService.isNightTariffHour(12,
+              dayStartHour: 5, nightStartHour: 1),
+          isFalse);
+    });
+    test('equal hours fall back to 23–7', () {
+      expect(
+          TariffForecastService.isNightTariffHour(23,
+              dayStartHour: 7, nightStartHour: 7),
+          isTrue);
+      expect(
+          TariffForecastService.isNightTariffHour(12,
+              dayStartHour: 7, nightStartHour: 7),
+          isFalse);
     });
   });
 }
