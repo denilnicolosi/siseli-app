@@ -704,5 +704,16 @@
   "rdValOverload": "Overload",
   "rdValNoLoad": "No load",
   "inverterSelfUseLabel": "Inverter self-consumption",
-  "inverterSelfUseHint": "Power the inverter uses for itself. The cloud sends battery current in whole amps, so below 3 A the battery power is estimated as solar − consumption − this value."
+  "inverterSelfUseHint": "Power the inverter uses for itself. The cloud sends battery current in whole amps, so below 3 A the battery power is estimated as solar − consumption − this value.",
+  "chartPeak": "Peak {value} · {time}",
+  "@chartPeak": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -445,5 +445,6 @@
   "rdValOverload": "Sovraccarico",
   "rdValNoLoad": "Nessun carico",
   "inverterSelfUseLabel": "Autoconsumo inverter",
-  "inverterSelfUseHint": "Potenza che l'inverter usa per sé. Il cloud invia la corrente della batteria in ampere interi: sotto i 3 A la potenza della batteria è stimata come solare − consumo − questo valore."
+  "inverterSelfUseHint": "Potenza che l'inverter usa per sé. Il cloud invia la corrente della batteria in ampere interi: sotto i 3 A la potenza della batteria è stimata come solare − consumo − questo valore.",
+  "chartPeak": "Picco {value} · {time}"
 }

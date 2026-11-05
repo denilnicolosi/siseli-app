@@ -1121,34 +1121,36 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
 
     var lines = <LineChartBarData>[];
 
-    if (_showProduction && _productionData.isNotEmpty) {
+    // One series on: mark its peak (and, for the battery, the deepest
+    // discharge). With several series the labels would pile up.
+    final single = [_showProduction, _showConsumption, _showBattery, _showGrid]
+            .where((on) => on)
+            .length ==
+        1;
+    final peaks = <FlSpot>[];
+    void addSeries(List<FlSpot> data, Color color) {
+      if (data.isEmpty) return;
+      final normalized = normalizeSpots(data);
+      final seriesPeaks = <FlSpot>[];
+      if (single && normalized.isNotEmpty) {
+        final max = normalized.reduce((a, b) => b.y > a.y ? b : a);
+        final min = normalized.reduce((a, b) => b.y < a.y ? b : a);
+        if (max.y > 0) seriesPeaks.add(max);
+        if (min.y < 0) seriesPeaks.add(min);
+        peaks.addAll(seriesPeaks);
+      }
       lines.add(buildLineData(
-        _productionData,
-        AppTheme.pvColor,
+        normalized,
+        color,
         isCurved: _selectedRange == 0,
+        peaks: seriesPeaks,
       ));
     }
-    if (_showConsumption && _consumptionData.isNotEmpty) {
-      lines.add(buildLineData(
-        _consumptionData,
-        AppTheme.loadColor,
-        isCurved: _selectedRange == 0,
-      ));
-    }
-    if (_showBattery && _batteryData.isNotEmpty) {
-      lines.add(buildLineData(
-        _batteryData,
-        AppTheme.batteryColor,
-        isCurved: _selectedRange == 0,
-      ));
-    }
-    if (_showGrid && _gridData.isNotEmpty) {
-      lines.add(buildLineData(
-        _gridData,
-        AppTheme.gridColor,
-        isCurved: _selectedRange == 0,
-      ));
-    }
+
+    if (_showProduction) addSeries(_productionData, AppTheme.pvColor);
+    if (_showConsumption) addSeries(_consumptionData, AppTheme.loadColor);
+    if (_showBattery) addSeries(_batteryData, AppTheme.batteryColor);
+    if (_showGrid) addSeries(_gridData, AppTheme.gridColor);
 
     if (_showForecast && _forecastData.isNotEmpty && _selectedRange == 0) {
       lines.add(LineChartBarData(
@@ -1292,6 +1294,33 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                 ],
               ),
         borderData: FlBorderData(show: false),
+        extraLinesData: ExtraLinesData(horizontalLines: [
+          for (final peak in peaks)
+            HorizontalLine(
+              y: peak.y,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withValues(alpha: 0.5),
+              strokeWidth: 1,
+              dashArray: [4, 4],
+              label: HorizontalLineLabel(
+                show: true,
+                // Above the line for a maximum, below it for a minimum.
+                alignment:
+                    peak.y >= 0 ? Alignment.topRight : Alignment.bottomRight,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                labelResolver: (_) => AppLocalizations.of(context)!.chartPeak(
+                  Formatters.formatPower(peak.y),
+                  formatHourOfDay(peak.x),
+                ),
+              ),
+            ),
+        ]),
         lineBarsData: lines,
       ),
     );
@@ -1512,6 +1541,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     List<FlSpot> spots,
     Color color, {
     required bool isCurved,
+    List<FlSpot> peaks = const [],
   }) {
     final normalized = normalizeSpots(spots);
     final useCurved = isCurved && normalized.length >= 4;
@@ -1523,7 +1553,16 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       preventCurveOvershootingThreshold: 8,
       color: color,
       barWidth: 3,
-      dotData: const FlDotData(show: false),
+      dotData: FlDotData(
+        show: peaks.isNotEmpty,
+        checkToShowDot: (spot, _) => peaks.contains(spot),
+        getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+          radius: 4.5,
+          color: color,
+          strokeWidth: 2,
+          strokeColor: Colors.white,
+        ),
+      ),
       belowBarData: BarAreaData(
         show: true,
         gradient: LinearGradient(

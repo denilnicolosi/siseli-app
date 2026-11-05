@@ -2739,6 +2739,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Power the inverter uses for itself. The cloud sends battery current in whole amps, so below 3 A the battery power is estimated as solar − consumption − this value.'**
   String get inverterSelfUseHint;
+
+  /// No description provided for @chartPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak {value} · {time}'**
+  String chartPeak(String value, String time);
 }
 
 class _AppLocalizationsDelegate
