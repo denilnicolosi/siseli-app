@@ -130,11 +130,6 @@ class UpdateService {
     }
   }
 
-  static Future<bool> checkForUpdate() async {
-    final info = await fetchUpdateInfo();
-    return info.hasUpdate;
-  }
-
   static bool _isVersionNewer(String latest, String current) {
     final latestVersion = _parseVersion(latest);
     final currentVersion = _parseVersion(current);
@@ -227,22 +222,6 @@ class UpdateService {
   }
 
   static const int _maxDownloadAttempts = 2;
-
-  static Future<String?> downloadUpdate(
-      [void Function(double progress)? onProgress]) async {
-    final info = await fetchUpdateInfo();
-    if (info.downloadUrl == null || info.assetName == null) {
-      LogService.log(
-          '⚠️ update.download skipped: no supported installer asset');
-      return null;
-    }
-    return downloadUpdateAsset(
-      downloadUrl: info.downloadUrl!,
-      fileName: info.assetName!,
-      expectedBytes: info.assetSize,
-      onProgress: onProgress,
-    );
-  }
 
   static Future<String?> downloadUpdateAsset({
     required String downloadUrl,

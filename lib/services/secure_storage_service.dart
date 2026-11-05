@@ -42,25 +42,7 @@ class SecureStorageService {
     }
   }
 
-  /// Зберегти токен безпечно
-  static Future<void> saveToken(String token) async {
-    try {
-      await _storage.write(key: 'access_token', value: token);
-    } catch (e) {
-      throw Exception('Помилка збереження токена: $e');
-    }
-  }
-
-  /// Отримати токен
-  static Future<String?> getToken() async {
-    try {
-      return await _storage.read(key: 'access_token');
-    } catch (e) {
-      throw Exception('Помилка читання токена: $e');
-    }
-  }
-
-  /// Видалити токен
+  /// Removes the access token persisted by older versions (no longer stored).
   static Future<void> deleteToken() async {
     try {
       await _storage.delete(key: 'access_token');

@@ -3,40 +3,30 @@ import 'package:flutter/material.dart';
 class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
   final Duration quick;
   final Duration regular;
-  final Duration emphasized;
   final Curve standardCurve;
-  final Curve emphasizedCurve;
 
   const AppMotionTokens({
     required this.quick,
     required this.regular,
-    required this.emphasized,
     required this.standardCurve,
-    required this.emphasizedCurve,
   });
 
   static const fallback = AppMotionTokens(
     quick: Duration(milliseconds: 160),
     regular: Duration(milliseconds: 280),
-    emphasized: Duration(milliseconds: 420),
     standardCurve: Curves.easeOutCubic,
-    emphasizedCurve: Curves.easeInOutCubicEmphasized,
   );
 
   @override
   AppMotionTokens copyWith({
     Duration? quick,
     Duration? regular,
-    Duration? emphasized,
     Curve? standardCurve,
-    Curve? emphasizedCurve,
   }) {
     return AppMotionTokens(
       quick: quick ?? this.quick,
       regular: regular ?? this.regular,
-      emphasized: emphasized ?? this.emphasized,
       standardCurve: standardCurve ?? this.standardCurve,
-      emphasizedCurve: emphasizedCurve ?? this.emphasizedCurve,
     );
   }
 
@@ -46,9 +36,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
     return AppMotionTokens(
       quick: _lerpDuration(quick, other.quick, t),
       regular: _lerpDuration(regular, other.regular, t),
-      emphasized: _lerpDuration(emphasized, other.emphasized, t),
       standardCurve: t < 0.5 ? standardCurve : other.standardCurve,
-      emphasizedCurve: t < 0.5 ? emphasizedCurve : other.emphasizedCurve,
     );
   }
 
@@ -153,8 +141,6 @@ class AppTheme {
   static const Color loadColor = Color(0xFF8A4DDE);
   static const Color pvGlowColor = Color(0xFFF2B544);
   static const Color gridGlowColor = Color(0xFF58A8FF);
-  static const Color batteryGlowColor = Color(0xFF4BCB8D);
-  static const Color loadGlowColor = Color(0xFFB486F2);
 
   static const Color _lightBg = Color(0xFFF4F8FC);
   static const Color _lightSurface = Color(0xFFFFFFFF);
@@ -800,5 +786,4 @@ class AppTheme {
   static const double spacingM = 12.0;
   static const double spacingL = 16.0;
   static const double spacingXL = 20.0;
-  static const double spacing2XL = 24.0;
 }

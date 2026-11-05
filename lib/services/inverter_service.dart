@@ -1,4 +1,4 @@
-import 'dart:developer' as log_service;
+import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
 import 'dart:convert';
@@ -6,7 +6,6 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/foundation.dart';
 import '../models/inverter_data.dart';
 import 'log_service.dart' as app_log;
 
@@ -99,7 +98,7 @@ class InverterService {
         return handler.next(options);
       },
       onError: (DioException e, handler) {
-        log_service.log('🔴 API Error at ${e.requestOptions.path}',
+        app_log.LogService.log('🔴 API Error at ${e.requestOptions.path}',
             error: '${e.message} | ${e.response?.data}');
         return handler.next(e);
       },
@@ -224,7 +223,7 @@ class InverterService {
         }
       }
     } catch (e) {
-      log_service.log('Device list error', error: e);
+      app_log.LogService.log('Device list error', error: e);
     }
   }
 
@@ -427,7 +426,6 @@ class InverterService {
         error: e,
         stack: stack,
       );
-      if (kDebugMode) print('Realtime data error: $e');
     }
     return null;
   }
@@ -1058,11 +1056,11 @@ class InverterService {
             _cachedFullConfigs = parsed;
             return parsed;
           }
-          debugPrint('⏳ Config batch triggered, data pending...');
+          app_log.LogService.log('⏳ Config batch triggered, data pending...');
         }
       } else {
         final code = response.data['code'];
-        debugPrint('⏳ Config API code=$code, will retry later...');
+        app_log.LogService.log('⏳ Config API code=$code, will retry later...');
       }
     } catch (e) {
       _isConfigFetching = false;
@@ -1074,11 +1072,11 @@ class InverterService {
                 const Duration(seconds: 45);
         if (shouldLog) {
           _lastConfigConnectionErrorLogAt = DateTime.now();
-          debugPrint(
+          app_log.LogService.log(
               '⚠️ Config fetch paused for 2 min due to connection error');
         }
       }
-      debugPrint('getDeviceFullConfigs error: $e');
+      app_log.LogService.log('getDeviceFullConfigs error: $e');
     }
     return _cachedFullConfigs;
   }
@@ -1107,7 +1105,7 @@ class InverterService {
       try {
         final batchId = _configBatchReadId;
         if (batchId == null || batchId.isEmpty) {
-          debugPrint('⚠️ Missing batchReadId while polling configs');
+          app_log.LogService.log('⚠️ Missing batchReadId while polling configs');
           break;
         }
 
@@ -1122,11 +1120,11 @@ class InverterService {
           if (parsed != null) {
             _cachedFullConfigs = parsed;
             _lastConfigFetchTime = DateTime.now();
-            debugPrint('✅ Конфіги отримано (спроба ${i + 1}/$maxAttempts)');
+            app_log.LogService.log('✅ Конфіги отримано (спроба ${i + 1}/$maxAttempts)');
             return parsed;
           }
         }
-        debugPrint('⏳ Конфіги не готові (${i + 1}/$maxAttempts)...');
+        app_log.LogService.log('⏳ Конфіги не готові (${i + 1}/$maxAttempts)...');
       } catch (e) {
         if (e is DioException && e.type == DioExceptionType.connectionError) {
           _configPollingBlockedUntil =
@@ -1136,12 +1134,12 @@ class InverterService {
                   const Duration(seconds: 45);
           if (shouldLog) {
             _lastConfigConnectionErrorLogAt = DateTime.now();
-            debugPrint(
+            app_log.LogService.log(
                 '⚠️ Config background polling paused for 2 min (network/DNS issue)');
           }
           break;
         }
-        debugPrint('pollForConfigsBackground error: $e');
+        app_log.LogService.log('pollForConfigsBackground error: $e');
       }
     }
     return _cachedFullConfigs;
@@ -1163,82 +1161,9 @@ class InverterService {
       // Код 0 означає, що команда прийнята сервером і відправлена на інвертор
       return response.statusCode == 200 && response.data['code'] == 0;
     } catch (e) {
-      debugPrint('Помилка запису налаштування $key: $e');
+      app_log.LogService.log('Помилка запису налаштування $key: $e');
       return false;
     }
-  }
-
-// --- Збір історії для машинного навчання прогнозу ---
-  Future<Map<String, double>> getHistoricalPvMapForForecast() async {
-    if (deviceSn == null) return {};
-
-    final now = DateTime.now();
-    final offsetHours = now.timeZoneOffset.inHours.toString().padLeft(2, '0');
-    final offsetString =
-        now.timeZoneOffset.isNegative ? '-$offsetHours:00' : '+$offsetHours:00';
-
-    // Беремо останні 3 дні для аналізу
-    final fromDate = now.subtract(const Duration(days: 3));
-    final fromStr =
-        "${fromDate.year}-${fromDate.month.toString().padLeft(2, '0')}-${fromDate.day.toString().padLeft(2, '0')}";
-    final toStr =
-        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-
-    final payload = {
-      'deviceId': deviceSn,
-      'count': 1500, // Ліміт дозволяє взяти 3 дні (864 точки)
-      'page': 1,
-      'fromTime': '${fromStr}T00:00:00$offsetString',
-      'toTime': '${toStr}T23:59:59$offsetString',
-      'orderByTimeAsc': true,
-      'keys': ['generationPower']
-    };
-
-    var hourlyGroups = <String, List<double>>{};
-
-    try {
-      final response = await _dio.post(
-          '/apis/deviceState/simple/attribute/keys/history/v1',
-          data: payload);
-      if (response.data['code'] == 0) {
-        final payloadData = response.data['data']['payload'];
-        if (payloadData != null) {
-          final timeSeries = payloadData['timeSeries'] as List<dynamic>? ?? [];
-          final fields = payloadData['fields'] as Map<String, dynamic>? ?? {};
-          final genPower = fields['generationPower'] as List<dynamic>? ?? [];
-
-          for (var i = 0; i < timeSeries.length; i++) {
-            if (i < genPower.length && genPower[i] != null) {
-              final dt = DateTime.tryParse(timeSeries[i].toString())?.toLocal();
-              if (dt != null) {
-                // Групуємо 5-хвилинні дані в години. Формат як у Open-Meteo: "YYYY-MM-DDTHH:00"
-                var hourKey =
-                    "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}T${dt.hour.toString().padLeft(2, '0')}:00";
-                var valWatts =
-                    (genPower[i] as num).toDouble() * 1000.0; // у Вати
-
-                if (!hourlyGroups.containsKey(hourKey)) {
-                  hourlyGroups[hourKey] = [];
-                }
-                hourlyGroups[hourKey]!.add(valWatts);
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('HistoricalPvMapForForecast error: $e');
-      return {};
-    }
-
-    // Усереднюємо дані (отримуємо середню потужність за кожну годину)
-    var result = <String, double>{};
-    hourlyGroups.forEach((hourKey, values) {
-      var sum = values.reduce((a, b) => a + b);
-      result[hourKey] = sum / values.length;
-    });
-
-    return result;
   }
 
   Map<String, List<FlSpot>> _parseHistoryData(Map<String, dynamic> data) {
@@ -1252,7 +1177,7 @@ class InverterService {
     final timeSeries = payload['timeSeries'] as List<dynamic>? ?? [];
     final fields = payload['fields'] as Map<String, dynamic>? ?? {};
 
-    log_service.log(
+    developer.log(
         '📊 _parseHistoryData: timeSeries=${timeSeries.length}, fields keys=${fields.keys.join(', ')}');
 
     // РОЗУМНИЙ ПОШУК: Шукає перший масив, у якому є хоча б одне не-null значення
@@ -1265,7 +1190,7 @@ class InverterService {
         if (fields.containsKey(key)) {
           var list = fields[key] as List<dynamic>;
           if (list.any((element) => element != null)) {
-            log_service.log(
+            developer.log(
                 '✅ Використано ключ $key для ${possibleKeys.join('/')}: ${list.where((e) => e != null).length} не-null значень');
             return list;
           }
@@ -1275,11 +1200,11 @@ class InverterService {
       final signature = '$fieldAlias:${possibleKeys.join('|')}';
       if (optional) {
         if (_loggedMissingHistoryKeys.add(signature)) {
-          log_service.log(
+          developer.log(
               'ℹ️ Для $fieldAlias немає валідних даних за ключами: ${possibleKeys.join(', ')}. Буде використано fallback-розрахунок.');
         }
       } else {
-        log_service.log(
+        developer.log(
             '❌ Не знайдено валідних даних для ключів: ${possibleKeys.join(', ')}');
       }
       return [];
@@ -1305,7 +1230,7 @@ class InverterService {
     final batVoltage =
         extractList(['batteryVoltage'], fieldAlias: 'batteryVoltage');
 
-    log_service.log(
+    developer.log(
         '📊 Розпарсені масиви: genPower=${genPower.length}, loadPwr=${loadPwr.length}, batPower=${batPower.length}, gridPwr=${gridPwr.length}');
 
     for (var i = 0; i < timeSeries.length; i++) {
@@ -1366,7 +1291,7 @@ class InverterService {
       }
     }
 
-    log_service.log(
+    developer.log(
         '📊 Після парсингу: pv=${pv.length}, load=${load.length}, battery=${battery.length}, grid=${grid.length}');
 
     // СОРТУВАННЯ: fl_chart вимагає, щоб точки йшли строго зліва направо (за зростанням X).
@@ -1855,7 +1780,7 @@ class InverterService {
       return {};
     } catch (e) {
       app_log.LogService.log('❌ profile.fetch failed', error: e);
-      debugPrint('UserInfo error: $e');
+      app_log.LogService.log('UserInfo error: $e');
     }
     return {};
   }

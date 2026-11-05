@@ -4,12 +4,6 @@ import '../models/inverter_data.dart';
 import '../providers/app_provider.dart';
 import 'log_service.dart';
 
-class DailyTimeWindows {
-  DailyTimeWindows();
-
-  factory DailyTimeWindows.defaultTemperate() => DailyTimeWindows();
-}
-
 /// Output priorities used by the inverter API.
 class _Out {
   static const usb = '0'; // grid first

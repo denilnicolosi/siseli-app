@@ -51,7 +51,7 @@ void main() async {
         appPath: Platform.resolvedExecutable,
       );
     } catch (e) {
-      debugPrint('Помилка ініціалізації автозапуску: $e');
+      LogService.log('Помилка ініціалізації автозапуску: $e');
     }
 
     await windowManager.ensureInitialized();

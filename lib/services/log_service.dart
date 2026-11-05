@@ -250,8 +250,6 @@ class LogService {
   }
 
   static List<LogEntry> get entries => List.unmodifiable(_entries);
-  static List<String> get allLogs =>
-      List.unmodifiable(_entries.map((e) => e.toDisplayString()));
 
   /// БЕЗПЕКА: Повертає санітизовані логи без конфіденційних даних
   /// Використовується при експорті логів користувачем

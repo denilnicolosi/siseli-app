@@ -2,7 +2,6 @@
 /// Based on system characteristics, history, and forecasts
 library;
 
-import 'package:intl/intl.dart';
 import 'dart:math';
 import '../models/hems_optimization_profile.dart';
 import 'log_service.dart';
@@ -12,77 +11,9 @@ class HemsTuningService {
 
   HemsTuningService(this.profile);
 
-  static const String _reasonAstronomicalWindows =
-      'reason=astronomical_windows_update';
   static const String _reasonPvVariance = 'reason=pv_variance_adaptation';
   static const String _reasonDwellVariance = 'reason=dwell_variance_adaptation';
   static const String _reasonReserveSoc = 'reason=reserve_soc_adaptation';
-  static const String _reasonDriftCap = 'reason=drift_cap';
-
-  /// Calculate sunrise/sunset for given date and location
-  /// Simple astronomical formula (good enough for ±5 min accuracy)
-  static DateTime calculateSunrise(
-      double latitude, double longitude, DateTime date) {
-    // Simplified algorithm; for production consider solar_calculator package
-    // This is a rough estimate based on latitude and day of year
-    final dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays;
-    final declinationAngle =
-        23.44 * sin((2 * pi * (dayOfYear - 81)) / 365.0) * (pi / 180.0);
-
-    final B = (latitude * pi / 180.0);
-    const h = -0.833 * pi / 180.0; // sunset/sunrise angle
-    final numerator = sin(h) - sin(B) * sin(declinationAngle);
-    final denominator = cos(B) * cos(declinationAngle);
-
-    if (denominator == 0) {
-      // Polar midnight or midnight sun
-      return DateTime(date.year, date.month, date.day, 6, 0);
-    }
-
-    final cosH = numerator / denominator;
-    if (cosH.abs() > 1) {
-      // Sun doesn't rise/set on this day (polar regions)
-      return DateTime(date.year, date.month, date.day, 6, 0);
-    }
-
-    final hourAngle = acos(cosH) * 180.0 / pi / 15.0; // convert to hours
-    final solarNoon = 12.0 - (longitude / 15.0); // rough UTC correction
-    final sunrise = solarNoon - hourAngle;
-
-    final hour = sunrise.toInt();
-    final minute = ((sunrise - hour) * 60).toInt();
-    return DateTime(date.year, date.month, date.day, hour.clamp(0, 23),
-        minute.clamp(0, 59));
-  }
-
-  static DateTime calculateSunset(
-      double latitude, double longitude, DateTime date) {
-    final sunrise = calculateSunrise(latitude, longitude, date);
-    // Sunset is roughly 12 hours later (for temperate zones)
-    // More accurate: use the complement angle
-    return sunrise
-        .add(const Duration(hours: 12, minutes: 20)); // rough estimate
-  }
-
-  /// Update time windows based on GPS location (if available)
-  Future<void> updateAstronomicalWindows({
-    required double latitude,
-    required double longitude,
-    DateTime? forDate,
-  }) async {
-    final date = forDate ?? DateTime.now();
-    final sunrise = calculateSunrise(latitude, longitude, date);
-    final sunset = calculateSunset(latitude, longitude, date);
-
-    profile.timeWindows = DailyTimeWindows.fromAstronomical(
-      sunrise: sunrise,
-      sunset: sunset,
-    );
-
-    LogService.log(
-      '🌅 HEMS tuning: astronomical windows updated ($_reasonAstronomicalWindows) — sunrise=${DateFormat('HH:mm').format(sunrise)}, sunset=${DateFormat('HH:mm').format(sunset)}',
-    );
-  }
 
   /// Compute adaptive PV surplus threshold based on live variance
   double computeAdaptivePvSurplus(List<double> recentSurplusHistory) {
@@ -172,45 +103,6 @@ class HemsTuningService {
     logParameterUpdate('reserve_soc', baseReserveSoc, clamped,
         reasonCode: _reasonReserveSoc);
     return clamped;
-  }
-
-  /// Get recommended strategy based on profile + forecasts + mode
-  String recommendOptimizationStrategy() {
-    // If grid reliability is poor → gridReliance
-    if (profile.gridForecast?.shouldPrechargeForStability() ?? false) {
-      return 'gridReliance: precharging for stability';
-    }
-
-    // If thermal load needs heating → solarMaxed (maximize PV for heat)
-    if (profile.thermalLoad?.isHeatingNeeded() ?? false) {
-      return 'solarMaxed: thermal demand detected';
-    }
-
-    // If TOU tariff + low PV → economical
-    if (profile.tariffForecast != null && profile.pvPeakW < 2000) {
-      return 'economical: TOU tariff + small PV';
-    }
-
-    // If large battery + good PV → batteryLife (care for longevity)
-    if (profile.batteryCapacityKwh > 10 && profile.pvPeakW > 3000) {
-      return 'batteryLife: large system, extend cycles';
-    }
-
-    return 'hybrid: balanced approach';
-  }
-
-  /// Cap adaptive parameter drift to prevent sudden jumps
-  double capDrift(double oldValue, double newValue, double maxDriftPercent) {
-    final maxChange = oldValue * (maxDriftPercent / 100.0);
-    final capped = newValue.clamp(oldValue - maxChange, oldValue + maxChange);
-    if ((newValue - capped).abs() > 0.01) {
-      LogService.log(
-        '🧱 HEMS tuning: capped drift ($_reasonDriftCap) '
-        'old=${oldValue.toStringAsFixed(2)} new=${newValue.toStringAsFixed(2)} '
-        'capped=${capped.toStringAsFixed(2)} max=${maxDriftPercent.toStringAsFixed(1)}%',
-      );
-    }
-    return capped.toDouble();
   }
 
   /// Log transitions when parameters change

@@ -86,7 +86,6 @@ class NotificationService extends ChangeNotifier {
 
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
-  bool get hasUnread => unreadCount > 0;
 
   /// Call on app startup (before any show() calls).
   Future<void> initialize() async {
@@ -157,14 +156,6 @@ class NotificationService extends ChangeNotifier {
       }
     }
     if (changed) notifyListeners();
-  }
-
-  void markRead(String id) {
-    final idx = _notifications.indexWhere((n) => n.id == id);
-    if (idx >= 0 && !_notifications[idx].isRead) {
-      _notifications[idx].isRead = true;
-      notifyListeners();
-    }
   }
 
   void clearAll() {

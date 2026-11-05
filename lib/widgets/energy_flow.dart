@@ -105,7 +105,6 @@ class _FlowSnapshot {
     );
   }
 
-  double get batteryNetPowerW => batteryChargeW - batteryDischargeW;
   bool get balanceStable => balanceErrorW.abs() <= 120.0;
 }
 

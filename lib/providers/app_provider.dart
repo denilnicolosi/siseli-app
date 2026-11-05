@@ -101,8 +101,6 @@ class AppStateProvider extends ChangeNotifier {
   Future<void>? _monthlyEconomicsInFlight;
   bool _monthlyEconomicsPendingForce = false;
 
-  String solcastApiKey = '';
-  String solcastResourceId = '';
 
   // --- НОВІ ЗМІННІ ДЛЯ РОЗУМНОГО АЛГОРИТМУ ---
   Map<String, double> hourlyForecast = {};
@@ -113,7 +111,6 @@ class AppStateProvider extends ChangeNotifier {
   ThemeMode themeMode = ThemeMode.dark;
   String lang = 'en';
 
-  bool get isEn => lang == 'en';
   bool isAutostartEnabled = false;
   bool isStartInTrayEnabled = false;
   String? savedEmail;
@@ -153,7 +150,6 @@ class AppStateProvider extends ChangeNotifier {
   bool _forecastStormActive = false;
   bool _emergencyChargeActive =
       false; // set true when daytime SNU top-up is triggered; cleared on recovery
-  WeatherStormRisk? _latestStormRisk;
 
   // Anomaly detection: rolling samples per hour
   final Map<int, List<double>> _loadSamplesByHour = {};
@@ -184,12 +180,7 @@ class AppStateProvider extends ChangeNotifier {
 
   // New: event history + battery tracker
   EventHistoryService get eventHistory => _eventHistory;
-  BatteryTrackerService get batteryTracker => _batteryTracker;
   SocHistoryService get socHistory => _socHistory;
-  ScheduleRulesService get scheduleRules => _scheduleRules;
-  bool get gridOutageAutoStormActive => _gridOutageAutoStormActive;
-  bool get forecastStormActive => _forecastStormActive;
-  WeatherStormRisk? get latestStormRisk => _latestStormRisk;
   bool get isGridOutageDetected {
     if (isInverterOffline) return false;
     final snapshot = data;
@@ -373,12 +364,9 @@ class AppStateProvider extends ChangeNotifier {
   double get effectiveTariffUahPerKwh =>
       (dayTariffUahPerKwh * (1.0 - nightEnergyShareFraction)) +
       (nightTariffUahPerKwh * nightEnergyShareFraction);
-  // Backward compatibility for existing UI/usage.
-  double get tariffUahPerKwh => effectiveTariffUahPerKwh;
   bool get monthEconomicsUsesTelemetryTou => _monthEconomicsUsesTelemetryTou;
   bool get monthEconomicsUsesEstimatedFallback =>
       !_monthEconomicsUsesTelemetryTou;
-  bool get isMonthlyEconomicsRefreshing => _monthlyEconomicsInFlight != null;
 
   double? get monthToPayUah {
     if (_monthPayableUah != null) return _monthPayableUah;
@@ -459,25 +447,6 @@ class AppStateProvider extends ChangeNotifier {
   double get recommendedBatteryChargeCurrentA =>
       (recommendedBatteryChargePowerW / 51.2).clamp(0.0, 400.0).toDouble();
 
-  double? estimateChargeHoursToFull({double? fromSoc}) {
-    final startSoc =
-        (fromSoc ?? data?.batterySoc)?.clamp(0.0, 100.0).toDouble();
-    if (startSoc == null) return null;
-    final targetSoc = 100.0;
-    if (startSoc >= targetSoc) return 0.0;
-    final maxPower = recommendedBatteryChargePowerW;
-    if (maxPower <= 1.0) return null;
-
-    final capacityWh = batteryCapacityAh * 51.2;
-    final deltaSoc = (targetSoc - startSoc) / 100.0;
-    final neededStoredWh = capacityWh * deltaSoc;
-    final chargingEfficiency = math.sqrt(batteryRoundTripEfficiencyFraction);
-    final requiredInputWh = neededStoredWh / chargingEfficiency;
-    final hours = requiredInputWh / maxPower;
-    if (!hours.isFinite) return null;
-    return hours.clamp(0.0, 240.0).toDouble();
-  }
-
   double estimateHouseLoadReserveW({DateTime? nowOverride}) {
     final now = nowOverride ?? DateTime.now();
     final hour = now.hour;
@@ -552,23 +521,6 @@ class AppStateProvider extends ChangeNotifier {
     );
     final demandForecast =
         demandForecastService.toDemandForecastData(avgHourlyConsumptionStats);
-    final plannedOutages = <GridOutageEvent>[];
-    if (plannedOutageEnabled &&
-        plannedOutageStartAt != null &&
-        plannedOutageEndAt != null &&
-        plannedOutageEndAt!.isAfter(plannedOutageStartAt!)) {
-      plannedOutages.add(
-        GridOutageEvent(
-          startTime: plannedOutageStartAt!,
-          endTime: plannedOutageEndAt!,
-          reason: 'manual_planned_outage',
-        ),
-      );
-    }
-    final gridForecast = GridReliabilityForecast(
-      plannedOutages: plannedOutages,
-      instabilityZones: const [],
-    );
 
     final profile = HemsOptimizationProfile(
       systemId: 'home',
@@ -578,7 +530,6 @@ class AppStateProvider extends ChangeNotifier {
       batteryHealth: BatteryHealthModel(installationDate: batteryInstallDate),
       tariffForecast: tariffForecast,
       demandForecast: demandForecast,
-      gridForecast: gridForecast,
     );
     final tuning = HemsTuningService(profile);
     hemsService = HemsAlgorithmService(
@@ -830,20 +781,6 @@ class AppStateProvider extends ChangeNotifier {
       LogService.log('Failed to load app version: $e');
       _appVersionLabel = _defaultAppVersionLabel;
     }
-  }
-
-  Future<void> saveTariffUahPerKwh(double tariff) async {
-    final clamped = tariff.clamp(0.0, 999.0).toDouble();
-    dayTariffUahPerKwh = clamped;
-    nightTariffUahPerKwh = (clamped * 0.5).clamp(0.0, 999.0).toDouble();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('energy_tariff_uah_per_kwh', clamped);
-    await prefs.setDouble('energy_tariff_day_uah_per_kwh', dayTariffUahPerKwh);
-    await prefs.setDouble(
-        'energy_tariff_night_uah_per_kwh', nightTariffUahPerKwh);
-    notifyListeners();
-    // Recompute money cards immediately with new tariff.
-    await _updateMonthlyEconomics(force: true);
   }
 
   Future<void> saveTimeOfUseTariffs({
@@ -1198,7 +1135,7 @@ class AppStateProvider extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      debugPrint('Помилка завантаження статистики: $e');
+      LogService.log('Помилка завантаження статистики: $e');
     }
   }
 
@@ -1538,11 +1475,6 @@ class AppStateProvider extends ChangeNotifier {
     samples.add(loadW);
   }
 
-  Future<void> resetBatteryCycles() async {
-    await _batteryTracker.resetCycleCount();
-    notifyListeners();
-  }
-
   Future<void> toggleAutostart(bool val) async {
     if (!_supportsDesktopIntegrations) {
       isAutostartEnabled = false;
@@ -1602,19 +1534,7 @@ class AppStateProvider extends ChangeNotifier {
     }
 
     if (email != null && email.isNotEmpty && pass != null && pass.isNotEmpty) {
-      final success = await service.login(email, pass);
-      if (success) {
-        final token = service.accessToken;
-        if (token != null && token.isNotEmpty) {
-          try {
-            await SecureStorageService.saveToken(token);
-          } catch (e) {
-            LogService.log('Failed to persist access token after auto login',
-                error: e);
-          }
-        }
-      }
-      return success;
+      return service.login(email, pass);
     }
     return false;
   }
@@ -1630,15 +1550,6 @@ class AppStateProvider extends ChangeNotifier {
       } catch (e) {
         LogService.log('Failed to persist password securely after login',
             error: e);
-      }
-      final token = service.accessToken;
-      if (token != null && token.isNotEmpty) {
-        try {
-          await SecureStorageService.saveToken(token);
-        } catch (e) {
-          LogService.log('Failed to persist access token after login',
-              error: e);
-        }
       }
       savedEmail = email;
 
@@ -2240,7 +2151,6 @@ class AppStateProvider extends ChangeNotifier {
         lat: siteLatitude,
         lon: siteLongitude,
       );
-      _latestStormRisk = risk;
 
       if (risk.isHighRisk && !_forecastStormActive) {
         // Activate storm mode

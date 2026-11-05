@@ -183,7 +183,7 @@ class _MainScreenState extends State<MainScreen> {
             },
             child: KeyedSubtree(
               key: ValueKey(safeIndex),
-              // On mobile/compact layout, skip AppScreenFrame to avoid
+              // On mobile/compact layout, skip the framed page to avoid a
               // double header bar and extra horizontal padding. The AppBar
               // already shows the section label and status pill.
               child: useRail

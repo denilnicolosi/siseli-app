@@ -166,13 +166,6 @@ class SocHistoryService {
     return true;
   }
 
-  /// Convenience getter: only samples from today (local time, midnight..now).
-  List<SocSample> get todaySamples {
-    final midnight = DateTime.now();
-    final start = DateTime(midnight.year, midnight.month, midnight.day);
-    return _samples.where((s) => !s.timestamp.isBefore(start)).toList();
-  }
-
   @visibleForTesting
   void debugResetForTests() {
     _samples.clear();

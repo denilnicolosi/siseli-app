@@ -65,13 +65,6 @@ class BatteryTrackerService extends ChangeNotifier {
     return false;
   }
 
-  Future<void> resetCycleCount() async {
-    _cycleCount = 0;
-    _inLowState = false;
-    notifyListeners();
-    await _saveAsync();
-  }
-
   Future<void> _saveAsync() async {
     try {
       final prefs = await SharedPreferences.getInstance();

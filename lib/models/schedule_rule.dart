@@ -113,22 +113,6 @@ class ScheduleRule {
     return '$s – $e';
   }
 
-  /// Abbreviated day list, e.g. "Mon Wed Fri".
-  String get daysLabel {
-    const abbr = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    if (daysOfWeek.length == 7) return 'Every day';
-    final weekdays = [1, 2, 3, 4, 5];
-    final weekend = [6, 7];
-    final sorted = List<int>.from(daysOfWeek)..sort();
-    if (sorted.length == 5 && sorted.every((d) => weekdays.contains(d))) {
-      return 'Weekdays';
-    }
-    if (sorted.length == 2 && sorted.every((d) => weekend.contains(d))) {
-      return 'Weekend';
-    }
-    return sorted.map((d) => abbr[d]).join(', ');
-  }
-
   // ── Serialisation ──────────────────────────────────────────────────────────
 
   Map<String, dynamic> toJson() => {
