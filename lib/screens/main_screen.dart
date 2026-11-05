@@ -5,10 +5,10 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_components.dart';
 import '../widgets/notification_panel.dart';
-import 'dashboard_tab.dart';
+import 'dashboard/dashboard_tab.dart';
 import 'automation_tab.dart';
 import 'details_tab.dart';
-import 'settings_tab.dart';
+import 'settings/settings_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
