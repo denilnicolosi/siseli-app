@@ -109,7 +109,7 @@ class AppStateProvider extends ChangeNotifier {
   Map<String, double> historicalPvData = {};
 
   ThemeMode themeMode = ThemeMode.dark;
-  String lang = 'en';
+  String lang = 'it';
 
   bool isAutostartEnabled = false;
   bool isStartInTrayEnabled = false;
@@ -625,7 +625,7 @@ class AppStateProvider extends ChangeNotifier {
     smartMode = prefs.getInt('smart_mode') ?? 0;
     autoStormByForecastEnabled =
         prefs.getBool('auto_storm_by_forecast') ?? false;
-    lang = prefs.getString('app_lang') ?? 'en';
+    lang = prefs.getString('app_lang') ?? 'it';
     if (_supportsDesktopIntegrations) {
       isAutostartEnabled = await launchAtStartup.isEnabled();
     } else {
