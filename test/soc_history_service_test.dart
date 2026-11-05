@@ -11,7 +11,11 @@ void main() {
     test(
         'keeps samples sorted when a live sample is added before persisted load',
         () async {
-      final now = DateTime(2026, 5, 21, 12, 0);
+      // load() drops samples older than 24h relative to the real clock, so
+      // the fixture must be relative to now. Truncated to ms because samples
+      // are persisted as millisecondsSinceEpoch.
+      final now = DateTime.fromMillisecondsSinceEpoch(
+          DateTime.now().millisecondsSinceEpoch);
       final persisted = [
         {
           't': now.subtract(const Duration(hours: 2)).millisecondsSinceEpoch,
