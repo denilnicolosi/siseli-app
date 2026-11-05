@@ -8,15 +8,8 @@
   "darkTheme": "Темна тема",
   "language": "Мова",
   "dashboard": "Дашборд",
-  "details": "Деталі",
   "automation": "Автоматика",
   "data": "Дані",
-  "smartModes": "Смарт Режими",
-  "modeOff": "Вимкнення",
-  "modeWinter": "Зимовий Режим",
-  "modeWinterDesc": "Опис для Зимового Режиму",
-  "modeSummer": "Літній Режим",
-  "modeSummerDesc": "Опис для Літнього Режиму",
   "energyOverview": "Огляд енергії",
   "production": "Виробництво",
   "consumption": "Споживання",
@@ -57,20 +50,12 @@
       }
     }
   },
-  "inverterMode": "Режим інвертора",
   "advancedSettings": "Розширені налаштування",
-  "outputSourcePriority": "Пріоритет виходу (Output)",
-  "chargerSourcePriority": "Пріоритет зарядки (Charger)",
-  "sbuPriority": "SBU Priority",
-  "onlySolar": "Тільки Сонце (OSO)",
-  "solarFirst": "Сонце в першу чергу (CSO)",
   "hemsTitle": "Інтелектуальні HEMS режими",
   "hemsSubtitle": "Оберіть стратегію: адаптивна автоматизація, економія або резерв",
   "gotIt": "Зрозуміло",
-  "welcomeBack": "З поверненням",
   "email": "Електронна пошта",
   "password": "Пароль",
-  "loginError": "Неправильний логін або пароль",
   "startWithWindows": "Автозапуск з Windows",
   "startInTray": "Запускати в треї",
   "startInTraySubtitle": "Стартує згорнутим, якщо є збережена сесія",
@@ -357,40 +342,7 @@
       }
     }
   },
-  "logsTitle": "Логи застосунку",
-  "logsAll": "Усі",
-  "logsInfo": "Інфо",
-  "logsWarn": "Попередж.",
-  "logsError": "Помилки",
-  "logsNoEntries": "Логи відсутні.",
-  "logsErrorPrefix": "Помилка",
-  "logsCopyFiltered": "Копіювати фільтр",
   "clear": "Очистити",
-  "logsCopied": "Логи скопійовано в буфер обміну",
-  "logsSummary": "Всього: {total}  |  Інфо: {info}  Попередж.: {warn}  Помилки: {error}",
-  "@logsSummary": {
-    "placeholders": {
-      "total": {
-        "type": "String"
-      },
-      "info": {
-        "type": "String"
-      },
-      "warn": {
-        "type": "String"
-      },
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "solarSbu": "СОНЦЕ (SBU)",
-  "gridUsb": "МЕРЕЖА (USB)",
-  "modeFromSolar": "Від сонця",
-  "modeFromGrid": "Від мережі",
-  "utilityFirstUsb": "Мережа (Utility First / USB)",
-  "solarFirstSub": "Сонце (Solar First / SUB)",
-  "solarUtilitySnu": "Сонце + Мережа (SNU)",
   "presetDisabled": "Вимкнено",
   "presetEnabled": "Увімкнено",
   "presetOutputUsb": "USB - Пріоритет мережі",
@@ -539,7 +491,6 @@
   "moneySavedMonth": "Зекономлено за місяць",
   "paymentThisMonth": "До оплати за місяць",
   "currencyUah": "€",
-  "energyTariffLabel": "Тариф на електроенергію",
   "energyTariffDayLabel": "Денний тариф",
   "energyTariffNightLabel": "Нічний тариф",
   "energyTariffUnit": "€/кВт·год",
@@ -634,8 +585,6 @@
       }
     }
   },
-  "tooltipMoneySavedMonth": "Оціночна економія за місяць за рахунок власного сонячного споживання",
-  "tooltipPaymentThisMonth": "Оціночна сума до сплати за мережеву електроенергію цього місяця",
   "projectedSavedMonth": "Прогноз економії до кінця місяця",
   "projectedPaymentMonth": "Прогноз оплати до кінця місяця",
   "tooltipProjectedSavedMonth": "Прогноз на основі поточного тренду власного сонячного споживання за місяць",
@@ -657,7 +606,6 @@
   "notificationsTitle": "Сповіщення",
   "notificationsEmpty": "Поки немає сповіщень",
   "notificationsClear": "Очистити всі",
-  "notificationMarkAllRead": "Позначити прочитаними",
 
   "notifGridOutageTitle": "Відключення мережі",
   "notifGridOutageBody": "Напруга мережі впала — живлення від сонця/батареї",
@@ -752,8 +700,6 @@
       "soh": {"type": "String"}
     }
   },
-  "resetCycleCount": "Скинути лічильник",
-  "gridAutoStormNote": "Режим Шторм активовано автоматично через відключення мережі",
 
   "autoStormByForecastTitle": "Автоматичний режим Шторм за прогнозом погоди",
   "autoStormByForecastEnabledSubtitle": "Перемикає в режим Шторм при небезпечному прогнозі (найближчі 12 год)",

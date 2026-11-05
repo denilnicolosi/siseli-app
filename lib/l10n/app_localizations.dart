@@ -154,12 +154,6 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboard;
 
-  /// No description provided for @details.
-  ///
-  /// In en, this message translates to:
-  /// **'Details'**
-  String get details;
-
   /// No description provided for @automation.
   ///
   /// In en, this message translates to:
@@ -171,42 +165,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data'**
   String get data;
-
-  /// No description provided for @smartModes.
-  ///
-  /// In en, this message translates to:
-  /// **'Smart Modes'**
-  String get smartModes;
-
-  /// No description provided for @modeOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Off'**
-  String get modeOff;
-
-  /// No description provided for @modeWinter.
-  ///
-  /// In en, this message translates to:
-  /// **'Winter Mode'**
-  String get modeWinter;
-
-  /// No description provided for @modeWinterDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Description for winter'**
-  String get modeWinterDesc;
-
-  /// No description provided for @modeSummer.
-  ///
-  /// In en, this message translates to:
-  /// **'Summer Mode'**
-  String get modeSummer;
-
-  /// No description provided for @modeSummerDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Description for summer'**
-  String get modeSummerDesc;
 
   /// No description provided for @energyOverview.
   ///
@@ -406,47 +364,11 @@ abstract class AppLocalizations {
   /// **'ID: {id}'**
   String userId(String id);
 
-  /// No description provided for @inverterMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Inverter Mode'**
-  String get inverterMode;
-
   /// No description provided for @advancedSettings.
   ///
   /// In en, this message translates to:
   /// **'Advanced Settings'**
   String get advancedSettings;
-
-  /// No description provided for @outputSourcePriority.
-  ///
-  /// In en, this message translates to:
-  /// **'Output Source Priority'**
-  String get outputSourcePriority;
-
-  /// No description provided for @chargerSourcePriority.
-  ///
-  /// In en, this message translates to:
-  /// **'Charger Source Priority'**
-  String get chargerSourcePriority;
-
-  /// No description provided for @sbuPriority.
-  ///
-  /// In en, this message translates to:
-  /// **'SBU Priority'**
-  String get sbuPriority;
-
-  /// No description provided for @onlySolar.
-  ///
-  /// In en, this message translates to:
-  /// **'Only Solar (OSO)'**
-  String get onlySolar;
-
-  /// No description provided for @solarFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'Solar First (CSO)'**
-  String get solarFirst;
 
   /// No description provided for @hemsTitle.
   ///
@@ -466,12 +388,6 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get gotIt;
 
-  /// No description provided for @welcomeBack.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome Back'**
-  String get welcomeBack;
-
   /// No description provided for @email.
   ///
   /// In en, this message translates to:
@@ -483,12 +399,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password'**
   String get password;
-
-  /// No description provided for @loginError.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid login or password'**
-  String get loginError;
 
   /// No description provided for @startWithWindows.
   ///
@@ -1222,113 +1132,11 @@ abstract class AppLocalizations {
   /// **'Input C{breaker} -> safe battery charge {power} W (~{current} A)'**
   String chargeLimitSummary(String breaker, String power, String current);
 
-  /// No description provided for @logsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'App Logs'**
-  String get logsTitle;
-
-  /// No description provided for @logsAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get logsAll;
-
-  /// No description provided for @logsInfo.
-  ///
-  /// In en, this message translates to:
-  /// **'Info'**
-  String get logsInfo;
-
-  /// No description provided for @logsWarn.
-  ///
-  /// In en, this message translates to:
-  /// **'Warn'**
-  String get logsWarn;
-
-  /// No description provided for @logsError.
-  ///
-  /// In en, this message translates to:
-  /// **'Error'**
-  String get logsError;
-
-  /// No description provided for @logsNoEntries.
-  ///
-  /// In en, this message translates to:
-  /// **'No logs yet.'**
-  String get logsNoEntries;
-
-  /// No description provided for @logsErrorPrefix.
-  ///
-  /// In en, this message translates to:
-  /// **'Error'**
-  String get logsErrorPrefix;
-
-  /// No description provided for @logsCopyFiltered.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy filtered'**
-  String get logsCopyFiltered;
-
   /// No description provided for @clear.
   ///
   /// In en, this message translates to:
   /// **'Clear'**
   String get clear;
-
-  /// No description provided for @logsCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Logs copied to clipboard'**
-  String get logsCopied;
-
-  /// No description provided for @logsSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Total: {total}  |  Info: {info}  Warn: {warn}  Error: {error}'**
-  String logsSummary(String total, String info, String warn, String error);
-
-  /// No description provided for @solarSbu.
-  ///
-  /// In en, this message translates to:
-  /// **'SOLAR (SBU)'**
-  String get solarSbu;
-
-  /// No description provided for @gridUsb.
-  ///
-  /// In en, this message translates to:
-  /// **'GRID (USB)'**
-  String get gridUsb;
-
-  /// No description provided for @modeFromSolar.
-  ///
-  /// In en, this message translates to:
-  /// **'From solar'**
-  String get modeFromSolar;
-
-  /// No description provided for @modeFromGrid.
-  ///
-  /// In en, this message translates to:
-  /// **'From grid'**
-  String get modeFromGrid;
-
-  /// No description provided for @utilityFirstUsb.
-  ///
-  /// In en, this message translates to:
-  /// **'Utility First (USB)'**
-  String get utilityFirstUsb;
-
-  /// No description provided for @solarFirstSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Solar First (SUB)'**
-  String get solarFirstSub;
-
-  /// No description provided for @solarUtilitySnu.
-  ///
-  /// In en, this message translates to:
-  /// **'Solar + Utility (SNU)'**
-  String get solarUtilitySnu;
 
   /// No description provided for @presetDisabled.
   ///
@@ -1780,12 +1588,6 @@ abstract class AppLocalizations {
   /// **'€'**
   String get currencyUah;
 
-  /// No description provided for @energyTariffLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Electricity tariff'**
-  String get energyTariffLabel;
-
   /// No description provided for @energyTariffDayLabel.
   ///
   /// In en, this message translates to:
@@ -1924,18 +1726,6 @@ abstract class AppLocalizations {
   /// **'Reference blended tariff only. Actual payment and savings above are calculated hourly from telemetry using day from {dayStart}:00 and night from {nightStart}:00.'**
   String tooltipEffectiveTariffTelemetry(String dayStart, String nightStart);
 
-  /// No description provided for @tooltipMoneySavedMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated money saved this month from self-consumed solar energy'**
-  String get tooltipMoneySavedMonth;
-
-  /// No description provided for @tooltipPaymentThisMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'Estimated monthly bill for imported grid energy'**
-  String get tooltipPaymentThisMonth;
-
   /// No description provided for @projectedSavedMonth.
   ///
   /// In en, this message translates to:
@@ -2055,12 +1845,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear all'**
   String get notificationsClear;
-
-  /// No description provided for @notificationMarkAllRead.
-  ///
-  /// In en, this message translates to:
-  /// **'Mark all read'**
-  String get notificationMarkAllRead;
 
   /// No description provided for @notifGridOutageTitle.
   ///
@@ -2277,18 +2061,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SOH {soh}%'**
   String battSohPercent(String soh);
-
-  /// No description provided for @resetCycleCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset counter'**
-  String get resetCycleCount;
-
-  /// No description provided for @gridAutoStormNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto Storm mode was activated due to grid outage'**
-  String get gridAutoStormNote;
 
   /// No description provided for @autoStormByForecastTitle.
   ///

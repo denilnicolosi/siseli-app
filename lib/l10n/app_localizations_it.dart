@@ -36,31 +36,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dashboard => 'Dashboard';
 
   @override
-  String get details => 'Dettagli';
-
-  @override
   String get automation => 'Automazione';
 
   @override
   String get data => 'Dati';
-
-  @override
-  String get smartModes => 'Modalità intelligenti';
-
-  @override
-  String get modeOff => 'Spento';
-
-  @override
-  String get modeWinter => 'Modalità inverno';
-
-  @override
-  String get modeWinterDesc => 'Descrizione per l\'inverno';
-
-  @override
-  String get modeSummer => 'Modalità estate';
-
-  @override
-  String get modeSummerDesc => 'Descrizione per l\'estate';
 
   @override
   String get energyOverview => 'Panoramica energia';
@@ -169,25 +148,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get inverterMode => 'Modalità inverter';
-
-  @override
   String get advancedSettings => 'Impostazioni avanzate';
-
-  @override
-  String get outputSourcePriority => 'Priorità sorgente di uscita';
-
-  @override
-  String get chargerSourcePriority => 'Priorità sorgente di carica';
-
-  @override
-  String get sbuPriority => 'Priorità SBU';
-
-  @override
-  String get onlySolar => 'Solo solare (OSO)';
-
-  @override
-  String get solarFirst => 'Prima il solare (CSO)';
 
   @override
   String get hemsTitle => 'Modalità HEMS intelligenti';
@@ -200,16 +161,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gotIt => 'Ho capito';
 
   @override
-  String get welcomeBack => 'Bentornato';
-
-  @override
   String get email => 'Email';
 
   @override
   String get password => 'Password';
-
-  @override
-  String get loginError => 'Login o password non validi';
 
   @override
   String get startWithWindows => 'Avvia con Windows';
@@ -640,60 +595,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get logsTitle => 'Log app';
-
-  @override
-  String get logsAll => 'Tutti';
-
-  @override
-  String get logsInfo => 'Info';
-
-  @override
-  String get logsWarn => 'Avvisi';
-
-  @override
-  String get logsError => 'Errori';
-
-  @override
-  String get logsNoEntries => 'Nessun log.';
-
-  @override
-  String get logsErrorPrefix => 'Errore';
-
-  @override
-  String get logsCopyFiltered => 'Copia filtrati';
-
-  @override
   String get clear => 'Cancella';
-
-  @override
-  String get logsCopied => 'Log copiati negli appunti';
-
-  @override
-  String logsSummary(String total, String info, String warn, String error) {
-    return 'Totale: $total  |  Info: $info  Avvisi: $warn  Errori: $error';
-  }
-
-  @override
-  String get solarSbu => 'SOLARE (SBU)';
-
-  @override
-  String get gridUsb => 'RETE (USB)';
-
-  @override
-  String get modeFromSolar => 'Da solare';
-
-  @override
-  String get modeFromGrid => 'Da rete';
-
-  @override
-  String get utilityFirstUsb => 'Prima la rete (USB)';
-
-  @override
-  String get solarFirstSub => 'Prima il solare (SUB)';
-
-  @override
-  String get solarUtilitySnu => 'Solare + rete (SNU)';
 
   @override
   String get presetDisabled => 'Disattivato';
@@ -951,9 +853,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get currencyUah => '€';
 
   @override
-  String get energyTariffLabel => 'Tariffa elettrica';
-
-  @override
   String get energyTariffDayLabel => 'Tariffa diurna';
 
   @override
@@ -1042,14 +941,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get tooltipMoneySavedMonth =>
-      'Risparmio stimato di questo mese dall\'energia solare autoconsumata';
-
-  @override
-  String get tooltipPaymentThisMonth =>
-      'Bolletta mensile stimata per l\'energia prelevata dalla rete';
-
-  @override
   String get projectedSavedMonth => 'Risparmio previsto a fine mese';
 
   @override
@@ -1112,9 +1003,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationsClear => 'Cancella tutto';
-
-  @override
-  String get notificationMarkAllRead => 'Segna tutte come lette';
 
   @override
   String get notifGridOutageTitle => 'Blackout rete elettrica';
@@ -1247,13 +1135,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String battSohPercent(String soh) {
     return 'SOH $soh%';
   }
-
-  @override
-  String get resetCycleCount => 'Azzera contatore';
-
-  @override
-  String get gridAutoStormNote =>
-      'Modalità Tempesta automatica attivata per blackout della rete';
 
   @override
   String get autoStormByForecastTitle =>

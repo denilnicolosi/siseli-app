@@ -8,15 +8,8 @@
   "darkTheme": "Dark theme",
   "language": "Language",
   "dashboard": "Dashboard",
-  "details": "Details",
   "automation": "Automation",
   "data": "Data",
-  "smartModes": "Smart Modes",
-  "modeOff": "Off",
-  "modeWinter": "Winter Mode",
-  "modeWinterDesc": "Description for winter",
-  "modeSummer": "Summer Mode",
-  "modeSummerDesc": "Description for summer",
   "energyOverview": "Energy Overview",
   "production": "Production",
   "consumption": "Consumption",
@@ -57,20 +50,12 @@
       }
     }
   },
-  "inverterMode": "Inverter Mode",
   "advancedSettings": "Advanced Settings",
-  "outputSourcePriority": "Output Source Priority",
-  "chargerSourcePriority": "Charger Source Priority",
-  "sbuPriority": "SBU Priority",
-  "onlySolar": "Only Solar (OSO)",
-  "solarFirst": "Solar First (CSO)",
   "hemsTitle": "Intelligent HEMS Modes",
   "hemsSubtitle": "Choose your strategy: adaptive automation, savings, or backup reserve",
   "gotIt": "Got it",
-  "welcomeBack": "Welcome Back",
   "email": "Email",
   "password": "Password",
-  "loginError": "Invalid login or password",
   "startWithWindows": "Start with Windows",
   "startInTray": "Start in tray",
   "startInTraySubtitle": "Starts minimized when a saved session exists",
@@ -357,40 +342,7 @@
       }
     }
   },
-  "logsTitle": "App Logs",
-  "logsAll": "All",
-  "logsInfo": "Info",
-  "logsWarn": "Warn",
-  "logsError": "Error",
-  "logsNoEntries": "No logs yet.",
-  "logsErrorPrefix": "Error",
-  "logsCopyFiltered": "Copy filtered",
   "clear": "Clear",
-  "logsCopied": "Logs copied to clipboard",
-  "logsSummary": "Total: {total}  |  Info: {info}  Warn: {warn}  Error: {error}",
-  "@logsSummary": {
-    "placeholders": {
-      "total": {
-        "type": "String"
-      },
-      "info": {
-        "type": "String"
-      },
-      "warn": {
-        "type": "String"
-      },
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "solarSbu": "SOLAR (SBU)",
-  "gridUsb": "GRID (USB)",
-  "modeFromSolar": "From solar",
-  "modeFromGrid": "From grid",
-  "utilityFirstUsb": "Utility First (USB)",
-  "solarFirstSub": "Solar First (SUB)",
-  "solarUtilitySnu": "Solar + Utility (SNU)",
   "presetDisabled": "Disabled",
   "presetEnabled": "Enabled",
   "presetOutputUsb": "USB - Grid priority",
@@ -539,7 +491,6 @@
   "moneySavedMonth": "Saved this month",
   "paymentThisMonth": "To pay this month",
   "currencyUah": "€",
-  "energyTariffLabel": "Electricity tariff",
   "energyTariffDayLabel": "Day tariff",
   "energyTariffNightLabel": "Night tariff",
   "energyTariffUnit": "€/kWh",
@@ -634,8 +585,6 @@
       }
     }
   },
-  "tooltipMoneySavedMonth": "Estimated money saved this month from self-consumed solar energy",
-  "tooltipPaymentThisMonth": "Estimated monthly bill for imported grid energy",
   "projectedSavedMonth": "Projected saved by month end",
   "projectedPaymentMonth": "Projected payment by month end",
   "tooltipProjectedSavedMonth": "Forecast based on current month trend of self-consumed solar energy",
@@ -657,7 +606,6 @@
   "notificationsTitle": "Notifications",
   "notificationsEmpty": "No notifications yet",
   "notificationsClear": "Clear all",
-  "notificationMarkAllRead": "Mark all read",
 
   "notifGridOutageTitle": "Grid Power Outage",
   "notifGridOutageBody": "Grid voltage dropped — running on solar/battery",
@@ -752,8 +700,6 @@
       "soh": {"type": "String"}
     }
   },
-  "resetCycleCount": "Reset counter",
-  "gridAutoStormNote": "Auto Storm mode was activated due to grid outage",
 
   "autoStormByForecastTitle": "Auto Storm mode by weather forecast",
   "autoStormByForecastEnabledSubtitle": "Switches to Storm mode when bad weather is predicted (next 12 h)",

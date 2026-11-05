@@ -36,31 +36,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard => 'Dashboard';
 
   @override
-  String get details => 'Details';
-
-  @override
   String get automation => 'Automation';
 
   @override
   String get data => 'Data';
-
-  @override
-  String get smartModes => 'Smart Modes';
-
-  @override
-  String get modeOff => 'Off';
-
-  @override
-  String get modeWinter => 'Winter Mode';
-
-  @override
-  String get modeWinterDesc => 'Description for winter';
-
-  @override
-  String get modeSummer => 'Summer Mode';
-
-  @override
-  String get modeSummerDesc => 'Description for summer';
 
   @override
   String get energyOverview => 'Energy Overview';
@@ -169,25 +148,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get inverterMode => 'Inverter Mode';
-
-  @override
   String get advancedSettings => 'Advanced Settings';
-
-  @override
-  String get outputSourcePriority => 'Output Source Priority';
-
-  @override
-  String get chargerSourcePriority => 'Charger Source Priority';
-
-  @override
-  String get sbuPriority => 'SBU Priority';
-
-  @override
-  String get onlySolar => 'Only Solar (OSO)';
-
-  @override
-  String get solarFirst => 'Solar First (CSO)';
 
   @override
   String get hemsTitle => 'Intelligent HEMS Modes';
@@ -200,16 +161,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gotIt => 'Got it';
 
   @override
-  String get welcomeBack => 'Welcome Back';
-
-  @override
   String get email => 'Email';
 
   @override
   String get password => 'Password';
-
-  @override
-  String get loginError => 'Invalid login or password';
 
   @override
   String get startWithWindows => 'Start with Windows';
@@ -634,60 +589,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get logsTitle => 'App Logs';
-
-  @override
-  String get logsAll => 'All';
-
-  @override
-  String get logsInfo => 'Info';
-
-  @override
-  String get logsWarn => 'Warn';
-
-  @override
-  String get logsError => 'Error';
-
-  @override
-  String get logsNoEntries => 'No logs yet.';
-
-  @override
-  String get logsErrorPrefix => 'Error';
-
-  @override
-  String get logsCopyFiltered => 'Copy filtered';
-
-  @override
   String get clear => 'Clear';
-
-  @override
-  String get logsCopied => 'Logs copied to clipboard';
-
-  @override
-  String logsSummary(String total, String info, String warn, String error) {
-    return 'Total: $total  |  Info: $info  Warn: $warn  Error: $error';
-  }
-
-  @override
-  String get solarSbu => 'SOLAR (SBU)';
-
-  @override
-  String get gridUsb => 'GRID (USB)';
-
-  @override
-  String get modeFromSolar => 'From solar';
-
-  @override
-  String get modeFromGrid => 'From grid';
-
-  @override
-  String get utilityFirstUsb => 'Utility First (USB)';
-
-  @override
-  String get solarFirstSub => 'Solar First (SUB)';
-
-  @override
-  String get solarUtilitySnu => 'Solar + Utility (SNU)';
 
   @override
   String get presetDisabled => 'Disabled';
@@ -943,9 +845,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currencyUah => '€';
 
   @override
-  String get energyTariffLabel => 'Electricity tariff';
-
-  @override
   String get energyTariffDayLabel => 'Day tariff';
 
   @override
@@ -1033,14 +932,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tooltipMoneySavedMonth =>
-      'Estimated money saved this month from self-consumed solar energy';
-
-  @override
-  String get tooltipPaymentThisMonth =>
-      'Estimated monthly bill for imported grid energy';
-
-  @override
   String get projectedSavedMonth => 'Projected saved by month end';
 
   @override
@@ -1101,9 +992,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsClear => 'Clear all';
-
-  @override
-  String get notificationMarkAllRead => 'Mark all read';
 
   @override
   String get notifGridOutageTitle => 'Grid Power Outage';
@@ -1234,13 +1122,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String battSohPercent(String soh) {
     return 'SOH $soh%';
   }
-
-  @override
-  String get resetCycleCount => 'Reset counter';
-
-  @override
-  String get gridAutoStormNote =>
-      'Auto Storm mode was activated due to grid outage';
 
   @override
   String get autoStormByForecastTitle => 'Auto Storm mode by weather forecast';

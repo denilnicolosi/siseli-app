@@ -36,31 +36,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get dashboard => 'Дашборд';
 
   @override
-  String get details => 'Деталі';
-
-  @override
   String get automation => 'Автоматика';
 
   @override
   String get data => 'Дані';
-
-  @override
-  String get smartModes => 'Смарт Режими';
-
-  @override
-  String get modeOff => 'Вимкнення';
-
-  @override
-  String get modeWinter => 'Зимовий Режим';
-
-  @override
-  String get modeWinterDesc => 'Опис для Зимового Режиму';
-
-  @override
-  String get modeSummer => 'Літній Режим';
-
-  @override
-  String get modeSummerDesc => 'Опис для Літнього Режиму';
 
   @override
   String get energyOverview => 'Огляд енергії';
@@ -168,25 +147,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get inverterMode => 'Режим інвертора';
-
-  @override
   String get advancedSettings => 'Розширені налаштування';
-
-  @override
-  String get outputSourcePriority => 'Пріоритет виходу (Output)';
-
-  @override
-  String get chargerSourcePriority => 'Пріоритет зарядки (Charger)';
-
-  @override
-  String get sbuPriority => 'SBU Priority';
-
-  @override
-  String get onlySolar => 'Тільки Сонце (OSO)';
-
-  @override
-  String get solarFirst => 'Сонце в першу чергу (CSO)';
 
   @override
   String get hemsTitle => 'Інтелектуальні HEMS режими';
@@ -199,16 +160,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gotIt => 'Зрозуміло';
 
   @override
-  String get welcomeBack => 'З поверненням';
-
-  @override
   String get email => 'Електронна пошта';
 
   @override
   String get password => 'Пароль';
-
-  @override
-  String get loginError => 'Неправильний логін або пароль';
 
   @override
   String get startWithWindows => 'Автозапуск з Windows';
@@ -635,60 +590,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get logsTitle => 'Логи застосунку';
-
-  @override
-  String get logsAll => 'Усі';
-
-  @override
-  String get logsInfo => 'Інфо';
-
-  @override
-  String get logsWarn => 'Попередж.';
-
-  @override
-  String get logsError => 'Помилки';
-
-  @override
-  String get logsNoEntries => 'Логи відсутні.';
-
-  @override
-  String get logsErrorPrefix => 'Помилка';
-
-  @override
-  String get logsCopyFiltered => 'Копіювати фільтр';
-
-  @override
   String get clear => 'Очистити';
-
-  @override
-  String get logsCopied => 'Логи скопійовано в буфер обміну';
-
-  @override
-  String logsSummary(String total, String info, String warn, String error) {
-    return 'Всього: $total  |  Інфо: $info  Попередж.: $warn  Помилки: $error';
-  }
-
-  @override
-  String get solarSbu => 'СОНЦЕ (SBU)';
-
-  @override
-  String get gridUsb => 'МЕРЕЖА (USB)';
-
-  @override
-  String get modeFromSolar => 'Від сонця';
-
-  @override
-  String get modeFromGrid => 'Від мережі';
-
-  @override
-  String get utilityFirstUsb => 'Мережа (Utility First / USB)';
-
-  @override
-  String get solarFirstSub => 'Сонце (Solar First / SUB)';
-
-  @override
-  String get solarUtilitySnu => 'Сонце + Мережа (SNU)';
 
   @override
   String get presetDisabled => 'Вимкнено';
@@ -948,9 +850,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get currencyUah => '€';
 
   @override
-  String get energyTariffLabel => 'Тариф на електроенергію';
-
-  @override
   String get energyTariffDayLabel => 'Денний тариф';
 
   @override
@@ -1038,14 +937,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get tooltipMoneySavedMonth =>
-      'Оціночна економія за місяць за рахунок власного сонячного споживання';
-
-  @override
-  String get tooltipPaymentThisMonth =>
-      'Оціночна сума до сплати за мережеву електроенергію цього місяця';
-
-  @override
   String get projectedSavedMonth => 'Прогноз економії до кінця місяця';
 
   @override
@@ -1107,9 +998,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get notificationsClear => 'Очистити всі';
-
-  @override
-  String get notificationMarkAllRead => 'Позначити прочитаними';
 
   @override
   String get notifGridOutageTitle => 'Відключення мережі';
@@ -1240,13 +1128,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String battSohPercent(String soh) {
     return 'SOH $soh%';
   }
-
-  @override
-  String get resetCycleCount => 'Скинути лічильник';
-
-  @override
-  String get gridAutoStormNote =>
-      'Режим Шторм активовано автоматично через відключення мережі';
 
   @override
   String get autoStormByForecastTitle =>
