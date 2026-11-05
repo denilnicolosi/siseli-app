@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -34,7 +34,8 @@ class UpdateInfo {
 class UpdateService {
   static const String releasesUrl =
       'https://api.github.com/repos/denilnicolosi/siseli-app/releases?per_page=20';
-  static final _client = http.Client();
+  // validateStatus: status codes are checked explicitly below, not thrown.
+  static final _dio = Dio(BaseOptions(validateStatus: (_) => true));
 
   static List<String> get _supportedAssetExtensions =>
       Platform.isAndroid ? ['.apk'] : ['.exe', '.msi', '.msix'];
@@ -74,12 +75,14 @@ class UpdateService {
     final currentVersion = '${_cleanVersion(packageInfo.version)}+$buildNumber';
 
     try {
-      final response = await _client
-          .get(Uri.parse(releasesUrl), headers: _headers)
+      final response = await _dio
+          .get<String>(releasesUrl,
+              options:
+                  Options(headers: _headers, responseType: ResponseType.plain))
           .timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) {
         LogService.log(
-            '⚠️ update.check failed: status=${response.statusCode}, body=${response.body}');
+            '⚠️ update.check failed: status=${response.statusCode}, body=${response.data}');
         return UpdateInfo(
           hasUpdate: false,
           currentVersion: currentVersion,
@@ -87,7 +90,7 @@ class UpdateService {
         );
       }
 
-      final decoded = json.decode(response.body);
+      final decoded = json.decode(response.data ?? '');
       final releases = (decoded is List ? decoded : const <dynamic>[])
           .whereType<Map<String, dynamic>>()
           .toList();
@@ -251,25 +254,26 @@ class UpdateService {
           await file.delete();
         }
 
-        final request = http.Request('GET', Uri.parse(downloadUrl));
-        request.headers.addAll(_headers);
-        final response = await _client.send(request).timeout(
-              const Duration(minutes: 3),
-            );
+        final response = await _dio
+            .get<ResponseBody>(downloadUrl,
+                options: Options(
+                    headers: _headers, responseType: ResponseType.stream))
+            .timeout(const Duration(minutes: 3));
+        final body = response.data;
 
-        if (response.statusCode != 200) {
+        if (response.statusCode != 200 || body == null) {
           LogService.log(
               '⚠️ update.download failed: status=${response.statusCode}, file=$fileName, attempt=$attempt');
           if (attempt == _maxDownloadAttempts) return null;
           continue;
         }
 
-        final totalBytes = response.contentLength ?? 0;
+        final totalBytes = body.contentLength; // -1 when unknown
         var received = 0;
         var nextProgressLog = 0.25;
         sink = file.openWrite();
 
-        await for (final chunk in response.stream) {
+        await for (final chunk in body.stream) {
           received += chunk.length;
           sink.add(chunk);
           if (totalBytes > 0 && onProgress != null) {
