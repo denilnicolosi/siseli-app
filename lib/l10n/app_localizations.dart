@@ -2637,6 +2637,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More power goes out than the readings show coming in: the values were sampled at slightly different moments.'**
   String get flowMismatchHint;
+
+  /// No description provided for @batteryChargedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery charged'**
+  String get batteryChargedTotal;
+
+  /// No description provided for @batteryDischargedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery discharged'**
+  String get batteryDischargedTotal;
 }
 
 class _AppLocalizationsDelegate

@@ -546,6 +546,13 @@ class InverterService {
       app_log.LogService.log(
           '❌ chart.fetch week no data after fallback: weekStart=${weekStart.toIso8601String().substring(0, 10)}');
     } else {
+      // Month from 5-minute telemetry, like the week: the monthly summary
+      // endpoint below only carries PV generation (load/battery come back 0).
+      final telemetry = await _buildMonthFromTelemetry(targetDate);
+      if (telemetry != null) {
+        _logChartSummary('chart.parse month telemetry', telemetry);
+        return telemetry;
+      }
       // ========================================================
       // 3. МІСЯЦЬ: денна агрегація енергії за вибраний місяць
       // ========================================================
@@ -573,6 +580,42 @@ class InverterService {
     app_log.LogService.log(
         '📉 chart.fetch empty result: range=$rangeLabel($range), date=$dateLabel');
     return {'pv': [], 'load': [], 'grid': [], 'battery': []};
+  }
+
+  /// Per-day energy for [targetDate]'s month, x = day of month (1-based),
+  /// built from history in 5-day chunks (<= ~1440 samples each). Null when
+  /// no chunk returned data, so the caller can fall back to the summary API.
+  Future<Map<String, List<FlSpot>>?> _buildMonthFromTelemetry(
+      DateTime targetDate) async {
+    final first = DateTime(targetDate.year, targetDate.month, 1);
+    final now = DateTime.now();
+    final lastDay = (first.year == now.year && first.month == now.month)
+        ? now.day
+        : DateTime(first.year, first.month + 1, 0).day;
+    if (first.isAfter(now)) return null;
+
+    const keys = ['pv', 'load', 'battery', 'batteryIn', 'batteryOut', 'grid'];
+    final out = {for (final k in keys) k: <FlSpot>[]};
+    var gotData = false;
+    for (var startDay = 1; startDay <= lastDay; startDay += 5) {
+      final days = (lastDay - startDay + 1).clamp(1, 5);
+      final chunkStart = DateTime(first.year, first.month, startDay);
+      final chunkEnd = chunkStart.add(Duration(days: days - 1));
+      final raw = await _fetchHistoryRaw(
+        from: chunkStart,
+        to: DateTime(chunkEnd.year, chunkEnd.month, chunkEnd.day, 23, 59, 59),
+        count: 1500,
+      );
+      if (raw == null) continue;
+      final parsed = _parseWeeklyHistoryData(raw, chunkStart, days: days);
+      if (_hasAnyChartData(parsed)) gotData = true;
+      for (final k in keys) {
+        for (final spot in parsed[k] ?? const <FlSpot>[]) {
+          out[k]!.add(FlSpot(startDay + spot.x, spot.y));
+        }
+      }
+    }
+    return gotData ? out : null;
   }
 
   /// Invalidates the config cache so the next call forces a re-fetch
@@ -813,6 +856,8 @@ class InverterService {
         extractList(['batteryVoltage'], fieldAlias: 'batteryVoltage');
     final batSoc = extractList(['batteryCapacity', 'batterySoc'],
         fieldAlias: 'batterySoc', optional: true);
+    final acVoltage = extractList(['acInputVoltage'],
+        fieldAlias: 'acInputVoltage', optional: true);
 
     developer.log(
         '📊 Розпарсені масиви: genPower=${genPower.length}, loadPwr=${loadPwr.length}, batPower=${batPower.length}, gridPwr=${gridPwr.length}');
@@ -866,7 +911,9 @@ class InverterService {
         final batW = batteryW ?? 0.0;
         // Approximation: grid covers remaining demand when positive.
         final derivedGrid = loadW + (batW > 0 ? batW : 0.0) - pvW;
-        if (derivedGrid > 0) {
+        if (!_acInputLive(acVoltage, i)) {
+          gridW = 0.0; // nothing on the AC input: measured, not missing
+        } else if (derivedGrid > 0) {
           gridW = derivedGrid;
         }
       }
@@ -912,7 +959,9 @@ class InverterService {
     var productionData = <FlSpot>[];
     var consumptionData = <FlSpot>[];
     var batteryData = <FlSpot>[];
+    var batteryOutData = <FlSpot>[];
     var gridData = <FlSpot>[];
+    final unknownKeys = <String>{};
 
     final properties = dataMap['properties'] as List<dynamic>?;
     if (properties == null) {
@@ -952,6 +1001,9 @@ class InverterService {
             keyLower.contains('usepower') ||
             keyLower.contains('consumepower')) {
           consumptionData.add(spot);
+        } else if (key == 'dischargeElectricityQuantity' ||
+            keyLower.contains('discharge')) {
+          batteryOutData.add(spot);
         } else if (key == 'chargeElectricityQuantity' ||
             keyLower.contains('batterypower') ||
             keyLower.contains('chargepower')) {
@@ -960,14 +1012,23 @@ class InverterService {
             keyLower.contains('gridpower') ||
             keyLower.contains('buypower')) {
           gridData.add(spot);
+        } else {
+          unknownKeys.add(key);
         }
       }
+    }
+    if (unknownKeys.isNotEmpty) {
+      app_log.LogService.log(
+          'chart.parse month: unmapped keys ${unknownKeys.join(', ')}');
     }
 
     final result = {
       'pv': productionData,
       'load': consumptionData,
       'battery': batteryData,
+      // Monthly summary has energy, not net power: charge is batteryData.
+      'batteryIn': batteryData,
+      'batteryOut': batteryOutData,
       'grid': gridData,
     };
     _logChartSummary('chart.parse summary/month-source', result);
@@ -1018,6 +1079,8 @@ class InverterService {
     final pvWhByDay = List<double>.filled(7, 0.0);
     final loadWhByDay = List<double>.filled(7, 0.0);
     final batteryWhByDay = List<double>.filled(7, 0.0);
+    final batteryInWhByDay = List<double>.filled(7, 0.0);
+    final batteryOutWhByDay = List<double>.filled(7, 0.0);
     final gridWhByDay = List<double>.filled(7, 0.0);
 
     for (var dayOffset = 0; dayOffset < 7; dayOffset++) {
@@ -1032,6 +1095,8 @@ class InverterService {
       pvWhByDay[dayOffset] = dayEnergy['pv'] ?? 0.0;
       loadWhByDay[dayOffset] = dayEnergy['load'] ?? 0.0;
       batteryWhByDay[dayOffset] = dayEnergy['battery'] ?? 0.0;
+      batteryInWhByDay[dayOffset] = dayEnergy['batteryIn'] ?? 0.0;
+      batteryOutWhByDay[dayOffset] = dayEnergy['batteryOut'] ?? 0.0;
       gridWhByDay[dayOffset] = dayEnergy['grid'] ?? 0.0;
     }
 
@@ -1044,6 +1109,8 @@ class InverterService {
       'pv': toSpots(pvWhByDay),
       'load': toSpots(loadWhByDay),
       'battery': toSpots(batteryWhByDay),
+      'batteryIn': toSpots(batteryInWhByDay),
+      'batteryOut': toSpots(batteryOutWhByDay),
       'grid': toSpots(gridWhByDay),
     };
   }
@@ -1074,10 +1141,13 @@ class InverterService {
     final batChargeCurrent = pick(['batteryChargingCurrent']);
     final batDischargeCurrent = pick(['batteryDischargeCurrent']);
     final batVoltage = pick(['batteryVoltage']);
+    final acVoltage = pick(['acInputVoltage']);
 
     var pvWh = 0.0;
     var loadWh = 0.0;
     var batteryWh = 0.0;
+    var batteryInWh = 0.0;
+    var batteryOutWh = 0.0;
     var gridWh = 0.0;
 
     DateTime? previousDt;
@@ -1132,7 +1202,8 @@ class InverterService {
       final totalDemand = loadW + (batteryW > 0 ? batteryW : 0.0);
       final derivedGrid = totalDemand - pvW;
 
-      if (gridW <= 0 || (gridW > totalDemand && derivedGrid > 0)) {
+      if ((gridW <= 0 || (gridW > totalDemand && derivedGrid > 0)) &&
+          _acInputLive(acVoltage, i)) {
         // Use derived value if grid is missing or suspiciously high
         gridW = derivedGrid > 0 ? derivedGrid : 0.0;
       }
@@ -1140,6 +1211,11 @@ class InverterService {
       pvWh += pvW * sampleHours;
       loadWh += loadW * sampleHours;
       batteryWh += batteryW * sampleHours;
+      if (batteryW > 0) {
+        batteryInWh += batteryW * sampleHours;
+      } else {
+        batteryOutWh += -batteryW * sampleHours;
+      }
       gridWh += gridW * sampleHours;
     }
 
@@ -1147,8 +1223,21 @@ class InverterService {
       'pv': pvWh,
       'load': loadWh,
       'battery': batteryWh,
+      'batteryIn': batteryInWh,
+      'batteryOut': batteryOutWh,
       'grid': gridWh,
     };
+  }
+
+  /// AC input power is often missing from the history API and is then
+  /// derived as "demand not covered by PV". That residual is only real when
+  /// something (grid/generator) is on the AC input: off-grid it is just
+  /// measurement mismatch. Without voltage data the old behaviour is kept.
+  static bool _acInputLive(List<dynamic> acVoltage, int i) {
+    if (acVoltage.isEmpty) return true;
+    final v = i < acVoltage.length ? acVoltage[i] : null;
+    // APL range starts at 90 V; below that nothing usable is connected.
+    return v is num && v >= 90;
   }
 
   DateTime _startOfWeek(DateTime date) {
@@ -1191,6 +1280,7 @@ class InverterService {
         'batteryChargingCurrent',
         'batteryDischargeCurrent',
         'batteryVoltage',
+        'acInputVoltage',
       ],
     };
 
@@ -1242,7 +1332,8 @@ class InverterService {
   }
 
   Map<String, List<FlSpot>> _parseWeeklyHistoryData(
-      Map<String, dynamic> data, DateTime weekStart) {
+      Map<String, dynamic> data, DateTime weekStart,
+      {int days = 7}) {
     final payload = (data['payload'] as Map<String, dynamic>?) ?? data;
     final timeSeries = payload['timeSeries'] as List<dynamic>? ?? [];
     final fields = payload['fields'] as Map<String, dynamic>? ?? {};
@@ -1270,11 +1361,14 @@ class InverterService {
     final batChargeCurrent = pick(['batteryChargingCurrent']); // A
     final batDischargeCurrent = pick(['batteryDischargeCurrent']); // A
     final batVoltage = pick(['batteryVoltage']); // V
+    final acVoltage = pick(['acInputVoltage']); // V
 
-    final pvWhByDay = List<double>.filled(7, 0.0);
-    final loadWhByDay = List<double>.filled(7, 0.0);
-    final batteryWhByDay = List<double>.filled(7, 0.0);
-    final gridWhByDay = List<double>.filled(7, 0.0);
+    final pvWhByDay = List<double>.filled(days, 0.0);
+    final loadWhByDay = List<double>.filled(days, 0.0);
+    final batteryWhByDay = List<double>.filled(days, 0.0);
+    final batteryInWhByDay = List<double>.filled(days, 0.0);
+    final batteryOutWhByDay = List<double>.filled(days, 0.0);
+    final gridWhByDay = List<double>.filled(days, 0.0);
 
     DateTime? previousDt;
 
@@ -1295,7 +1389,7 @@ class InverterService {
       previousDt = dt;
 
       final dayIndex = dt.difference(weekStart).inDays;
-      if (dayIndex < 0 || dayIndex > 6) continue;
+      if (dayIndex < 0 || dayIndex >= days) continue;
 
       final pvW = (i < genPower.length && genPower[i] != null)
           ? (genPower[i] as num).toDouble() * 1000.0
@@ -1328,24 +1422,32 @@ class InverterService {
         gridW = (gridPower[i] as num).toDouble() * 1000.0;
       } else {
         final derivedGrid = loadW + (batteryW > 0 ? batteryW : 0.0) - pvW;
-        gridW = derivedGrid > 0 ? derivedGrid : 0.0;
+        gridW =
+            derivedGrid > 0 && _acInputLive(acVoltage, i) ? derivedGrid : 0.0;
       }
 
       pvWhByDay[dayIndex] += pvW * sampleHours;
       loadWhByDay[dayIndex] += loadW * sampleHours;
       batteryWhByDay[dayIndex] += batteryW * sampleHours;
+      if (batteryW > 0) {
+        batteryInWhByDay[dayIndex] += batteryW * sampleHours;
+      } else {
+        batteryOutWhByDay[dayIndex] += -batteryW * sampleHours;
+      }
       gridWhByDay[dayIndex] += gridW * sampleHours;
     }
 
     List<FlSpot> toSpots(List<double> values) {
       return List<FlSpot>.generate(
-          7, (index) => FlSpot(index.toDouble(), values[index]));
+          days, (index) => FlSpot(index.toDouble(), values[index]));
     }
 
     final result = {
       'pv': toSpots(pvWhByDay),
       'load': toSpots(loadWhByDay),
       'battery': toSpots(batteryWhByDay),
+      'batteryIn': toSpots(batteryInWhByDay),
+      'batteryOut': toSpots(batteryOutWhByDay),
       'grid': toSpots(gridWhByDay),
     };
     _logChartSummary('chart.parse week', result);

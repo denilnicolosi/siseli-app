@@ -681,5 +681,7 @@
   "flowLosses": "Losses",
   "flowLossesHint": "Power coming in (solar, AC input, battery) that does not reach the loads or the battery: inverter self-consumption and conversion losses.",
   "flowMismatch": "Reading mismatch",
-  "flowMismatchHint": "More power goes out than the readings show coming in: the values were sampled at slightly different moments."
+  "flowMismatchHint": "More power goes out than the readings show coming in: the values were sampled at slightly different moments.",
+  "batteryChargedTotal": "Battery charged",
+  "batteryDischargedTotal": "Battery discharged"
 }

@@ -1460,4 +1460,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get flowMismatchHint =>
       'Esce più potenza di quella che le letture mostrano in ingresso: i valori sono stati letti in istanti leggermente diversi.';
+
+  @override
+  String get batteryChargedTotal => 'Carica batteria';
+
+  @override
+  String get batteryDischargedTotal => 'Scarica batteria';
 }

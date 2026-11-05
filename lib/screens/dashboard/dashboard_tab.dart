@@ -17,6 +17,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/app_components.dart';
 import '../../widgets/energy_flow.dart';
 import '../../utils/chart_log.dart';
+import '../../utils/energy_totals.dart';
 import '../../utils/formatters.dart';
 
 part 'energy_flow_section.dart';

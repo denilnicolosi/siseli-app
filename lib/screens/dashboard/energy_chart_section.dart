@@ -28,6 +28,8 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
   List<FlSpot> _gridData = [];
   List<FlSpot> _forecastData = [];
   List<FlSpot> _socData = [];
+  List<FlSpot> _batteryInData = [];
+  List<FlSpot> _batteryOutData = [];
   Timer? _chartDebounce;
   Timer? _autoRefreshTimer;
   int _chartRequestSeq = 0;
@@ -87,6 +89,8 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       _gridData = [];
       _forecastData = [];
       _socData = [];
+      _batteryInData = [];
+      _batteryOutData = [];
     });
     LogService.log(
         '[chart] reset before fetch: range=$_selectedRange, date=${_currentDate.toIso8601String().substring(0, 10)}');
@@ -153,6 +157,8 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
           _batteryData = normalizeSpots(data['battery'] ?? []);
           _gridData = normalizeSpots(data['grid'] ?? []);
           _socData = normalizeSpots(data['soc'] ?? []);
+          _batteryInData = normalizeSpots(data['batteryIn'] ?? []);
+          _batteryOutData = normalizeSpots(data['batteryOut'] ?? []);
           _forecastData = forecastSpots;
           _isLoading = false;
           _isBackgroundRefreshing = false;
@@ -274,7 +280,8 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
 
   String getDateText() {
     if (_selectedRange == 0) {
-      return '${_currentDate.day.toString().padLeft(2, '0')}.${_currentDate.month.toString().padLeft(2, '0')}.${_currentDate.year}';
+      final weekday = formatBottomAxisLabelForWeekday(_currentDate.weekday);
+      return '$weekday ${_currentDate.day.toString().padLeft(2, '0')}.${_currentDate.month.toString().padLeft(2, '0')}.${_currentDate.year}';
     } else if (_selectedRange == 1) {
       final start = startOfWeek(_currentDate);
       final end = start.add(const Duration(days: 6));
@@ -283,6 +290,11 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       return '${_currentDate.month.toString().padLeft(2, '0')}.${_currentDate.year}';
     }
   }
+
+  /// Short weekday name ("Lun"...) for DateTime.weekday (1 = Monday).
+  String formatBottomAxisLabelForWeekday(int weekday) => formatBottomAxisLabel(
+      (weekday - 1).toDouble(), AppLocalizations.of(context)!,
+      forceWeek: true);
 
   DateTime startOfWeek(DateTime date) {
     final normalized = DateTime(date.year, date.month, date.day);
@@ -397,14 +409,18 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
               ],
             ),
             const SizedBox(height: AppTheme.spacingS),
-            Wrap(
-              spacing: AppTheme.spacingS,
-              runSpacing: AppTheme.spacingS,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                buildTimeSelector(l10n),
-                buildDateNavigator(),
-              ],
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppTheme.spacingS,
+                runSpacing: AppTheme.spacingS,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  buildTimeSelector(l10n),
+                  buildDateNavigator(),
+                ],
+              ),
             ),
             const SizedBox(height: AppTheme.spacingS),
             buildLegend(l10n),
@@ -433,6 +449,10 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                 ),
               ),
             ),
+            if (!_isLoading) ...[
+              const SizedBox(height: AppTheme.spacingS),
+              buildTotals(context, l10n),
+            ],
             if (_selectedRange == 0 || _showBattery) ...[
               const SizedBox(height: AppTheme.spacingXS),
               buildBatterySignHint(context),
@@ -447,6 +467,98 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
         ),
       ),
     );
+  }
+
+  EnergyTotals get _totals => _selectedRange == 0
+      ? EnergyTotals.fromPower(
+          pv: _productionData,
+          load: _consumptionData,
+          battery: _batteryData,
+          acIn: _gridData,
+        )
+      : EnergyTotals.fromDaily(
+          pv: _productionData,
+          load: _consumptionData,
+          batteryIn: _batteryInData,
+          batteryOut: _batteryOutData,
+          acIn: _gridData,
+        );
+
+  Widget buildTotals(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final totals = _totals;
+    final items = [
+      (l10n.production, totals.pvWh, AppTheme.pvColor, Icons.wb_sunny_rounded),
+      (l10n.consumption, totals.loadWh, AppTheme.loadColor, Icons.home_rounded),
+      (
+        l10n.batteryChargedTotal,
+        totals.batteryInWh,
+        AppTheme.batteryColor,
+        Icons.battery_charging_full_rounded
+      ),
+      (
+        l10n.batteryDischargedTotal,
+        totals.batteryOutWh,
+        AppTheme.batteryColor,
+        Icons.battery_3_bar_rounded
+      ),
+      (
+        l10n.acInput,
+        totals.acInWh,
+        AppTheme.gridColor,
+        Icons.electrical_services_rounded
+      ),
+    ];
+    return LayoutBuilder(builder: (context, constraints) {
+      const spacing = AppTheme.spacingXS;
+      final columns = constraints.maxWidth >= 700 ? 5 : 2;
+      final width = (constraints.maxWidth - (columns - 1) * spacing) / columns;
+      return Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: [
+          for (final (label, wh, color, icon) in items)
+            Container(
+              width: width,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacingS,
+                vertical: AppTheme.spacingXS,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHigh,
+                borderRadius:
+                    BorderRadius.circular(context.expressive.cornerSmall),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, size: 14, color: color),
+                      const SizedBox(width: AppTheme.spacingXS),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    wh == null ? '--' : Formatters.formatEnergy(wh),
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      );
+    });
   }
 
   /// Day view with only the battery series on: add the SOC % trend below.
@@ -512,6 +624,8 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                       maxY: 100,
                       lineTouchData: LineTouchData(
                         touchTooltipData: LineTouchTooltipData(
+                          fitInsideHorizontally: true,
+                          fitInsideVertically: true,
                           getTooltipItems: (spots) => spots
                               .map((s) => LineTooltipItem(
                                     '${formatBottomAxisLabel(s.x, l10n)}  ${s.y.toStringAsFixed(0)}%',
@@ -985,19 +1099,37 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
         maxY: maxY,
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipColor: (spot) =>
                 Theme.of(context).colorScheme.surfaceContainerHighest,
-            getTooltipItems: (spots) => spots
-                .map((spot) => LineTooltipItem(
-                      _selectedRange == 0
-                          ? Formatters.formatPower(spot.y)
-                          : Formatters.formatEnergy(spot.y),
-                      TextStyle(
-                        color: spot.bar.color,
-                        fontWeight: FontWeight.bold,
+            getTooltipItems: (spots) {
+              final timeStyle = TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              );
+              return [
+                for (var i = 0; i < spots.length; i++)
+                  LineTooltipItem(
+                    // HH:mm once, above the first value of the touched column.
+                    i == 0 && _selectedRange == 0
+                        ? '${formatHourOfDay(spots[i].x)}\n'
+                        : '',
+                    timeStyle,
+                    children: [
+                      TextSpan(
+                        text: _selectedRange == 0
+                            ? Formatters.formatPower(spots[i].y)
+                            : Formatters.formatEnergy(spots[i].y),
+                        style: TextStyle(
+                          color: spots[i].bar.color,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ))
-                .toList(),
+                    ],
+                  ),
+              ];
+            },
           ),
         ),
         titlesData: FlTitlesData(
@@ -1100,121 +1232,148 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       );
     }
 
-    final groups = <BarChartGroupData>[];
-    final start = minX.round();
-    final end = maxX.round();
+    return LayoutBuilder(builder: (context, constraints) {
+      final groups = <BarChartGroupData>[];
+      final start = minX.round();
+      final end = maxX.round();
+      // Fit every group in its slot: 30 month days x 4 series used to overlap
+      // the neighbouring days with fixed 5 px rods + 4 px gaps.
+      final groupCount = (end - start + 1).clamp(1, 31);
+      final slotWidth = (constraints.maxWidth - 52) / groupCount;
+      final barsSpace = slotWidth < 24 ? 1.0 : 4.0;
+      final rodWidth =
+          ((slotWidth * 0.75 - barsSpace * (series.length - 1)) / series.length)
+              .clamp(1.5, 8.0)
+              .toDouble();
 
-    for (var x = start; x <= end; x++) {
-      final rods = <BarChartRodData>[];
-      for (final s in series) {
-        final value = s.points[x] ?? 0.0;
-        rods.add(
-          BarChartRodData(
-            toY: value,
-            color: s.color,
-            width: (20 / series.length).clamp(3, 8).toDouble(),
-            borderRadius: BorderRadius.circular(2),
+      for (var x = start; x <= end; x++) {
+        final rods = <BarChartRodData>[];
+        for (final s in series) {
+          final value = s.points[x] ?? 0.0;
+          rods.add(
+            BarChartRodData(
+              toY: value,
+              color: s.color,
+              width: rodWidth,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          );
+        }
+        groups.add(
+          BarChartGroupData(
+            x: x,
+            barsSpace: barsSpace,
+            barRods: rods,
           ),
         );
       }
-      groups.add(
-        BarChartGroupData(
-          x: x,
-          barsSpace: 4,
-          barRods: rods,
-        ),
-      );
-    }
 
-    return BarChart(
-      BarChartData(
-        minY: minY,
-        maxY: maxY,
-        baselineY: 0,
-        barGroups: groups,
-        groupsSpace: 8,
-        titlesData: FlTitlesData(
-          show: true,
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 52,
-              interval: _computeLeftInterval(minY, maxY),
-              getTitlesWidget: (value, meta) {
-                if (value == meta.min || value == meta.max) {
-                  return const SizedBox.shrink();
-                }
-                return SideTitleWidget(
-                  meta: meta,
-                  child: Text(
-                    Formatters.formatAxisEnergy(value),
-                    style: Theme.of(context).textTheme.bodySmall,
+      return BarChart(
+        BarChartData(
+          minY: minY,
+          maxY: maxY,
+          baselineY: 0,
+          barGroups: groups,
+          groupsSpace: 8,
+          titlesData: FlTitlesData(
+            show: true,
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 52,
+                interval: _computeLeftInterval(minY, maxY),
+                getTitlesWidget: (value, meta) {
+                  if (value == meta.min || value == meta.max) {
+                    return const SizedBox.shrink();
+                  }
+                  return SideTitleWidget(
+                    meta: meta,
+                    child: Text(
+                      Formatters.formatAxisEnergy(value),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval:
+                    _selectedRange == 1 ? 1 : ((maxX - minX) > 20 ? 5 : 2),
+                getTitlesWidget: (value, meta) {
+                  // Bar charts label every group and ignore `interval`:
+                  // in the month view keep day 1 and every 5th day only.
+                  final day = value.round();
+                  if (_selectedRange == 2 && day != 1 && day % 5 != 0) {
+                    return const SizedBox.shrink();
+                  }
+                  return SideTitleWidget(
+                    meta: meta,
+                    space: 10,
+                    child: Text(
+                      formatBottomAxisLabel(
+                          value, AppLocalizations.of(context)!),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.18),
+              strokeWidth: 0.8,
+            ),
+          ),
+          rangeAnnotations: futureStartX == null
+              ? const RangeAnnotations()
+              : RangeAnnotations(
+                  verticalRangeAnnotations: [
+                    VerticalRangeAnnotation(
+                      x1: futureStartX,
+                      x2: maxX,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.05),
+                    ),
+                  ],
+                ),
+          borderData: FlBorderData(show: false),
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              fitInsideHorizontally: true,
+              fitInsideVertically: true,
+              getTooltipColor: (_) =>
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                final name = series[rodIndex].name;
+                final when = _selectedRange == 1
+                    ? formatBottomAxisLabel(
+                        group.x.toDouble(), AppLocalizations.of(context)!)
+                    : '${group.x}';
+                return BarTooltipItem(
+                  '${rodIndex == 0 ? '$when\n' : ''}$name\n${Formatters.formatEnergy(rod.toY)}',
+                  TextStyle(
+                    color: rod.color,
+                    fontWeight: FontWeight.bold,
                   ),
                 );
               },
             ),
           ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              interval: _selectedRange == 1 ? 1 : ((maxX - minX) > 20 ? 5 : 2),
-              getTitlesWidget: (value, meta) => SideTitleWidget(
-                meta: meta,
-                space: 10,
-                child: Text(
-                  formatBottomAxisLabel(value, AppLocalizations.of(context)!),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            ),
-          ),
         ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (value) => FlLine(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.18),
-            strokeWidth: 0.8,
-          ),
-        ),
-        rangeAnnotations: futureStartX == null
-            ? const RangeAnnotations()
-            : RangeAnnotations(
-                verticalRangeAnnotations: [
-                  VerticalRangeAnnotation(
-                    x1: futureStartX,
-                    x2: maxX,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.05),
-                  ),
-                ],
-              ),
-        borderData: FlBorderData(show: false),
-        barTouchData: BarTouchData(
-          enabled: true,
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) =>
-                Theme.of(context).colorScheme.surfaceContainerHighest,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final name = series[rodIndex].name;
-              return BarTooltipItem(
-                '$name\n${Formatters.formatEnergy(rod.toY)}',
-                TextStyle(
-                  color: rod.color,
-                  fontWeight: FontWeight.bold,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+      );
+    });
   }
 
   List<_BarSeriesConfig> buildBarSeries(AppLocalizations l10n) {
@@ -1317,15 +1476,16 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     return 1;
   }
 
-  String formatBottomAxisLabel(double value, AppLocalizations l10n) {
+  String formatBottomAxisLabel(double value, AppLocalizations l10n,
+      {bool forceWeek = false}) {
     final rounded = value.round();
     if ((value - rounded).abs() > 0.01) return '';
 
-    if (_selectedRange == 0) {
+    if (_selectedRange == 0 && !forceWeek) {
       return '$rounded:00';
     }
 
-    if (_selectedRange == 1) {
+    if (_selectedRange == 1 || forceWeek) {
       const weekKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
       if (rounded < 0 || rounded >= weekKeys.length) return '';
       switch (weekKeys[rounded]) {

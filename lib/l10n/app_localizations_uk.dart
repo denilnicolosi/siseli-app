@@ -1448,4 +1448,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get flowMismatchHint =>
       'Вихідна потужність більша за вхідну за показами: значення зчитано в трохи різні моменти.';
+
+  @override
+  String get batteryChargedTotal => 'Заряд АКБ';
+
+  @override
+  String get batteryDischargedTotal => 'Розряд АКБ';
 }

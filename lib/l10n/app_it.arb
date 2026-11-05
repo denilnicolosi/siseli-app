@@ -422,5 +422,7 @@
   "flowLosses": "Perdite",
   "flowLossesHint": "Potenza in ingresso (sole, ingresso AC, batteria) che non arriva ai carichi né alla batteria: consumo proprio dell'inverter e perdite di conversione.",
   "flowMismatch": "Scarto misure",
-  "flowMismatchHint": "Esce più potenza di quella che le letture mostrano in ingresso: i valori sono stati letti in istanti leggermente diversi."
+  "flowMismatchHint": "Esce più potenza di quella che le letture mostrano in ingresso: i valori sono stati letti in istanti leggermente diversi.",
+  "batteryChargedTotal": "Carica batteria",
+  "batteryDischargedTotal": "Scarica batteria"
 }
