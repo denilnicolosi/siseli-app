@@ -13,18 +13,20 @@ class Formatters {
     return '${wattHours.toStringAsFixed(0)} Wh';
   }
 
-  /// Compact label for chart Y-axis (no units, shorter text to prevent overlap).
-  static String formatAxisPower(double watts) {
-    if (watts == 0) return '0';
-    if (watts.abs() >= 1000) {
-      final k = watts / 1000;
-      return k == k.roundToDouble()
-          ? '${k.toInt()}k'
-          : '${k.toStringAsFixed(1)}k';
-    }
-    return watts.toStringAsFixed(0);
-  }
+  /// Compact chart Y-axis label with unit: "500 W", "1.5 kW".
+  static String formatAxisPower(double watts) => _axis(watts, 'W');
 
-  /// Compact label for chart Y-axis energy (no units).
-  static String formatAxisEnergy(double wh) => formatAxisPower(wh);
+  /// Compact chart Y-axis label with unit: "500 Wh", "2 kWh".
+  static String formatAxisEnergy(double wh) => _axis(wh, 'Wh');
+
+  static String _axis(double value, String unit) {
+    if (value == 0) return '0';
+    if (value.abs() >= 1000) {
+      final k = value / 1000;
+      final n =
+          k == k.roundToDouble() ? k.toInt().toString() : k.toStringAsFixed(1);
+      return '$n k$unit';
+    }
+    return '${value.toStringAsFixed(0)} $unit';
+  }
 }

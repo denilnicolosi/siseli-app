@@ -39,7 +39,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get data => 'Dati';
 
   @override
-  String get energyOverview => 'Panoramica energia';
+  String get energyOverview => 'Storico energia';
 
   @override
   String get production => 'Produzione';
@@ -613,9 +613,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get forecastNextDays => 'Previsione solare per i prossimi giorni';
 
   @override
-  String get forecastPeak => 'Picco';
-
-  @override
   String get forecastUnavailable =>
       'Dati di previsione temporaneamente non disponibili';
 
@@ -627,10 +624,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get refreshChart => 'Aggiorna grafico';
-
-  @override
-  String get batterySignHint =>
-      'Batteria: \'+\' significa carica, \'-\' significa scarica.';
 
   @override
   String get chartNoDataTitle => 'Ancora nessun dato';
@@ -763,7 +756,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String forecastBasis(String kwp) {
-    return 'Stima per $kwp kWp di pannelli dalla radiazione solare Open-Meteo';
+    return 'Stima per $kwp kWp di pannelli piani dalla radiazione solare Open-Meteo';
   }
 
   @override

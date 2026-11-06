@@ -12,7 +12,7 @@ This is a Flutter desktop application for monitoring and controlling PowMr/Smart
 
 ## Key Services & Patterns
 - **InverterService**: API client with custom headers (appId, nonce, MD5 sign). Endpoints: `/apis/login/account`, `/apis/station/list`, `/apis/device/realTime`, `/apis/device/control`
-- **WeatherService**: Fetches solar radiation forecasts from Open-Meteo for the site `lat`/`lon` (required), sized on `pvTotalCapacityW`; learns radiation→PV bins from historical PV data (samples at SOC ≥ 95% are skipped because the MPPT curtails PV when the battery is full)
+- **WeatherService**: Fetches solar radiation forecasts from Open-Meteo for the site `lat`/`lon` (required), sized on `pvTotalCapacityW`; physical model for flat panels: GHI/1000 × capacity × 0.80, clamped to capacity (hourly values are the mean of the preceding hour)
 - **LogService**: Centralized logging with 1000-entry buffer, used throughout app instead of print/debugPrint
 - **SecureStorageService**: Wraps `flutter_secure_storage` for credential storage (Windows: DPAPI). Use `SecureStorageService.savePassword/getPassword/deletePassword` — do NOT store secrets in `SharedPreferences`. The access token is not persisted (`deleteToken` only cleans up older installs)
 - **UpdateService**: Checks GitHub Releases API (`denilnicolosi/siseli-app`) via `dio` (the only HTTP client in the app), downloads installer (`.exe`/`.msi`/`.msix` priority order) to temp dir, and launches it via `Process.run`/`Process.start` with `runInShell: false`

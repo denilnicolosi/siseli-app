@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:window_manager/window_manager.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -22,6 +23,7 @@ import '../../utils/formatters.dart';
 
 part 'energy_flow_section.dart';
 part 'energy_chart_section.dart';
+part 'solar_forecast_section.dart';
 
 class DashboardTab extends StatelessWidget {
   final AppStateProvider provider;
@@ -35,6 +37,7 @@ class DashboardTab extends StatelessWidget {
       RepaintBoundary(
           child: _EnergyFlowSection(provider: provider, data: data)),
       RepaintBoundary(child: _EnergyChartSection(provider: provider)),
+      RepaintBoundary(child: _SolarForecastSection(provider: provider)),
     ];
 
     final isCompact = MediaQuery.sizeOf(context).width < 600;
@@ -43,7 +46,7 @@ class DashboardTab extends StatelessWidget {
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyR, control: true): () {
           if (!provider.isDataLoading) {
-            unawaited(provider.fetchData());
+            unawaited(provider.refreshAll());
           }
         },
       },
@@ -51,7 +54,7 @@ class DashboardTab extends StatelessWidget {
         autofocus: true,
         child: RefreshIndicator(
           color: Theme.of(context).colorScheme.primary,
-          onRefresh: provider.fetchData,
+          onRefresh: provider.refreshAll,
           child: ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(
               parent: ClampingScrollPhysics(),

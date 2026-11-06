@@ -65,8 +65,6 @@ class AppStateProvider extends ChangeNotifier {
   Map<String, double> hourlyForecast = {};
   Map<int, double> avgHourlyConsumptionStats = {};
 
-  Map<String, double> historicalPvData = {};
-
   ThemeMode themeMode = ThemeMode.dark;
   String lang = 'it';
 
@@ -263,18 +261,8 @@ class AppStateProvider extends ChangeNotifier {
     savedEmail = prefs.getString('saved_email');
     _skippedUpdateVersion = prefs.getString(_skippedUpdateVersionKey);
 
-    // Load historical PV data
-    final historicalDataStr = prefs.getString('historical_pv_data');
-    if (historicalDataStr != null) {
-      try {
-        final decoded = json.decode(historicalDataStr) as Map<String, dynamic>;
-        historicalPvData = decoded
-            .map((key, value) => MapEntry(key, (value as num).toDouble()));
-      } catch (e) {
-        LogService.log('Error loading historical PV data: $e');
-        historicalPvData = {};
-      }
-    }
+    // The forecast no longer learns from PV history: drop the old samples.
+    await prefs.remove('historical_pv_data');
 
     final consumptionProfileStr = prefs.getString('consumption_profile_ewma');
     if (consumptionProfileStr != null && consumptionProfileStr.isNotEmpty) {
@@ -488,8 +476,6 @@ class AppStateProvider extends ChangeNotifier {
       lat: siteLatitude,
       lon: siteLongitude,
       pvCapacityW: pvTotalCapacityW,
-      efficiency: 0.85,
-      historicalPvData: historicalPvData,
     );
     hourlyForecast = dynamicForecastMap;
     notifyListeners();
@@ -515,40 +501,6 @@ class AppStateProvider extends ChangeNotifier {
       (k, v) => MapEntry(k.toString(), v),
     );
     await prefs.setString('consumption_profile_ewma', json.encode(encoded));
-  }
-
-  /// Off-grid: with the battery (nearly) full the MPPT throttles PV down to
-  /// the load, so those samples say nothing about what the panels could make.
-  static const double _pvCurtailmentSoc = 95.0;
-
-  void _recordPvHistory(InverterData currentData) async {
-    if (currentData.batterySoc >= _pvCurtailmentSoc) return;
-    try {
-      final now = DateTime.now();
-      final timeKey =
-          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}T${now.hour.toString().padLeft(2, '0')}:00";
-
-      historicalPvData[timeKey] = currentData.pvPower;
-
-      // Limit historical data to last 14 days to prevent unlimited growth
-      final cutoffDate = now.subtract(const Duration(days: 14));
-      historicalPvData.removeWhere((key, value) {
-        try {
-          final date = DateTime.parse(key.replaceAll(' ', 'T'));
-          return date.isBefore(cutoffDate);
-        } catch (_) {
-          return true; // Remove invalid keys
-        }
-      });
-
-      // Save to SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-          'historical_pv_data', json.encode(historicalPvData));
-    } catch (e, stack) {
-      // БЕЗПЕКА: Правильна обробка помилок вместо fire-and-forget
-      LogService.log('❌ Error recording PV history', error: e, stack: stack);
-    }
   }
 
   void handleVersionClick() async {
@@ -858,6 +810,17 @@ class AppStateProvider extends ChangeNotifier {
         l10n.batteryLevel(data?.batterySoc.toStringAsFixed(0) ?? '--'));
   }
 
+  /// Bumped by every user-requested refresh; the history and forecast
+  /// sections reload when it changes.
+  int manualRefreshCount = 0;
+
+  /// User refresh (button, pull-to-refresh, Ctrl+R): realtime data plus the
+  /// history chart and the forecast.
+  Future<void> refreshAll() {
+    manualRefreshCount++;
+    return fetchData();
+  }
+
   Future<void> fetchData() async {
     if (isDataLoading) return;
 
@@ -924,7 +887,6 @@ class AppStateProvider extends ChangeNotifier {
       }
       data = newData;
       _cachedSnapshotData = newData;
-      _recordPvHistory(newData);
       avgHourlyConsumptionStats = demandForecastService.updateEwmaProfile(
         avgHourlyConsumptionStats,
         timestamp: DateTime.now(),

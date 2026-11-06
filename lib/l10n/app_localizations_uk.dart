@@ -39,7 +39,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get data => 'Дані';
 
   @override
-  String get energyOverview => 'Огляд енергії';
+  String get energyOverview => 'Історія енергії';
 
   @override
   String get production => 'Виробництво';
@@ -608,9 +608,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get forecastNextDays => 'Прогноз сонячної генерації на наступні дні';
 
   @override
-  String get forecastPeak => 'Пік';
-
-  @override
   String get forecastUnavailable => 'Дані прогнозу тимчасово недоступні';
 
   @override
@@ -621,10 +618,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get refreshChart => 'Оновити графік';
-
-  @override
-  String get batterySignHint =>
-      'АКБ: \'+\' означає заряд, \'-\' означає розряд.';
 
   @override
   String get chartNoDataTitle => 'Нема даних';
@@ -758,7 +751,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String forecastBasis(String kwp) {
-    return 'Оцінка для $kwp кВтп панелей за сонячною радіацією Open-Meteo';
+    return 'Оцінка для $kwp кВтп горизонтальних панелей за сонячною радіацією Open-Meteo';
   }
 
   @override

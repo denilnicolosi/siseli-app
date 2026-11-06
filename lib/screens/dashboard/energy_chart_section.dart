@@ -35,10 +35,23 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
   int _chartRequestSeq = 0;
   String? _lastRenderLogSignature;
   DateTime? _lastChartRefreshedAt;
-  List<DailySolarForecast> _multiDayForecast = const [];
-  bool _isDailyForecastLoading = true;
+  late int _seenManualRefresh = widget.provider.manualRefreshCount;
 
   static const Duration _autoRefreshInterval = Duration(minutes: 5);
+
+  @override
+  void didUpdateWidget(covariant _EnergyChartSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The app-wide refresh (dashboard button, pull-to-refresh) reloads the
+    // history too.
+    if (widget.provider.manualRefreshCount != _seenManualRefresh) {
+      _seenManualRefresh = widget.provider.manualRefreshCount;
+      // After this frame: the fetch calls setState right away.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fetchChartData(background: true);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -118,8 +131,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
             lat: widget.provider.siteLatitude,
             lon: widget.provider.siteLongitude,
             pvCapacityW: widget.provider.pvTotalCapacityW,
-            efficiency: 0.85,
-            historicalPvData: widget.provider.historicalPvData,
             daysAhead: 16,
           )
           .whenComplete(dailySw.stop);
@@ -129,8 +140,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                   lat: widget.provider.siteLatitude,
                   lon: widget.provider.siteLongitude,
                   pvCapacityW: widget.provider.pvTotalCapacityW,
-                  efficiency: 0.85,
-                  historicalPvData: widget.provider.historicalPvData,
                   targetDate: _currentDate,
                 )
               : Future<Map<String, double>>.value(const <String, double>{}))
@@ -163,8 +172,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
           _isLoading = false;
           _isBackgroundRefreshing = false;
           _lastChartRefreshedAt = DateTime.now();
-          _multiDayForecast = dailyForecast;
-          _isDailyForecastLoading = false;
         });
 
         logChartUiSummary('chart.ui fetched');
@@ -181,7 +188,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       setState(() {
         _isLoading = false;
         _isBackgroundRefreshing = false;
-        _isDailyForecastLoading = false;
       });
     }
   }
@@ -280,8 +286,9 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
 
   String getDateText() {
     if (_selectedRange == 0) {
-      final weekday = formatBottomAxisLabelForWeekday(_currentDate.weekday);
-      return '$weekday ${_currentDate.day.toString().padLeft(2, '0')}.${_currentDate.month.toString().padLeft(2, '0')}.${_currentDate.year}';
+      return _capitalize(DateFormat(
+              'EEEE d MMMM yyyy', Localizations.localeOf(context).toString())
+          .format(_currentDate));
     } else if (_selectedRange == 1) {
       final start = startOfWeek(_currentDate);
       final end = start.add(const Duration(days: 6));
@@ -290,11 +297,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       return '${_currentDate.month.toString().padLeft(2, '0')}.${_currentDate.year}';
     }
   }
-
-  /// Short weekday name ("Lun"...) for DateTime.weekday (1 = Monday).
-  String formatBottomAxisLabelForWeekday(int weekday) => formatBottomAxisLabel(
-      (weekday - 1).toDouble(), AppLocalizations.of(context)!,
-      forceWeek: true);
 
   DateTime startOfWeek(DateTime date) {
     final normalized = DateTime(date.year, date.month, date.day);
@@ -352,24 +354,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     final expressive = context.expressive;
     final isCompact = MediaQuery.sizeOf(context).width < 600;
 
-    final refreshButton = IconButton(
-      visualDensity: VisualDensity.compact,
-      onPressed: _isBackgroundRefreshing
-          ? null
-          : () => _fetchChartData(background: true),
-      tooltip: l10n.refreshChart,
-      icon: _isBackgroundRefreshing
-          ? SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: theme.colorScheme.primary,
-              ),
-            )
-          : const Icon(Icons.refresh_rounded, size: 20),
-    );
-
     return AppCard(
       borderRadius: expressive.cornerLarge,
       enableBlur: false,
@@ -399,7 +383,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                     refreshedAt: _lastChartRefreshedAt!,
                     isRefreshing: _isBackgroundRefreshing,
                   ),
-                refreshButton,
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   onPressed: _isLoading ? null : _openFullscreen,
@@ -409,19 +392,9 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
               ],
             ),
             const SizedBox(height: AppTheme.spacingS),
-            SizedBox(
-              width: double.infinity,
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: AppTheme.spacingS,
-                runSpacing: AppTheme.spacingS,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  buildTimeSelector(l10n),
-                  buildDateNavigator(),
-                ],
-              ),
-            ),
+            buildTimeSelector(l10n),
+            const SizedBox(height: AppTheme.spacingS),
+            buildDateNavigator(l10n),
             const SizedBox(height: AppTheme.spacingS),
             buildLegend(l10n),
             const SizedBox(height: AppTheme.spacingS),
@@ -453,16 +426,10 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
               const SizedBox(height: AppTheme.spacingS),
               buildTotals(context, l10n),
             ],
-            if (_selectedRange == 0 || _showBattery) ...[
-              const SizedBox(height: AppTheme.spacingXS),
-              buildBatterySignHint(context),
-            ],
             if (_showSocChart) ...[
               const SizedBox(height: AppTheme.spacingS),
               buildSocChart(context, l10n),
             ],
-            const SizedBox(height: AppTheme.spacingM),
-            buildMultiDayForecast(context, l10n),
           ],
         ),
       ),
@@ -484,6 +451,13 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
           acIn: _gridData,
         );
 
+  /// Off-grid: the AC input (generator) is idle most days, so its legend
+  /// chip and total only show when the period has some AC input.
+  bool get _hasAcInput => _gridData.any((s) => s.y.abs() >= 1);
+
+  /// AC input series visible: toggled on and there is something to draw.
+  bool get _gridOn => _showGrid && _hasAcInput;
+
   Widget buildTotals(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final totals = _totals;
@@ -502,12 +476,13 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
         AppTheme.batteryColor,
         Icons.battery_3_bar_rounded
       ),
-      (
-        l10n.acInput,
-        totals.acInWh,
-        AppTheme.gridColor,
-        Icons.electrical_services_rounded
-      ),
+      if (_hasAcInput)
+        (
+          l10n.acInput,
+          totals.acInWh,
+          AppTheme.gridColor,
+          Icons.electrical_services_rounded
+        ),
     ];
     return LayoutBuilder(builder: (context, constraints) {
       const spacing = AppTheme.spacingXS;
@@ -568,7 +543,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       _showBattery &&
       !_showProduction &&
       !_showConsumption &&
-      !_showGrid;
+      !_gridOn;
 
   ({List<FlSpot> spots, DateTime depletionAt})? _buildSocForecast() {
     final now = DateTime.now();
@@ -789,174 +764,66 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     );
   }
 
-  Widget buildMultiDayForecast(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final expressive = context.expressive;
-    if (_isDailyForecastLoading && _multiDayForecast.isEmpty) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-    }
-    if (_multiDayForecast.isEmpty) {
-      return AppEmptyState(
-        title: l10n.forecastNextDays,
-        message: l10n.forecastUnavailable,
-        icon: Icons.wb_cloudy_outlined,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.wb_sunny_rounded,
-                size: 18, color: theme.colorScheme.tertiary),
-            const SizedBox(width: AppTheme.spacingS),
-            Expanded(
-              child: Text(
-                l10n.forecastNextDays,
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 2, bottom: AppTheme.spacingS),
-          child: Text(
-            l10n.forecastBasis(
-                (widget.provider.pvTotalCapacityW / 1000).toStringAsFixed(1)),
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            const spacing = AppTheme.spacingS;
-            final width = constraints.maxWidth;
-            final columns = width >= 980
-                ? 4
-                : width >= 600
-                    ? 3
-                    : 2;
-            final cardWidth = (width - (columns - 1) * spacing) / columns;
-            final previewDays =
-                _multiDayForecast.take(columns == 4 ? 8 : 6).toList();
-
-            return Wrap(
-              spacing: spacing,
-              runSpacing: spacing,
-              children: [
-                for (final day in previewDays)
-                  SizedBox(
-                    width: cardWidth,
-                    child: AppCard(
-                      borderRadius: expressive.cornerMedium,
-                      padding: const EdgeInsets.all(AppTheme.spacingS),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            dayLabel(day.date, l10n),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  Formatters.formatEnergy(day.energyWh),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                              WeatherIcon(code: day.weatherCode),
-                            ],
-                          ),
-                          Text(
-                            '${l10n.forecastPeak}: ${Formatters.formatPower(day.peakPowerW)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  String dayLabel(DateTime date, AppLocalizations l10n) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final current = DateTime(date.year, date.month, date.day);
-    if (current == today) return l10n.today;
-    const weekKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    final key = weekKeys[current.weekday - 1];
-    final weekLabel = weekLabel0(key, l10n);
-    return '$weekLabel ${current.day.toString().padLeft(2, '0')}.${current.month.toString().padLeft(2, '0')}';
-  }
-
-  String weekLabel0(String key, AppLocalizations l10n) {
-    switch (key) {
-      case 'mon':
-        return l10n.mon;
-      case 'tue':
-        return l10n.tue;
-      case 'wed':
-        return l10n.wed;
-      case 'thu':
-        return l10n.thu;
-      case 'fri':
-        return l10n.fri;
-      case 'sat':
-        return l10n.sat;
-      case 'sun':
-        return l10n.sun;
-      default:
-        return '';
-    }
-  }
+  /// Shared height of the range selector and the date bar below it.
+  static const double _selectorHeight = 36;
 
   Widget buildTimeSelector(AppLocalizations l10n) {
     final expressive = context.expressive;
-    return SegmentedButton<int>(
-      showSelectedIcon: false,
-      style: ButtonStyle(
-        visualDensity: VisualDensity.compact,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(expressive.cornerMedium),
+    // scaleDown: "Settimana" shrinks instead of wrapping on narrow phones.
+    Widget label(String text) => FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(text, maxLines: 1, softWrap: false),
+        );
+    return SizedBox(
+      width: double.infinity,
+      height: _selectorHeight,
+      child: SegmentedButton<int>(
+        showSelectedIcon: false,
+        style: ButtonStyle(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: AppTheme.spacingXS)),
+          textStyle:
+              WidgetStatePropertyAll(Theme.of(context).textTheme.labelLarge),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(expressive.cornerMedium),
+            ),
           ),
         ),
+        segments: [
+          ButtonSegment<int>(value: 0, label: label(l10n.day)),
+          ButtonSegment<int>(value: 1, label: label(l10n.week)),
+          ButtonSegment<int>(value: 2, label: label(l10n.month)),
+        ],
+        selected: {_selectedRange},
+        onSelectionChanged: (selected) {
+          final next = selected.first;
+          if (next == _selectedRange) return;
+          setState(() => _selectedRange = next);
+          _startRangeLoadingState();
+          _scheduleFetchChartData();
+        },
       ),
-      segments: [
-        ButtonSegment<int>(value: 0, label: Text(l10n.day)),
-        ButtonSegment<int>(value: 1, label: Text(l10n.week)),
-        ButtonSegment<int>(value: 2, label: Text(l10n.month)),
-      ],
-      selected: {_selectedRange},
-      onSelectionChanged: (selected) {
-        final next = selected.first;
-        if (next == _selectedRange) return;
-        setState(() => _selectedRange = next);
-        _startRangeLoadingState();
-        _scheduleFetchChartData();
-      },
     );
   }
 
-  Widget buildDateNavigator() {
+  bool get _isShowingToday {
+    final now = DateTime.now();
+    return switch (_selectedRange) {
+      0 => DateUtils.isSameDay(_currentDate, now),
+      1 => startOfWeek(_currentDate) == startOfWeek(now),
+      _ => DateUtils.isSameMonth(_currentDate, now),
+    };
+  }
+
+  void _goToToday() {
+    setState(() => _currentDate = DateTime.now());
+    _startRangeLoadingState();
+    _scheduleFetchChartData();
+  }
+
+  Widget buildDateNavigator(AppLocalizations l10n) {
     final theme = Theme.of(context);
     final expressive = context.expressive;
     final now = DateTime.now();
@@ -975,34 +842,61 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
             ? currentWeek.isBefore(maxWeek)
             : currentMonth.isBefore(maxMonth);
 
-    return AppCard(
-      borderRadius: expressive.cornerMedium,
-      enableBlur: false,
-      backgroundColor: theme.colorScheme.surfaceContainerHigh,
-      padding: EdgeInsets.zero,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () => changeDate(-1),
-          ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 96),
-            child: Text(
-              getDateText(),
-              style: theme.textTheme.labelLarge,
-              textAlign: TextAlign.center,
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: _selectorHeight,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(expressive.cornerMedium),
+              border: Border.all(color: theme.colorScheme.outline),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  visualDensity:
+                      const VisualDensity(horizontal: -2, vertical: -4),
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () => changeDate(-1),
+                ),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      getDateText(),
+                      maxLines: 1,
+                      style: theme.textTheme.labelLarge,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  visualDensity:
+                      const VisualDensity(horizontal: -2, vertical: -4),
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: canGoForward ? () => changeDate(1) : null,
+                ),
+              ],
             ),
           ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.chevron_right),
-            onPressed: canGoForward ? () => changeDate(1) : null,
+        ),
+        const SizedBox(width: AppTheme.spacingS),
+        SizedBox(
+          height: _selectorHeight,
+          child: FilledButton.tonal(
+            onPressed: _isShowingToday ? null : _goToToday,
+            style: FilledButton.styleFrom(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppTheme.spacingM),
+              textStyle: theme.textTheme.labelLarge,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(expressive.cornerMedium),
+              ),
+            ),
+            child: Text(l10n.today),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1038,13 +932,14 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
           isActive: _showBattery,
           onTap: () => toggle(() => _showBattery = !_showBattery),
         ),
-        _buildLegendChip(
-          label: l10n.acInput,
-          color: AppTheme.gridColor,
-          icon: Icons.electrical_services_rounded,
-          isActive: _showGrid,
-          onTap: () => toggle(() => _showGrid = !_showGrid),
-        ),
+        if (_hasAcInput)
+          _buildLegendChip(
+            label: l10n.acInput,
+            color: AppTheme.gridColor,
+            icon: Icons.electrical_services_rounded,
+            isActive: _showGrid,
+            onTap: () => toggle(() => _showGrid = !_showGrid),
+          ),
         _buildLegendChip(
           label: l10n.forecast,
           color: _forecastSeriesColor,
@@ -1097,15 +992,6 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     );
   }
 
-  Widget buildBatterySignHint(BuildContext context) {
-    final theme = Theme.of(context);
-    return Text(
-      AppLocalizations.of(context)!.batterySignHint,
-      style: theme.textTheme.labelSmall
-          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-    );
-  }
-
   Widget buildChart(BuildContext context) {
     final minX = getMinX();
     final maxX = getMaxX();
@@ -1130,7 +1016,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
 
     // One series on: mark its peak (and, for the battery, the deepest
     // discharge). With several series the labels would pile up.
-    final single = [_showProduction, _showConsumption, _showBattery, _showGrid]
+    final single = [_showProduction, _showConsumption, _showBattery, _gridOn]
             .where((on) => on)
             .length ==
         1;
@@ -1157,7 +1043,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     if (_showProduction) addSeries(_productionData, AppTheme.pvColor);
     if (_showConsumption) addSeries(_consumptionData, AppTheme.loadColor);
     if (_showBattery) addSeries(_batteryData, AppTheme.batteryColor);
-    if (_showGrid) addSeries(_gridData, AppTheme.gridColor);
+    if (_gridOn) addSeries(_gridData, AppTheme.gridColor);
 
     if (_showForecast && _forecastData.isNotEmpty && _selectedRange == 0) {
       lines.add(LineChartBarData(
@@ -1232,7 +1118,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 52,
+              reservedSize: 60,
               interval: _computeLeftInterval(minY, maxY),
               getTitlesWidget: (value, meta) {
                 if (value == meta.min || value == meta.max) {
@@ -1357,7 +1243,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       // Fit every group in its slot: 30 month days x 4 series used to overlap
       // the neighbouring days with fixed 5 px rods + 4 px gaps.
       final groupCount = (end - start + 1).clamp(1, 31);
-      final slotWidth = (constraints.maxWidth - 52) / groupCount;
+      final slotWidth = (constraints.maxWidth - 60) / groupCount;
       final barsSpace = slotWidth < 24 ? 1.0 : 4.0;
       final rodWidth =
           ((slotWidth * 0.75 - barsSpace * (series.length - 1)) / series.length)
@@ -1402,7 +1288,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 52,
+                reservedSize: 60,
                 interval: _computeLeftInterval(minY, maxY),
                 getTitlesWidget: (value, meta) {
                   if (value == meta.min || value == meta.max) {
@@ -1526,7 +1412,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
         points: toMap(_batteryData),
       ));
     }
-    if (_showGrid && _gridData.isNotEmpty) {
+    if (_gridOn) {
       result.add(_BarSeriesConfig(
         name: l10n.acInput,
         color: AppTheme.gridColor,
@@ -1599,21 +1485,23 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     return lastDay.toDouble();
   }
 
+  static String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
   double getMinX() {
     if (_selectedRange == 0 || _selectedRange == 1) return 0;
     return 1;
   }
 
-  String formatBottomAxisLabel(double value, AppLocalizations l10n,
-      {bool forceWeek = false}) {
+  String formatBottomAxisLabel(double value, AppLocalizations l10n) {
     final rounded = value.round();
     if ((value - rounded).abs() > 0.01) return '';
 
-    if (_selectedRange == 0 && !forceWeek) {
+    if (_selectedRange == 0) {
       return '$rounded:00';
     }
 
-    if (_selectedRange == 1 || forceWeek) {
+    if (_selectedRange == 1) {
       const weekKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
       if (rounded < 0 || rounded >= weekKeys.length) return '';
       switch (weekKeys[rounded]) {
@@ -1667,7 +1555,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     if (_showProduction) all.addAll(_productionData);
     if (_showConsumption) all.addAll(_consumptionData);
     if (_showBattery) all.addAll(_batteryData);
-    if (_showGrid) all.addAll(_gridData);
+    if (_gridOn) all.addAll(_gridData);
     if (_showForecast) all.addAll(_forecastData);
     return all;
   }

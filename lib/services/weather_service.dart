@@ -1,55 +1,13 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'log_service.dart';
 
-// Бін радіації зі статистикою
-class _RadiationBin {
-  final List<double> _values = [];
-
-  void add(double value) => _values.add(value);
-  int get count => _values.length;
-
-  double get average =>
-      _values.isEmpty ? 0 : _values.reduce((a, b) => a + b) / _values.length;
-
-  // Медіана стійкіша до аномальних днів
-  double get median {
-    if (_values.isEmpty) return 0;
-    final sorted = List<double>.from(_values)..sort();
-    final mid = sorted.length ~/ 2;
-    return sorted.length.isOdd
-        ? sorted[mid]
-        : (sorted[mid - 1] + sorted[mid]) / 2;
-  }
-
-  // Стандартне відхилення для виявлення аномалій
-  double get stdDev {
-    if (_values.length < 2) return 0;
-    final avg = average;
-    final variance =
-        _values.map((v) => pow(v - avg, 2).toDouble()).reduce((a, b) => a + b) /
-            _values.length;
-    return sqrt(variance);
-  }
-
-  /// Повертає true якщо значення є аномальним (виходить за 2σ від середнього)
-  bool isAnomaly(double value) {
-    if (_values.length < 4) return false; // Замало даних для статистики
-    final avg = average;
-    final sd = stdDev;
-    if (sd < 1.0) return false; // Занадто мала дисперсія
-    return (value - avg).abs() > 2.0 * sd;
-  }
-}
-
 class DailySolarForecast {
   final DateTime date;
   final double energyWh;
-  final double peakPowerW;
 
   /// Open-Meteo daily WMO weather code (0 clear … 99 thunderstorm), null
   /// when the payload has none.
@@ -58,7 +16,6 @@ class DailySolarForecast {
   const DailySolarForecast({
     required this.date,
     required this.energyWh,
-    required this.peakPowerW,
     this.weatherCode,
   });
 }
@@ -154,7 +111,7 @@ class WeatherService {
     _lastRequestTime = DateTime.now();
   }
 
-  double? _toDoubleOrNull(dynamic value) {
+  static double? _toDoubleOrNull(dynamic value) {
     if (value == null) return null;
     if (value is num) return value.toDouble();
     return double.tryParse(value.toString());
@@ -222,161 +179,36 @@ class WeatherService {
     return null;
   }
 
-  Map<int, _RadiationBin>? _buildLookupOrNull({
-    required Map<String, double> historicalPvData,
-    required List<String> times,
-    required List<dynamic> radiationList,
-  }) {
-    final totalHistoricalPoints = historicalPvData.length;
-    if (totalHistoricalPoints < 8) {
-      LogService.log('ℹ️ Мало історичних даних ($totalHistoricalPoints точок). '
-          'Використовуємо формульний прогноз.');
-      return null;
-    }
+  // ─────────────────────────────────────────────────────────
+  // PV MODEL: flat panels, so the horizontal GHI from Open-Meteo is the
+  // irradiance on the panels.
+  // ─────────────────────────────────────────────────────────
 
-    final lookup = _buildRadiationLookup(
-      historicalPvData: historicalPvData,
-      times: times,
-      radiationList: radiationList,
-    );
-    final validBins = lookup.values.where((b) => b.count >= 2).length;
-    if (validBins < 3) {
-      LogService.log(
-          '⚠️ Lookup має лише $validBins валідних бінів. Використовуємо fallback.');
-      return null;
-    }
-    return lookup;
+  /// Overall performance ratio: MPPT/inverter, wiring, soiling and the
+  /// temperature loss of a typical day.
+  // ponytail: one fixed ratio, no temperature model. Add `temperature_2m`
+  // derating if summer forecasts run high.
+  static const double performanceRatio = 0.80;
+
+  /// Expected PV power (W) for [ghiWm2] on [pvCapacityW] of panels, never
+  /// above the nameplate.
+  @visibleForTesting
+  static double pvWatts(double ghiWm2, double pvCapacityW) {
+    if (ghiWm2 <= 0 || pvCapacityW <= 0) return 0;
+    final w = ghiWm2 / 1000.0 * pvCapacityW * performanceRatio;
+    return w > pvCapacityW ? pvCapacityW : w;
   }
 
-  // ─────────────────────────────────────────────────────────
-  // 1. ПОБУДОВА LOOKUP-ТАБЛИЦІ (radiation → realWh)
-  //    Повністю data-driven: не потребує характеристик панелей
-  // ─────────────────────────────────────────────────────────
-  Map<int, _RadiationBin> _buildRadiationLookup({
-    required Map<String, double> historicalPvData,
-    required List<String> times,
-    required List<dynamic> radiationList,
-  }) {
-    const binSize = 50; // Крок бінування: 0–50, 50–100, ... Вт/м²
-    final bins = <int, _RadiationBin>{};
-    final normalizedHistory = _normalizeHistoryKeys(historicalPvData);
-
-    var anomalyCount = 0;
-    var usedCount = 0;
-
-    for (var i = 0; i < times.length; i++) {
-      final dt = DateTime.parse(times[i]).toLocal();
-      final normKey = _toNormKey(dt);
-      if (i >= radiationList.length) continue;
-      final radiationWm2 = _toDoubleOrNull(radiationList[i]);
-      if (radiationWm2 == null) continue;
-
-      if (radiationWm2 <= 0) continue;
-      if (!normalizedHistory.containsKey(normKey)) continue;
-
-      final realWh = normalizedHistory[normKey]!;
-      if (realWh <= 0) continue;
-
-      // ── ФІЛЬТР "ЗРІЗАННЯ" ІНВЕРТОРОМ ──────────────────────────────
-      // Коли АКБ заряджений на 100%, інвертор обрізає генерацію.
-      // Визначаємо це відносно: якщо realWh < 25% від теоретичного максимуму
-      // при суттєвій радіації — це скоріше за все "зрізання", а не реальна
-      // ефективність. Такі точки псують lookup-таблицю.
-      // Порогове значення теоретичного максимуму (без знання потужності панелей)
-      // ми не можемо порахувати точно, але можемо виявити аномально низькі значення
-      // відносно поточного біну після накопичення даних.
-      final binKey = ((radiationWm2 / binSize).floor() * binSize).toInt();
-      bins.putIfAbsent(binKey, () => _RadiationBin());
-
-      // ── ВИЯВЛЕННЯ АНОМАЛІЙ (після накопичення ≥4 точок у бінів) ───
-      if (bins[binKey]!.isAnomaly(realWh)) {
-        anomalyCount++;
-        LogService.log(
-            '⚠️ Аномалія в бін $binKey W/m²: realWh=${realWh.toInt()} '
-            'vs avg=${bins[binKey]!.average.toInt()} '
-            '± ${bins[binKey]!.stdDev.toInt()}. Пропускаємо.');
-        continue; // Не додаємо аномальну точку в бін
-      }
-
-      bins[binKey]!.add(realWh);
-      usedCount++;
-    }
-
-    LogService.log('📊 Lookup побудовано: ${bins.length} бінів, '
-        '$usedCount точок використано, $anomalyCount аномалій відфільтровано.');
-
-    return bins;
-  }
-
-  // ─────────────────────────────────────────────────────────
-  // 2. ПРОГНОЗ З LOOKUP + ІНТЕРПОЛЯЦІЯ
-  // ─────────────────────────────────────────────────────────
-  double _predictFromLookup(
-    double radiationWm2,
-    Map<int, _RadiationBin> lookup, {
-    double fallbackEfficiency = 0.85,
-    double pvCapacityW = 0,
-  }) {
-    if (lookup.isEmpty) {
-      return pvCapacityW > 0
-          ? (radiationWm2 / 1000.0) * pvCapacityW * fallbackEfficiency
-          : 0;
-    }
-
-    const binSize = 50;
-    final binKey = ((radiationWm2 / binSize).floor() * binSize).toInt();
-
-    // Точне попадання в бін з достатньою кількістю даних
-    // Використовуємо медіану (стійкіша до аномальних днів, ніж середнє)
-    if (lookup.containsKey(binKey) && lookup[binKey]!.count >= 3) {
-      return lookup[binKey]!.median;
-    }
-
-    // Знаходимо сусідні біни з достатньою кількістю точок
-    final validKeys = lookup.keys.where((k) => lookup[k]!.count >= 2).toList()
-      ..sort();
-
-    if (validKeys.isEmpty) {
-      return pvCapacityW > 0
-          ? (radiationWm2 / 1000.0) * pvCapacityW * fallbackEfficiency
-          : 0;
-    }
-
-    // Лінійна інтерполяція між двома сусідніми бінами
-    int? lower, upper;
-    for (final key in validKeys) {
-      if (key <= binKey) lower = key;
-      if (key > binKey && upper == null) upper = key;
-    }
-
-    if (lower == null) return lookup[validKeys.first]!.median;
-    if (upper == null) return lookup[validKeys.last]!.median;
-
-    final lowerVal = lookup[lower]!.median;
-    final upperVal = lookup[upper]!.median;
-    final t = (radiationWm2 - lower) / (upper - lower);
-    return lowerVal + (upperVal - lowerVal) * t;
-  }
-
-  // ─────────────────────────────────────────────────────────
-  // 3. ОСНОВНИЙ МЕТОД: ПРОГНОЗ НА МАЙБУТНЄ
-  // ─────────────────────────────────────────────────────────
+  /// Hourly PV power keyed "yyyy-MM-dd HH:mm".
   Future<Map<String, double>> fetchLocalForecast({
     required double lat,
     required double lon,
     required double pvCapacityW,
-    double efficiency = 0.85,
-    Map<String, double> historicalPvData = const {},
-    DateTime? targetDate, // Якщо null — повертаємо тільки майбутнє
+    DateTime? targetDate, // null: only the rest of today and later
   }) async {
-    final cacheKey = _localForecastCacheKey(
-      lat: lat,
-      lon: lon,
-      pvCapacityW: pvCapacityW,
-      efficiency: efficiency,
-      historicalPvData: historicalPvData,
-      targetDate: targetDate,
-    );
+    final cacheKey =
+        'local|${lat.toStringAsFixed(3)}|${lon.toStringAsFixed(3)}|'
+        '${pvCapacityW.toStringAsFixed(0)}|${_targetDayKey(targetDate)}';
 
     final cached = _localForecastCache[cacheKey];
     if (cached != null &&
@@ -397,8 +229,6 @@ class WeatherService {
       lat: lat,
       lon: lon,
       pvCapacityW: pvCapacityW,
-      efficiency: efficiency,
-      historicalPvData: historicalPvData,
       targetDate: targetDate,
     );
     _localForecastInFlight[cacheKey] = future;
@@ -422,8 +252,6 @@ class WeatherService {
     required double lat,
     required double lon,
     required double pvCapacityW,
-    required double efficiency,
-    required Map<String, double> historicalPvData,
     required DateTime? targetDate,
   }) async {
     final now = DateTime.now();
@@ -441,11 +269,10 @@ class WeatherService {
       forecastDays: forecastDays,
     );
     if (payload == null) return {};
-    return _buildForecast(
+    return hourlyFromPayload(
       payload,
-      historicalPvData: historicalPvData,
       pvCapacityW: pvCapacityW,
-      fallbackEfficiency: efficiency,
+      now: now,
       targetDate: targetDate,
     );
   }
@@ -454,18 +281,11 @@ class WeatherService {
     required double lat,
     required double lon,
     required double pvCapacityW,
-    double efficiency = 0.85,
-    Map<String, double> historicalPvData = const {},
     int daysAhead = 4,
   }) async {
-    final cacheKey = _dailyForecastCacheKey(
-      lat: lat,
-      lon: lon,
-      pvCapacityW: pvCapacityW,
-      efficiency: efficiency,
-      historicalPvData: historicalPvData,
-      daysAhead: daysAhead,
-    );
+    final cacheKey =
+        'daily|${lat.toStringAsFixed(3)}|${lon.toStringAsFixed(3)}|'
+        '${pvCapacityW.toStringAsFixed(0)}|${daysAhead.clamp(2, 16)}';
 
     final cached = _dailyForecastCache[cacheKey];
     if (cached != null &&
@@ -486,8 +306,6 @@ class WeatherService {
       lat: lat,
       lon: lon,
       pvCapacityW: pvCapacityW,
-      efficiency: efficiency,
-      historicalPvData: historicalPvData,
       daysAhead: daysAhead,
     );
     _dailyForecastInFlight[cacheKey] = future;
@@ -512,8 +330,6 @@ class WeatherService {
     required double lat,
     required double lon,
     required double pvCapacityW,
-    required double efficiency,
-    required Map<String, double> historicalPvData,
     required int daysAhead,
   }) async {
     final forecastDays = daysAhead.clamp(2, 16);
@@ -523,57 +339,49 @@ class WeatherService {
       forecastDays: forecastDays,
     );
     if (payload == null) return const [];
+    return dailyFromPayload(
+      payload,
+      pvCapacityW: pvCapacityW,
+      now: DateTime.now(),
+      days: forecastDays,
+    );
+  }
 
+  /// Daily PV energy from an Open-Meteo payload, today and the next
+  /// [days] - 1 days. Each hourly value is the mean power of that hour, so
+  /// the hourly watts sum to watt-hours.
+  @visibleForTesting
+  static List<DailySolarForecast> dailyFromPayload(
+    Map<String, dynamic> payload, {
+    required double pvCapacityW,
+    required DateTime now,
+    required int days,
+  }) {
     final times = (payload['hourly']['time'] as List).cast<String>();
     final List<dynamic> radiationList =
         payload['hourly']['shortwave_radiation'];
-    final lookup = _buildLookupOrNull(
-      historicalPvData: historicalPvData,
-      times: times,
-      radiationList: radiationList,
-    );
 
-    final now = DateTime.now();
     final startDay = DateTime(now.year, now.month, now.day);
-    final endDay = startDay.add(Duration(days: forecastDays - 1));
-    final daily = <DateTime, List<double>>{};
+    final endDay = startDay.add(Duration(days: days - 1));
+    final daily = <DateTime, double>{};
 
-    for (var i = 0; i < times.length; i++) {
-      final dt = DateTime.parse(times[i]).toLocal();
-      final day = DateTime(dt.year, dt.month, dt.day);
+    for (var i = 0; i < times.length && i < radiationList.length; i++) {
+      // The value stamped HH:00 covers the hour before it.
+      final mid = DateTime.parse(times[i]).subtract(_halfHour);
+      final day = DateTime(mid.year, mid.month, mid.day);
       if (day.isBefore(startDay) || day.isAfter(endDay)) continue;
-
-      if (i >= radiationList.length) continue;
-      final radiationWm2 = _toDoubleOrNull(radiationList[i]);
-      if (radiationWm2 == null) continue;
-      if (radiationWm2 <= 0) continue;
-
-      double predicted;
-      if (lookup != null) {
-        predicted = _predictFromLookup(
-          radiationWm2,
-          lookup,
-          fallbackEfficiency: efficiency,
-          pvCapacityW: pvCapacityW,
-        );
-      } else {
-        predicted = (radiationWm2 / 1000.0) * pvCapacityW * efficiency;
-      }
-
-      if (pvCapacityW > 0) {
-        predicted = predicted.clamp(0.0, pvCapacityW).toDouble();
-      }
-      daily.putIfAbsent(day, () => <double>[]).add(predicted);
+      final ghi = _toDoubleOrNull(radiationList[i]) ?? 0;
+      daily[day] = (daily[day] ?? 0) + pvWatts(ghi, pvCapacityW);
     }
 
     // Daily weather code by local date ("2026-11-06" -> 61).
     final codeByDay = <DateTime, int>{};
     final dailyPayload = payload['daily'];
     if (dailyPayload is Map) {
-      final days = (dailyPayload['time'] as List?) ?? const [];
+      final dayList = (dailyPayload['time'] as List?) ?? const [];
       final codes = (dailyPayload['weather_code'] as List?) ?? const [];
-      for (var i = 0; i < days.length && i < codes.length; i++) {
-        final d = DateTime.tryParse(days[i].toString());
+      for (var i = 0; i < dayList.length && i < codes.length; i++) {
+        final d = DateTime.tryParse(dayList[i].toString());
         final c = codes[i];
         if (d != null && c is num) {
           codeByDay[DateTime(d.year, d.month, d.day)] = c.toInt();
@@ -581,170 +389,55 @@ class WeatherService {
       }
     }
 
-    final result = daily.entries.map((entry) {
-      final values = entry.value;
-      final energyWh =
-          values.fold<double>(0, (sum, value) => sum + value).toDouble();
-      final peakPowerW = values.isEmpty
-          ? 0.0
-          : values.reduce((a, b) => a > b ? a : b).toDouble();
-      return DailySolarForecast(
-        date: entry.key,
-        energyWh: energyWh,
-        peakPowerW: peakPowerW,
-        weatherCode: codeByDay[entry.key],
-      );
-    }).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    return result;
+    return [
+      for (final e in daily.entries)
+        DailySolarForecast(
+          date: e.key,
+          energyWh: e.value,
+          weatherCode: codeByDay[e.key],
+        ),
+    ]..sort((a, b) => a.date.compareTo(b.date));
   }
 
-  // ─────────────────────────────────────────────────────────
-  // 4. ПОБУДОВА ПРОГНОЗУ З ДАНИХ API
-  // ─────────────────────────────────────────────────────────
-  Map<String, double> _buildForecast(
-    Map<String, dynamic> data, {
-    required Map<String, double> historicalPvData,
+  /// Hourly PV power keyed at the middle of each hour ("yyyy-MM-dd HH:30"),
+  /// for [targetDate] or, when null, from now on.
+  @visibleForTesting
+  static Map<String, double> hourlyFromPayload(
+    Map<String, dynamic> payload, {
     required double pvCapacityW,
-    required double fallbackEfficiency,
+    required DateTime now,
     DateTime? targetDate,
   }) {
-    final times = (data['hourly']['time'] as List).cast<String>();
-    final List<dynamic> radiationList = data['hourly']['shortwave_radiation'];
-
-    if (kDebugMode) {
-      LogService.log(
-          '🌤️ Початок побудови прогнозу: часових точок=${times.length}, радіаційних точок=${radiationList.length}');
-    }
-
-    final lookup = _buildLookupOrNull(
-      historicalPvData: historicalPvData,
-      times: times,
-      radiationList: radiationList,
-    );
-
-    final now = DateTime.now();
-    final forecast = <String, double>{};
+    final times = (payload['hourly']['time'] as List).cast<String>();
+    final List<dynamic> radiationList =
+        payload['hourly']['shortwave_radiation'];
     final formatter = DateFormat('yyyy-MM-dd HH:mm');
+    final forecast = <String, double>{};
 
-    if (kDebugMode) {
-      LogService.log('⏰ Поточний час: ${now.toIso8601String()}');
-    }
-    if (targetDate != null && kDebugMode) {
-      LogService.log(
-          '🎯 Цільова дата прогнозу: ${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}');
-    }
-
-    var processedCount = 0;
-    var includedCount = 0;
-
-    for (var i = 0; i < times.length; i++) {
-      final dt = DateTime.parse(times[i]);
-
-      if (targetDate != null) {
-        // Режим конкретної дати: повертаємо всі сонячні години для неї
-        final isTargetDay = dt.year == targetDate.year &&
-            dt.month == targetDate.month &&
-            dt.day == targetDate.day;
-        if (!isTargetDay) continue;
-        // Для сьогоднішньої дати пропускаємо минулі години
-        final isToday = targetDate.year == now.year &&
-            targetDate.month == now.month &&
-            targetDate.day == now.day;
-        if (isToday && dt.isBefore(now)) continue;
-      } else {
-        // Режим "тільки майбутнє" (поведінка за замовчуванням)
-        final isToday =
-            dt.year == now.year && dt.month == now.month && dt.day == now.day;
-        if (!isToday && !dt.isAfter(now)) continue;
-        if (isToday && dt.isBefore(now)) continue;
+    for (var i = 0; i < times.length && i < radiationList.length; i++) {
+      final end = DateTime.parse(times[i]);
+      // Skip hours already over; the current hour is still a forecast.
+      if (!end.isAfter(now)) continue;
+      // The value stamped HH:00 is the mean of the hour before it.
+      final mid = end.subtract(_halfHour);
+      if (targetDate != null &&
+          (mid.year != targetDate.year ||
+              mid.month != targetDate.month ||
+              mid.day != targetDate.day)) {
+        continue;
       }
-
-      processedCount++;
-
-      if (i >= radiationList.length) continue;
-      final radiationWm2 = _toDoubleOrNull(radiationList[i]);
-      if (radiationWm2 == null) continue;
-      if (radiationWm2 <= 0) continue;
-
-      double predicted;
-      if (lookup != null) {
-        predicted = _predictFromLookup(
-          radiationWm2,
-          lookup,
-          fallbackEfficiency: fallbackEfficiency,
-          pvCapacityW: pvCapacityW,
-        );
-      } else {
-        predicted = (radiationWm2 / 1000.0) * pvCapacityW * fallbackEfficiency;
-      }
-
-      // Обмежуємо максимальною потужністю панелей (фізична межа)
-      if (pvCapacityW > 0) {
-        predicted = predicted.clamp(0.0, pvCapacityW);
-      }
-
-      final timeKey = formatter.format(dt);
-      forecast[timeKey] = predicted;
-      includedCount++;
-
-      if (kDebugMode && includedCount <= 3) {
-        LogService.log(
-            '📊 Додано прогноз: $timeKey, радіація=${radiationWm2.toStringAsFixed(1)} W/m², передбачено=${predicted.toStringAsFixed(1)} Wh');
-      }
+      final ghi = _toDoubleOrNull(radiationList[i]);
+      if (ghi == null || ghi <= 0) continue;
+      forecast[formatter.format(mid)] = pvWatts(ghi, pvCapacityW);
     }
-
-    if (kDebugMode) {
-      LogService.log(
-          '✅ Завершено побудову прогнозу: оброблено=$processedCount, включено=$includedCount, фінальних точок=${forecast.length}');
-    }
-
     return forecast;
   }
 
-  String _localForecastCacheKey({
-    required double lat,
-    required double lon,
-    required double pvCapacityW,
-    required double efficiency,
-    required Map<String, double> historicalPvData,
-    required DateTime? targetDate,
-  }) {
-    return 'local|${lat.toStringAsFixed(3)}|${lon.toStringAsFixed(3)}|'
-        '${pvCapacityW.toStringAsFixed(0)}|${efficiency.toStringAsFixed(2)}|'
-        '${_historyFingerprint(historicalPvData)}|${_targetDayKey(targetDate)}';
-  }
-
-  String _dailyForecastCacheKey({
-    required double lat,
-    required double lon,
-    required double pvCapacityW,
-    required double efficiency,
-    required Map<String, double> historicalPvData,
-    required int daysAhead,
-  }) {
-    return 'daily|${lat.toStringAsFixed(3)}|${lon.toStringAsFixed(3)}|'
-        '${pvCapacityW.toStringAsFixed(0)}|${efficiency.toStringAsFixed(2)}|'
-        '${daysAhead.clamp(2, 16)}|${_historyFingerprint(historicalPvData)}';
-  }
+  static const Duration _halfHour = Duration(minutes: 30);
 
   String _targetDayKey(DateTime? day) {
     if (day == null) return 'future';
     return '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-  }
-
-  int _historyFingerprint(Map<String, double> historicalPvData) {
-    if (historicalPvData.isEmpty) return 0;
-    final keys = historicalPvData.keys.toList()..sort();
-    final takeFrom = (keys.length - 12).clamp(0, keys.length);
-    var hash = historicalPvData.length;
-    for (var i = takeFrom; i < keys.length; i++) {
-      final key = keys[i];
-      final value = (historicalPvData[key] ?? 0).round();
-      hash = Object.hash(hash, key, value);
-    }
-    return hash;
   }
 
   void _pruneCache<T>(Map<String, _MemoryCacheEntry<T>> cache) {
@@ -785,23 +478,4 @@ class WeatherService {
       dailyAvgMs: _dailyAvgMs.round(),
     );
   }
-
-  // ─────────────────────────────────────────────────────────
-  // 5. УТИЛІТИ
-  // ─────────────────────────────────────────────────────────
-
-  Map<String, double> _normalizeHistoryKeys(Map<String, double> raw) {
-    final result = <String, double>{};
-    for (final entry in raw.entries) {
-      try {
-        // Підтримуємо обидва формати: "2026-04-09T13:00" і "2026-04-09 13:00"
-        final dt = DateTime.parse(entry.key.replaceAll(' ', 'T')).toLocal();
-        result[_toNormKey(dt)] = entry.value;
-      } catch (_) {}
-    }
-    return result;
-  }
-
-  String _toNormKey(DateTime dt) =>
-      '${dt.year}-${dt.month}-${dt.day}-${dt.hour}';
 }

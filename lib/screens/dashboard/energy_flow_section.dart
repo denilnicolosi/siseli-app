@@ -38,7 +38,7 @@ class _EnergyFlowSection extends StatelessWidget {
               ),
               const SizedBox(width: AppTheme.spacingS),
               IconButton.filledTonal(
-                onPressed: provider.isDataLoading ? null : provider.fetchData,
+                onPressed: provider.isDataLoading ? null : provider.refreshAll,
                 tooltip: l10n.refreshChart,
                 icon: AnimatedSwitcher(
                   duration: context.motion.quick,

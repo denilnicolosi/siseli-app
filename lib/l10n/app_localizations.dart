@@ -163,7 +163,7 @@ abstract class AppLocalizations {
   /// No description provided for @energyOverview.
   ///
   /// In en, this message translates to:
-  /// **'Energy Overview'**
+  /// **'Energy history'**
   String get energyOverview;
 
   /// No description provided for @production.
@@ -1171,14 +1171,8 @@ abstract class AppLocalizations {
   /// No description provided for @forecastNextDays.
   ///
   /// In en, this message translates to:
-  /// **'Solar forecast for next days'**
+  /// **'Solar forecast for the next days'**
   String get forecastNextDays;
-
-  /// No description provided for @forecastPeak.
-  ///
-  /// In en, this message translates to:
-  /// **'Peak'**
-  String get forecastPeak;
 
   /// No description provided for @forecastUnavailable.
   ///
@@ -1203,12 +1197,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh chart'**
   String get refreshChart;
-
-  /// No description provided for @batterySignHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Battery: \'+\' means charge, \'-\' means discharge.'**
-  String get batterySignHint;
 
   /// No description provided for @chartNoDataTitle.
   ///
@@ -1435,7 +1423,7 @@ abstract class AppLocalizations {
   /// No description provided for @forecastBasis.
   ///
   /// In en, this message translates to:
-  /// **'Estimate for {kwp} kWp of panels from Open-Meteo solar radiation'**
+  /// **'Estimate for {kwp} kWp of flat panels from Open-Meteo solar radiation'**
   String forecastBasis(String kwp);
 
   /// No description provided for @applySafeCurrent.

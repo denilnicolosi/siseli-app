@@ -320,7 +320,8 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
               icon: Icons.battery_charging_full_rounded,
               color: AppTheme.batteryColor,
               title: l10n.battery,
-              value: '$batterySoc% ${_batteryNodeLabel(snapshot)}',
+              value: '$batterySoc%',
+              subValue: _batteryNodeLabel(snapshot),
               selected: selectedLink == _InteractiveFlowLink.solarToBattery ||
                   selectedLink == _InteractiveFlowLink.gridToBattery ||
                   selectedLink == _InteractiveFlowLink.batteryToLoad,
@@ -513,13 +514,14 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
   }
 
   String _batteryNodeLabel(_FlowSnapshot snapshot) {
+    // '+' charge, '−' discharge: same convention as the history chart.
     if (snapshot.batteryChargeW > 25.0) {
-      return '↑${snapshot.batteryChargeW.toStringAsFixed(0)}W';
+      return '+${snapshot.batteryChargeW.toStringAsFixed(0)} W';
     }
     if (snapshot.batteryDischargeW > 25.0) {
-      return '↓${snapshot.batteryDischargeW.toStringAsFixed(0)}W';
+      return '−${snapshot.batteryDischargeW.toStringAsFixed(0)} W';
     }
-    return '•0W';
+    return '0 W';
   }
 
   bool _isLinkVisible(_FlowSnapshot snapshot, _InteractiveFlowLink? link) {
@@ -773,6 +775,9 @@ class _NodeWidget extends StatelessWidget {
   final Color color;
   final String title;
   final String value;
+
+  /// Optional second value line (battery power under the SOC).
+  final String? subValue;
   final bool compact;
   final bool enableBlur;
   final bool selected;
@@ -783,6 +788,7 @@ class _NodeWidget extends StatelessWidget {
     required this.color,
     required this.title,
     required this.value,
+    this.subValue,
     required this.compact,
     required this.enableBlur,
     this.selected = false,
@@ -827,7 +833,8 @@ class _NodeWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 24),
+          // Smaller icon leaves room for the second value line.
+          Icon(icon, color: color, size: subValue == null ? 24 : 20),
           SizedBox(height: compact ? 2 : 4),
           Flexible(
             child: Text(
@@ -845,18 +852,19 @@ class _NodeWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 1),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: compact ? 11 : 12,
-                fontWeight: FontWeight.w700,
-                color: isDark ? color : color.withValues(alpha: 0.9),
+          for (final line in [value, if (subValue != null) subValue!])
+            Flexible(
+              child: Text(
+                line,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: compact ? 11 : 12,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? color : color.withValues(alpha: 0.9),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

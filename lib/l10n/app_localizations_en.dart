@@ -39,7 +39,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get data => 'Data';
 
   @override
-  String get energyOverview => 'Energy Overview';
+  String get energyOverview => 'Energy history';
 
   @override
   String get production => 'Production';
@@ -604,10 +604,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get today => 'Today';
 
   @override
-  String get forecastNextDays => 'Solar forecast for next days';
-
-  @override
-  String get forecastPeak => 'Peak';
+  String get forecastNextDays => 'Solar forecast for the next days';
 
   @override
   String get forecastUnavailable => 'Forecast data is temporarily unavailable';
@@ -620,10 +617,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get refreshChart => 'Refresh chart';
-
-  @override
-  String get batterySignHint =>
-      'Battery: \'+\' means charge, \'-\' means discharge.';
 
   @override
   String get chartNoDataTitle => 'No data yet';
@@ -756,7 +749,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String forecastBasis(String kwp) {
-    return 'Estimate for $kwp kWp of panels from Open-Meteo solar radiation';
+    return 'Estimate for $kwp kWp of flat panels from Open-Meteo solar radiation';
   }
 
   @override

@@ -9,7 +9,7 @@
   "language": "Language",
   "dashboard": "Dashboard",
   "data": "Data",
-  "energyOverview": "Energy Overview",
+  "energyOverview": "Energy history",
   "production": "Production",
   "consumption": "Consumption",
   "day": "Day",
@@ -348,13 +348,11 @@
   "signInCloud": "Sign in to Siseli Cloud",
   "loginFailed": "Login failed. Check credentials.",
   "today": "Today",
-  "forecastNextDays": "Solar forecast for next days",
-  "forecastPeak": "Peak",
+  "forecastNextDays": "Solar forecast for the next days",
   "forecastUnavailable": "Forecast data is temporarily unavailable",
   "equipmentStatus": "Equipment status",
   "inverterLoad": "Inverter load",
   "refreshChart": "Refresh chart",
-  "batterySignHint": "Battery: '+' means charge, '-' means discharge.",
   "chartNoDataTitle": "No data yet",
   "chartNoDataMessage": "The chart should load in a moment.",
   "lessThanMinute": "< 1 min",
@@ -454,7 +452,7 @@
   "mainSource": "Main source",
   "chartFullscreen": "Full screen",
   "chartRotate": "Rotate",
-  "forecastBasis": "Estimate for {kwp} kWp of panels from Open-Meteo solar radiation",
+  "forecastBasis": "Estimate for {kwp} kWp of flat panels from Open-Meteo solar radiation",
   "@forecastBasis": {
     "placeholders": {
       "kwp": {
