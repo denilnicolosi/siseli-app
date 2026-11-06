@@ -21,6 +21,9 @@ concurrency:
 jobs:
   build_windows:
     name: Build Windows
+    # A "release:" commit is pushed together with its tag: the tag run builds
+    # and publishes the same code, so the main-branch run would be a duplicate.
+    if: github.ref_type == 'tag' || !startsWith(github.event.head_commit.message, 'release:')
     runs-on: windows-latest
 
     steps:
@@ -78,6 +81,7 @@ jobs:
 
   build_android:
     name: Build Android
+    if: github.ref_type == 'tag' || !startsWith(github.event.head_commit.message, 'release:')
     runs-on: ubuntu-latest
 
     steps:
