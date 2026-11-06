@@ -15,9 +15,12 @@ class _EnergyFlowSection extends StatelessWidget {
     final lastUpdatedLabel = lastUpdatedAt == null
         ? l10n.lastRealtimeUpdate
         : '${l10n.lastRealtimeUpdate}: ${lastUpdatedAt.hour.toString().padLeft(2, '0')}:${lastUpdatedAt.minute.toString().padLeft(2, '0')}';
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
     return AppCard(
       borderRadius: expressive.cornerLarge,
-      padding: const EdgeInsets.all(AppTheme.spacingL),
+      // Same padding as the history and forecast cards.
+      padding:
+          EdgeInsets.all(isCompact ? AppTheme.spacingM : AppTheme.spacingL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -25,6 +28,7 @@ class _EnergyFlowSection extends StatelessWidget {
             children: [
               Icon(
                 Icons.account_tree_rounded,
+                size: 20,
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: AppTheme.spacingS),
@@ -40,6 +44,9 @@ class _EnergyFlowSection extends StatelessWidget {
               IconButton.filledTonal(
                 onPressed: provider.isDataLoading ? null : provider.refreshAll,
                 tooltip: l10n.refreshChart,
+                // Small button: a full 48 px one made the header (and the
+                // card's top margin) taller than the other cards.
+                style: _cardHeaderButtonStyle,
                 icon: AnimatedSwitcher(
                   duration: context.motion.quick,
                   child: provider.isDataLoading
@@ -84,6 +91,14 @@ class _EnergyFlowSection extends StatelessWidget {
     );
   }
 }
+
+/// Compact (32 px) style for the icon buttons in the dashboard card headers.
+final ButtonStyle _cardHeaderButtonStyle = IconButton.styleFrom(
+  minimumSize: const Size(32, 32),
+  fixedSize: const Size(32, 32),
+  padding: EdgeInsets.zero,
+  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+);
 
 /// Fullscreen helpers shared by the energy-flow and chart fullscreen views.
 /// Desktop: native OS fullscreen. Mobile: immersive mode, optional landscape.

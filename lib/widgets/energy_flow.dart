@@ -98,8 +98,6 @@ class _FlowSnapshot {
       balanceErrorW: balanceError,
     );
   }
-
-  bool get balanceStable => balanceErrorW.abs() <= 120.0;
 }
 
 enum _InteractiveFlowLink {
@@ -347,10 +345,16 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
           ),
           Align(
             alignment: Alignment.center,
+            // Δ = power in (PV + AC + battery discharge) − power out (loads +
+            // battery charge + export). Positive: inverter self-use and
+            // conversion losses. Negative: the readings do not add up (shown
+            // with a minus; the popup explains it).
             child: _CoreHub(
               animation: _controller,
               compact: compact,
               label: l10n.flowInverter,
+              value: '${snapshot.balanceErrorW < 0 ? '−' : ''}'
+                  '${snapshot.balanceErrorW.abs().toStringAsFixed(0)} W',
               onTap: () => _showNodeDetails(_FlowNode.inverter, snapshot),
             ),
           ),
@@ -486,6 +490,15 @@ class _EnergyFlowDiagramState extends State<EnergyFlowDiagram>
               children: [
                 for (final (name, value) in summary)
                   row(name, value, strong: true),
+                if (node == _FlowNode.inverter)
+                  Text(
+                    snapshot.balanceErrorW >= 0
+                        ? l10n.flowLossesHint
+                        : l10n.flowMismatchHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 if (readings.isNotEmpty) const Divider(),
                 for (final r in readings)
                   row(r.name, r.value, description: r.description),
@@ -553,7 +566,6 @@ class _FlowLegendBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     const threshold = 20.0;
 
     final entries = <({
@@ -620,27 +632,6 @@ class _FlowLegendBar extends StatelessWidget {
               selected: selectedLink == e.link,
               onTap: () => onSelectLink(e.link),
             ),
-        // Δ = power in (PV + AC + battery discharge) − power out (loads +
-        // battery charge + export). Positive: inverter self-use and
-        // conversion losses. Negative: the readings do not add up.
-        Tooltip(
-          message: snapshot.balanceErrorW >= 0
-              ? l10n.flowLossesHint
-              : l10n.flowMismatchHint,
-          triggerMode: TooltipTriggerMode.tap,
-          showDuration: const Duration(seconds: 6),
-          child: _FlowLegendChip(
-            icon: snapshot.balanceErrorW >= 0
-                ? Icons.local_fire_department_rounded
-                : Icons.compare_arrows_rounded,
-            color: snapshot.balanceStable
-                ? theme.colorScheme.onSurfaceVariant
-                : theme.colorScheme.error,
-            label:
-                '${snapshot.balanceErrorW >= 0 ? l10n.flowLosses : l10n.flowMismatch}: '
-                '${snapshot.balanceErrorW.abs().toStringAsFixed(0)} W',
-          ),
-        ),
       ],
     );
   }
@@ -704,20 +695,23 @@ class _CoreHub extends StatelessWidget {
   final AnimationController animation;
   final bool compact;
   final String label;
+  final String value;
   final VoidCallback onTap;
 
   const _CoreHub({
     required this.animation,
     required this.compact,
     required this.label,
+    required this.value,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? Colors.white70 : const Color(0xFF1A2A42);
-    final size = compact ? 70.0 : 82.0;
+    final fg = isDark ? Colors.white : const Color(0xFF1A2A42);
+    const accent = AppTheme.gridColor;
+    final size = compact ? 80.0 : 92.0;
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
@@ -738,12 +732,12 @@ class _CoreHub extends StatelessWidget {
                 ],
               ),
               border: Border.all(
-                color: AppTheme.gridColor.withValues(alpha: 0.36 + t * 0.4),
+                color: accent.withValues(alpha: 0.36 + t * 0.4),
                 width: 1.4,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.gridColor.withValues(alpha: 0.18 + t * 0.18),
+                  color: accent.withValues(alpha: 0.18 + t * 0.18),
                   blurRadius: isDark ? 24 : 14,
                   spreadRadius: 2,
                 ),
@@ -752,11 +746,23 @@ class _CoreHub extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _InverterIcon(size: compact ? 26 : 32, color: fg),
+                _InverterIcon(size: compact ? 24 : 30, color: fg),
+                const SizedBox(height: 2),
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: compact ? 9 : 10,
+                    fontWeight: FontWeight.w600,
+                    color: fg,
+                  ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: compact ? 11 : 12,
                     fontWeight: FontWeight.w700,
                     color: fg,
                   ),

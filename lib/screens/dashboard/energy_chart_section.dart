@@ -358,6 +358,8 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       borderRadius: expressive.cornerLarge,
       enableBlur: false,
       backgroundColor: theme.colorScheme.surfaceContainerLow,
+      // The Padding below is the only inset (AppCard's default would double it).
+      padding: EdgeInsets.zero,
       child: Padding(
         padding:
             EdgeInsets.all(isCompact ? AppTheme.spacingM : AppTheme.spacingL),
@@ -384,7 +386,7 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                     isRefreshing: _isBackgroundRefreshing,
                   ),
                 IconButton(
-                  visualDensity: VisualDensity.compact,
+                  style: _cardHeaderButtonStyle,
                   onPressed: _isLoading ? null : _openFullscreen,
                   tooltip: l10n.chartFullscreen,
                   icon: const Icon(Icons.open_in_full_rounded, size: 20),
@@ -407,9 +409,9 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
                 height: isCompact ? 210 : 300,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppTheme.spacingXS,
+                    0,
                     AppTheme.spacingM,
-                    AppTheme.spacingM,
+                    AppTheme.spacingS,
                     AppTheme.spacingXS,
                   ),
                   child: ExcludeSemantics(
@@ -907,48 +909,53 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
       onChanged?.call();
     }
 
-    return Wrap(
-      spacing: AppTheme.spacingXS,
-      runSpacing: AppTheme.spacingXS,
+    final chips = [
+      _buildLegendChip(
+        label: l10n.solar,
+        color: AppTheme.pvColor,
+        icon: Icons.wb_sunny_rounded,
+        isActive: _showProduction,
+        onTap: () => toggle(() => _showProduction = !_showProduction),
+      ),
+      _buildLegendChip(
+        label: l10n.consumption,
+        color: AppTheme.loadColor,
+        icon: Icons.home_rounded,
+        isActive: _showConsumption,
+        onTap: () => toggle(() => _showConsumption = !_showConsumption),
+      ),
+      _buildLegendChip(
+        label: l10n.battery,
+        color: AppTheme.batteryColor,
+        icon: Icons.battery_charging_full_rounded,
+        isActive: _showBattery,
+        onTap: () => toggle(() => _showBattery = !_showBattery),
+      ),
+      if (_hasAcInput)
+        _buildLegendChip(
+          label: l10n.acInput,
+          color: AppTheme.gridColor,
+          icon: Icons.electrical_services_rounded,
+          isActive: _showGrid,
+          onTap: () => toggle(() => _showGrid = !_showGrid),
+        ),
+      _buildLegendChip(
+        label: l10n.forecast,
+        color: _forecastSeriesColor,
+        icon: Icons.cloud_queue_rounded,
+        isActive: _showForecast && _forecastData.isNotEmpty,
+        onTap: _forecastData.isNotEmpty
+            ? () => toggle(() => _showForecast = !_showForecast)
+            : null,
+      ),
+    ];
+    // One line, equal shares; labels shrink if the screen is narrow.
+    return Row(
       children: [
-        _buildLegendChip(
-          label: l10n.production,
-          color: AppTheme.pvColor,
-          icon: Icons.wb_sunny_rounded,
-          isActive: _showProduction,
-          onTap: () => toggle(() => _showProduction = !_showProduction),
-        ),
-        _buildLegendChip(
-          label: l10n.consumption,
-          color: AppTheme.loadColor,
-          icon: Icons.home_rounded,
-          isActive: _showConsumption,
-          onTap: () => toggle(() => _showConsumption = !_showConsumption),
-        ),
-        _buildLegendChip(
-          label: l10n.battery,
-          color: AppTheme.batteryColor,
-          icon: Icons.battery_charging_full_rounded,
-          isActive: _showBattery,
-          onTap: () => toggle(() => _showBattery = !_showBattery),
-        ),
-        if (_hasAcInput)
-          _buildLegendChip(
-            label: l10n.acInput,
-            color: AppTheme.gridColor,
-            icon: Icons.electrical_services_rounded,
-            isActive: _showGrid,
-            onTap: () => toggle(() => _showGrid = !_showGrid),
-          ),
-        _buildLegendChip(
-          label: l10n.forecast,
-          color: _forecastSeriesColor,
-          icon: Icons.cloud_queue_rounded,
-          isActive: _showForecast && _forecastData.isNotEmpty,
-          onTap: _forecastData.isNotEmpty
-              ? () => toggle(() => _showForecast = !_showForecast)
-              : null,
-        ),
+        for (var i = 0; i < chips.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppTheme.spacingXS),
+          Expanded(child: chips[i]),
+        ],
       ],
     );
   }
@@ -961,34 +968,53 @@ class _EnergyChartSectionState extends State<_EnergyChartSection> {
     required VoidCallback? onTap,
   }) {
     final theme = Theme.of(context);
-    return FilterChip(
-      selected: isActive,
-      onSelected: onTap == null ? null : (_) => onTap(),
-      visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      labelPadding: const EdgeInsets.only(right: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      avatar: Icon(
-        icon,
-        size: 14,
-        color: isActive ? color : color.withValues(alpha: 0.54),
+    final radius = BorderRadius.circular(999);
+    // Plain pill instead of FilterChip: it can shrink to an equal share of
+    // the row, so all series fit on one line.
+    return Material(
+      color: isActive
+          ? theme.colorScheme.secondaryContainer
+          : theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(
+          color: isActive
+              ? theme.colorScheme.secondary
+              : theme.colorScheme.outlineVariant,
+        ),
       ),
-      label: Text(label),
-      labelStyle: theme.textTheme.labelSmall?.copyWith(
-        color: isActive
-            ? theme.colorScheme.onSurface
-            : theme.colorScheme.onSurfaceVariant,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: SizedBox(
+          height: 30,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isActive ? color : color.withValues(alpha: 0.54),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: isActive
+                          ? theme.colorScheme.onSurface
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      backgroundColor: theme.colorScheme.surfaceContainerLow,
-      selectedColor: theme.colorScheme.secondaryContainer,
-      side: BorderSide(
-        color: isActive
-            ? theme.colorScheme.secondary
-            : theme.colorScheme.outlineVariant,
-      ),
-      showCheckmark: false,
-      elevation: 0,
-      pressElevation: 0,
     );
   }
 
